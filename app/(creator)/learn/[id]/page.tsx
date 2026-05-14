@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { ArrowLeft, Download, Link as LinkIcon, Clock, Play } from "lucide-react";
+import { ArrowLeft, Download, ExternalLink, ChevronRight } from "lucide-react";
 
 function getEmbedUrl(url: string): string | null {
   if (!url) return null;
@@ -18,6 +18,12 @@ function getEmbedUrl(url: string): string | null {
   const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
   if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
   return null;
+}
+
+function getTemplatePlatform(url: string): string {
+  if (url.includes("canva.com")) return "Opens in Canva";
+  if (url.includes("google.com")) return "Opens in Google";
+  return "Opens in new tab";
 }
 
 interface ContentItem {
@@ -52,12 +58,6 @@ const TYPE_BG: Record<string, string> = {
   course:          "#222222",
   industry_update: "#706b6b",
 };
-
-function getTemplatePlatform(url: string): string {
-  if (url.includes("canva.com")) return "Opens in Canva";
-  if (url.includes("google.com")) return "Opens in Google";
-  return "Open link";
-}
 
 export default function LearnDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -105,6 +105,24 @@ export default function LearnDetailPage() {
   const isWorkbook = item.contentType === "workbook";
   const isVideo = item.contentType === "video";
 
+  function triggerPdfDownload() {
+    if (!item?.pdfUrl) return;
+    const downloadUrl = item.pdfUrl.includes("cloudinary.com")
+      ? item.pdfUrl + "?fl_attachment=true"
+      : item.pdfUrl;
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.download = item.title + ".pdf";
+    link.target = "_blank";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  const publishedDate = item.publishedAt
+    ? new Date(item.publishedAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
+    : null;
+
   return (
     <div style={{ paddingBottom: "40px" }}>
       {/* Back button */}
@@ -118,182 +136,207 @@ export default function LearnDetailPage() {
         </button>
       </div>
 
-      {/* Workbook: header card */}
+      {/* ── VIDEO ── */}
+      {isVideo && (
+        <>
+          {/* Video embed at top — no banner */}
+          {item.videoEmbedUrl && getEmbedUrl(item.videoEmbedUrl) && (
+            <div style={{ margin: "14px 0 0", position: "relative", background: "#000000", overflow: "hidden", aspectRatio: "16/9" }}>
+              <iframe
+                src={getEmbedUrl(item.videoEmbedUrl)!}
+                width="100%"
+                height="100%"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                referrerPolicy="strict-origin-when-cross-origin"
+                style={{ display: "block", border: "none" }}
+              />
+            </div>
+          )}
+
+          {/* Type pill + categories */}
+          <div style={{ padding: "16px 20px 0", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px" }}>
+            <span className="font-montserrat font-semibold uppercase" style={{ fontSize: "9px", letterSpacing: "0.10em", background: pillStyle.bg, color: pillStyle.text, border: pillStyle.border, padding: "3px 10px", borderRadius: "20px" }}>
+              {pillStyle.label}
+            </span>
+            {item.categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => router.push(`/learn?category=${cat}`)}
+                className="font-montserrat font-semibold uppercase"
+                style={{ fontSize: "9px", letterSpacing: "0.08em", background: "#333333", color: "#706b6b", padding: "3px 8px", borderRadius: "20px", cursor: "pointer", border: "none" }}
+              >
+                {cat.replace(/_/g, " ")}
+              </button>
+            ))}
+          </div>
+
+          {/* Title */}
+          <h1 className="font-playfair italic font-normal text-white" style={{ fontSize: "22px", lineHeight: 1.25, padding: "16px 20px 4px" }}>
+            {item.title}
+          </h1>
+
+          {/* Meta row */}
+          <div style={{ padding: "0 20px 12px", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "12px" }}>
+            {publishedDate && <span className="font-montserrat" style={{ fontSize: "11px", color: "#706b6b" }}>{publishedDate}</span>}
+            {item.readingTimeMinutes && <span className="font-montserrat" style={{ fontSize: "11px", color: "#706b6b" }}>{item.readingTimeMinutes} min read</span>}
+          </div>
+
+          {/* Body */}
+          {item.body && (
+            <div style={{ padding: "0 20px 16px" }}>
+              <div className="rich-content" dangerouslySetInnerHTML={{ __html: item.body }} />
+            </div>
+          )}
+
+          {/* Transcript */}
+          {item.videoTranscript && (
+            <div style={{ padding: "0 20px 16px" }}>
+              <p className="font-montserrat font-bold uppercase text-white/30 mb-3" style={{ fontSize: "9px", letterSpacing: "0.12em" }}>Notes</p>
+              <div style={{ background: "#2a2a2a", borderRadius: "10px", padding: "16px", border: "1px solid rgba(228,220,209,0.06)" }}>
+                <p className="font-montserrat text-white/60" style={{ fontSize: "13px", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
+                  {item.videoTranscript}
+                </p>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ── WORKBOOK ── */}
       {isWorkbook && (
-        <div style={{ padding: "16px 20px 0" }}>
-          <div style={{ background: "#2a2a2a", borderRadius: "12px", padding: "20px", border: "1px solid rgba(228,220,209,0.08)" }}>
+        <>
+          {/* Thumbnail image at top */}
+          {item.thumbnailUrl && (
+            <div style={{ margin: "14px 0 0", height: "260px", background: "#1a1a1a", overflow: "hidden", position: "relative" }}>
+              <Image src={item.thumbnailUrl} alt={item.title} fill style={{ objectFit: "contain" }} />
+            </div>
+          )}
+
+          {/* Type pill + categories */}
+          <div style={{ padding: "16px 20px 0", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px" }}>
             <span className="font-montserrat font-semibold uppercase" style={{ fontSize: "9px", letterSpacing: "0.10em", background: pillStyle.bg, color: pillStyle.text, padding: "3px 10px", borderRadius: "20px" }}>
               {pillStyle.label}
             </span>
-            <h1 className="font-playfair italic font-normal text-white mt-3" style={{ fontSize: "22px", lineHeight: 1.25 }}>
-              {item.title}
-            </h1>
-            {item.categories.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-3">
-                {item.categories.map((cat) => (
-                  <span key={cat} className="font-montserrat font-semibold uppercase" style={{ fontSize: "9px", letterSpacing: "0.08em", background: "#333", color: "#706b6b", padding: "3px 10px", borderRadius: "20px" }}>
-                    {cat.replace(/_/g, " ")}
-                  </span>
-                ))}
-              </div>
-            )}
+            {item.categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => router.push(`/learn?category=${cat}`)}
+                className="font-montserrat font-semibold uppercase"
+                style={{ fontSize: "9px", letterSpacing: "0.08em", background: "#333333", color: "#706b6b", padding: "3px 8px", borderRadius: "20px", cursor: "pointer", border: "none" }}
+              >
+                {cat.replace(/_/g, " ")}
+              </button>
+            ))}
+          </div>
 
+          {/* Title */}
+          <h1 className="font-playfair italic font-normal text-white" style={{ fontSize: "22px", lineHeight: 1.25, padding: "16px 20px 4px" }}>
+            {item.title}
+          </h1>
+
+          {/* Meta row */}
+          <div style={{ padding: "0 20px 12px", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "12px" }}>
+            {publishedDate && <span className="font-montserrat" style={{ fontSize: "11px", color: "#706b6b" }}>{publishedDate}</span>}
+            {item.readingTimeMinutes && <span className="font-montserrat" style={{ fontSize: "11px", color: "#706b6b" }}>{item.readingTimeMinutes} min read</span>}
+          </div>
+
+          {/* Body/description */}
+          {item.body && (
+            <div style={{ padding: "0 20px 16px" }}>
+              <div className="rich-content" dangerouslySetInnerHTML={{ __html: item.body }} />
+            </div>
+          )}
+
+          {/* Action boxes */}
+          <div style={{ padding: "0 20px 24px", display: "flex", flexDirection: "column", gap: "10px" }}>
             {/* PDF download */}
             {item.pdfUrl && (
-              <a
-                href={item.pdfUrl}
-                target="_blank"
-                rel="noreferrer"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                  background: "#333333",
-                  borderRadius: "8px",
-                  padding: "12px 16px",
-                  marginTop: "16px",
-                  textDecoration: "none",
-                  cursor: "pointer",
-                }}
+              <div
+                onClick={triggerPdfDownload}
+                style={{ background: "#2a2a2a", borderRadius: "12px", padding: "16px 20px", display: "flex", alignItems: "center", gap: "14px", cursor: "pointer" }}
               >
-                <Download size={16} color="#4a5e4a" />
-                <div>
-                  <p className="font-montserrat font-semibold text-white" style={{ fontSize: "13px" }}>Download Workbook</p>
-                  <p className="font-montserrat" style={{ fontSize: "10px", color: "#706b6b" }}>PDF</p>
+                <div style={{ width: "40px", height: "40px", background: "#333333", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Download size={18} color="#e4dcd1" />
                 </div>
-              </a>
+                <div style={{ flex: 1 }}>
+                  <p className="font-montserrat font-semibold text-white" style={{ fontSize: "14px" }}>Download PDF</p>
+                  <p className="font-montserrat" style={{ fontSize: "11px", color: "#706b6b" }}>Tap to download</p>
+                </div>
+                <ChevronRight size={16} color="#706b6b" />
+              </div>
             )}
 
             {/* Editable template */}
             {item.editableTemplateUrl && (
-              <button
+              <div
                 onClick={() => window.open(item.editableTemplateUrl!, "_blank")}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                  background: "#2a2a2a",
-                  border: "1px solid rgba(228,220,209,0.08)",
-                  borderRadius: "8px",
-                  padding: "12px 16px",
-                  marginTop: "8px",
-                  width: "100%",
-                  cursor: "pointer",
-                }}
+                style={{ background: "rgba(155,126,86,0.1)", borderRadius: "12px", padding: "16px 20px", display: "flex", alignItems: "center", gap: "14px", cursor: "pointer" }}
               >
-                <LinkIcon size={16} color="#9b7e56" />
-                <div style={{ textAlign: "left" }}>
-                  <p className="font-montserrat font-semibold text-white" style={{ fontSize: "13px" }}>Open Editable Template</p>
-                  <p className="font-montserrat" style={{ fontSize: "10px", color: "#706b6b" }}>{getTemplatePlatform(item.editableTemplateUrl)}</p>
+                <div style={{ width: "40px", height: "40px", background: "rgba(155,126,86,0.2)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <ExternalLink size={18} color="#9b7e56" />
                 </div>
-              </button>
+                <div style={{ flex: 1 }}>
+                  <p className="font-montserrat font-semibold text-white" style={{ fontSize: "14px" }}>Open Editable Template</p>
+                  <p className="font-montserrat" style={{ fontSize: "11px", color: "#706b6b" }}>{getTemplatePlatform(item.editableTemplateUrl)}</p>
+                </div>
+                <ChevronRight size={16} color="#706b6b" />
+              </div>
             )}
           </div>
-        </div>
+        </>
       )}
 
-      {/* Non-workbook: banner / hero */}
-      {!isWorkbook && (
-        <div
-          className="relative"
-          style={{ height: bannerSrc ? "220px" : "160px", margin: "14px 0 0", background: heroBg }}
-        >
-          {bannerSrc && <Image src={bannerSrc} alt={item.title} fill style={{ objectFit: "cover" }} />}
-          <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(34,34,34,0.85) 100%)" }} />
-
-          {/* Type badge */}
-          <div className="absolute top-4 left-4">
-            <span
-              className="font-montserrat font-semibold uppercase"
-              style={{ fontSize: "9px", letterSpacing: "0.10em", background: "rgba(34,34,34,0.75)", color: "#e4dcd1", padding: "4px 12px", borderRadius: "20px", backdropFilter: "blur(4px)" }}
-            >
-              {pillStyle.label}
-            </span>
-          </div>
-
-          {/* Play overlay for video */}
-          {isVideo && (
-            <div className="absolute inset-0 flex items-center justify-center" style={{ paddingBottom: "60px" }}>
-              <div style={{ width: "44px", height: "44px", borderRadius: "50%", background: "rgba(228,220,209,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Play size={18} color="#e4dcd1" fill="#e4dcd1" />
-              </div>
+      {/* ── BLOG POST / COURSE / INDUSTRY UPDATE ── */}
+      {!isVideo && !isWorkbook && (
+        <>
+          {/* Banner / hero */}
+          <div
+            className="relative"
+            style={{ height: bannerSrc ? "220px" : "160px", margin: "14px 0 0", background: heroBg }}
+          >
+            {bannerSrc && <Image src={bannerSrc} alt={item.title} fill style={{ objectFit: "cover" }} />}
+            <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(34,34,34,0.85) 100%)" }} />
+            <div className="absolute top-4 left-4">
+              <span className="font-montserrat font-semibold uppercase" style={{ fontSize: "9px", letterSpacing: "0.10em", background: "rgba(34,34,34,0.75)", color: "#e4dcd1", padding: "4px 12px", borderRadius: "20px", backdropFilter: "blur(4px)" }}>
+                {pillStyle.label}
+              </span>
             </div>
-          )}
-
-          {/* Title overlay */}
-          <div className="absolute bottom-0 left-0 right-0" style={{ padding: "0 20px 18px" }}>
-            <h1 className="font-playfair italic font-normal text-white" style={{ fontSize: "22px", lineHeight: 1.25 }}>
-              {item.title}
-            </h1>
-            <div className="flex items-center gap-3 mt-1.5">
-              {item.readingTimeMinutes && (
-                <div className="flex items-center gap-1">
-                  <Clock size={11} color="#706b6b" />
-                  <span className="font-montserrat text-white/40" style={{ fontSize: "11px" }}>{item.readingTimeMinutes} min read</span>
-                </div>
-              )}
-              {item.categories.map((cat) => (
-                <span key={cat} className="font-montserrat font-semibold uppercase text-white/30" style={{ fontSize: "9px", letterSpacing: "0.08em" }}>
-                  {cat.replace(/_/g, " ")}
-                </span>
-              ))}
+            <div className="absolute bottom-0 left-0 right-0" style={{ padding: "0 20px 18px" }}>
+              <h1 className="font-playfair italic font-normal text-white" style={{ fontSize: "22px", lineHeight: 1.25 }}>
+                {item.title}
+              </h1>
             </div>
           </div>
-        </div>
-      )}
 
-      {/* Video embed */}
-      {isVideo && item.videoEmbedUrl && getEmbedUrl(item.videoEmbedUrl) && (
-        <div style={{ padding: "20px 20px 0" }}>
-          <div style={{ position: "relative", background: "#000000", borderRadius: "8px", overflow: "hidden", aspectRatio: "16/9" }}>
-            <iframe
-              src={getEmbedUrl(item.videoEmbedUrl)!}
-              width="100%"
-              height="100%"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              referrerPolicy="strict-origin-when-cross-origin"
-              style={{ display: "block", border: "none" }}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Body (all types) */}
-      {item.body && (
-        <div style={{ padding: "24px 20px 0" }}>
-          <div className="rich-content" dangerouslySetInnerHTML={{ __html: item.body }} />
-        </div>
-      )}
-
-      {/* Video transcript */}
-      {isVideo && item.videoTranscript && (
-        <div style={{ padding: "24px 20px 0" }}>
-          <p className="font-montserrat font-bold uppercase text-white/30 mb-3" style={{ fontSize: "9px", letterSpacing: "0.12em" }}>Notes</p>
-          <div style={{ background: "#2a2a2a", borderRadius: "10px", padding: "16px", border: "1px solid rgba(228,220,209,0.06)" }}>
-            <p className="font-montserrat text-white/60" style={{ fontSize: "13px", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
-              {item.videoTranscript}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Category tags (non-workbook) */}
-      {item.categories.length > 0 && !isWorkbook && (
-        <div style={{ padding: "24px 20px 0" }}>
-          <div className="flex flex-wrap gap-2">
+          {/* Type pill + categories */}
+          <div style={{ padding: "16px 20px 0", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px" }}>
             {item.categories.map((cat) => (
-              <span
+              <button
                 key={cat}
+                onClick={() => router.push(`/learn?category=${cat}`)}
                 className="font-montserrat font-semibold uppercase"
-                style={{ fontSize: "9px", letterSpacing: "0.08em", background: "#2a2a2a", color: "#706b6b", padding: "4px 12px", borderRadius: "20px", border: "1px solid rgba(255,255,255,0.06)" }}
+                style={{ fontSize: "9px", letterSpacing: "0.08em", background: "#333333", color: "#706b6b", padding: "3px 8px", borderRadius: "20px", cursor: "pointer", border: "none" }}
               >
                 {cat.replace(/_/g, " ")}
-              </span>
+              </button>
             ))}
           </div>
-        </div>
+
+          {/* Meta row */}
+          <div style={{ padding: "12px 20px 12px", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "12px" }}>
+            {publishedDate && <span className="font-montserrat" style={{ fontSize: "11px", color: "#706b6b" }}>{publishedDate}</span>}
+            {item.readingTimeMinutes && <span className="font-montserrat" style={{ fontSize: "11px", color: "#706b6b" }}>{item.readingTimeMinutes} min read</span>}
+          </div>
+
+          {/* Body */}
+          {item.body && (
+            <div style={{ padding: "0 20px 16px" }}>
+              <div className="rich-content" dangerouslySetInnerHTML={{ __html: item.body }} />
+            </div>
+          )}
+        </>
       )}
     </div>
   );

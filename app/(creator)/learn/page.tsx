@@ -1,7 +1,8 @@
 "use client";
 
-import { Search, Play, FileText, Download, Link as LinkIcon, BookOpen } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Search, Play, BookOpen } from "lucide-react";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -29,16 +30,6 @@ const TYPE_FILTERS = [
   { label: "INDUSTRY UPDATE", value: "industry_update" },
 ];
 
-const CATEGORY_FILTERS = [
-  { label: "ALL",              value: "all" },
-  { label: "SOCIAL MEDIA",    value: "social_media" },
-  { label: "CONTENT CREATION", value: "content_creation" },
-  { label: "BRAND DEALS",     value: "brand_deals" },
-  { label: "GROWTH",          value: "growth" },
-  { label: "MINDSET",         value: "mindset" },
-  { label: "TIPS & TRICKS",   value: "tips_and_tricks" },
-];
-
 const TYPE_PILL_STYLE: Record<string, { bg: string; text: string; border?: string; label: string }> = {
   blog_post:       { bg: "#8b6f5e", text: "#e4dcd1", label: "BLOG" },
   workbook:        { bg: "#4a5e4a", text: "#e4dcd1", label: "WORKBOOK" },
@@ -48,108 +39,50 @@ const TYPE_PILL_STYLE: Record<string, { bg: string; text: string; border?: strin
 };
 
 const TYPE_BG: Record<string, string> = {
-  blog_post: "#8b6f5e",
-  workbook:  "#4a5e4a",
-  video:     "#3d3550",
-  course:    "#222222",
+  blog_post:       "#8b6f5e",
+  workbook:        "#4a5e4a",
+  video:           "#3d3550",
+  course:          "#222222",
   industry_update: "#706b6b",
 };
 
-function getTemplatePlatform(url: string): string {
-  if (url.includes("canva.com")) return "Opens in Canva";
-  if (url.includes("google.com")) return "Opens in Google";
-  return "Open link";
-}
-
 function ContentCard({ item }: { item: ContentItem }) {
+  const router = useRouter();
   const isWorkbook = item.contentType === "workbook";
   const isVideo = item.contentType === "video";
   const hasThumbnail = !!item.thumbnailUrl;
   const pillStyle = TYPE_PILL_STYLE[item.contentType] ?? TYPE_PILL_STYLE.blog_post;
   const bg = TYPE_BG[item.contentType] ?? "#3a3a3a";
 
-  // Workbook: compact card with download + template actions
+  // Workbook: thumbnail image if available, then PDF icon fallback — fully clickable
   if (isWorkbook) {
     return (
       <div
+        onClick={() => router.push(`/learn/${item.id}`)}
+        className="cursor-pointer"
         style={{
           background: "#2a2a2a",
           borderRadius: "12px",
-          padding: "14px",
+          overflow: "hidden",
           border: "1px solid rgba(228,220,209,0.08)",
         }}
       >
-        {/* Header row */}
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <div
-            className="flex items-center justify-center flex-shrink-0"
-            style={{ width: "48px", height: "48px", background: "#333333", borderRadius: "8px" }}
-          >
-            <FileText size={20} color="#4a5e4a" strokeWidth={1.5} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <span
-              className="font-montserrat font-semibold uppercase"
-              style={{ fontSize: "9px", letterSpacing: "0.10em", background: pillStyle.bg, color: pillStyle.text, padding: "2px 8px", borderRadius: "20px", display: "inline-block" }}
-            >
+        {/* Thumbnail area */}
+        <div className="relative" style={{ height: "180px", background: hasThumbnail ? undefined : bg }}>
+          {hasThumbnail ? (
+            <Image src={item.thumbnailUrl!} alt={item.title} fill style={{ objectFit: "cover" }} />
+          ) : null}
+          <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.2)" }} />
+          <div className="absolute top-3 left-3">
+            <span className="font-montserrat font-semibold uppercase" style={{ fontSize: "9px", letterSpacing: "0.10em", background: pillStyle.bg, color: pillStyle.text, padding: "3px 10px", borderRadius: "20px" }}>
               {pillStyle.label}
             </span>
-            <p className="font-playfair font-normal text-white truncate" style={{ fontSize: "14px", marginTop: "3px", lineHeight: 1.3 }}>
-              {item.title}
-            </p>
           </div>
         </div>
-
-        {/* PDF download */}
-        {item.pdfUrl && (
-          <a
-            href={item.pdfUrl}
-            target="_blank"
-            rel="noreferrer"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-              background: "#333333",
-              borderRadius: "8px",
-              padding: "12px 16px",
-              marginTop: "12px",
-              textDecoration: "none",
-              cursor: "pointer",
-            }}
-          >
-            <Download size={16} color="#4a5e4a" />
-            <div>
-              <p className="font-montserrat font-semibold text-white" style={{ fontSize: "13px" }}>Download Workbook</p>
-              <p className="font-montserrat" style={{ fontSize: "10px", color: "#706b6b" }}>PDF</p>
-            </div>
-          </a>
-        )}
-
-        {/* Editable template */}
-        {item.editableTemplateUrl && (
-          <button
-            onClick={() => window.open(item.editableTemplateUrl!, "_blank")}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-              background: "#2a2a2a",
-              border: "1px solid rgba(228,220,209,0.08)",
-              borderRadius: "8px",
-              padding: "12px 16px",
-              marginTop: "8px",
-              width: "100%",
-              cursor: "pointer",
-            }}
-          >
-            <LinkIcon size={16} color="#9b7e56" />
-            <div style={{ textAlign: "left" }}>
-              <p className="font-montserrat font-semibold text-white" style={{ fontSize: "13px" }}>Open Editable Template</p>
-              <p className="font-montserrat" style={{ fontSize: "10px", color: "#706b6b" }}>{getTemplatePlatform(item.editableTemplateUrl)}</p>
-            </div>
-          </button>
-        )}
+        <div style={{ padding: "12px" }}>
+          <p className="font-playfair font-normal text-white" style={{ fontSize: "15px", lineHeight: 1.3 }}>{item.title}</p>
+          <p className="font-montserrat font-normal mt-1" style={{ fontSize: "11px", color: "#706b6b" }}>Workbook</p>
+        </div>
       </div>
     );
   }
@@ -241,7 +174,9 @@ function ContentCard({ item }: { item: ContentItem }) {
   );
 }
 
-export default function LearnPage() {
+function LearnPageInner() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [activeType, setActiveType] = useState("all");
   const [activeCategory, setActiveCategory] = useState("all");
   const [search, setSearch] = useState("");
@@ -254,6 +189,14 @@ export default function LearnPage() {
       .then((data) => { setItems(data); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    const categoryParam = searchParams.get("category");
+    if (categoryParam) setActiveCategory(categoryParam);
+  }, [searchParams]);
+
+  // Suppress unused warning — router used in ContentCard via prop drilling is not needed here
+  void router;
 
   const filtered = items.filter((item) => {
     const matchType = activeType === "all" || item.contentType === activeType;
@@ -291,30 +234,13 @@ export default function LearnPage() {
       </div>
 
       {/* Type filter pills */}
-      <div className="flex gap-2 overflow-x-auto" style={{ padding: "0 20px 10px", scrollbarWidth: "none" }}>
+      <div className="flex gap-2 overflow-x-auto" style={{ padding: "0 20px 20px", scrollbarWidth: "none" }}>
         {TYPE_FILTERS.map((f) => {
           const isActive = activeType === f.value;
           return (
             <button
               key={f.value}
               onClick={() => setActiveType(f.value)}
-              className="flex-none font-montserrat font-semibold uppercase transition-colors"
-              style={{ ...pillBase, background: isActive ? "#e4dcd1" : "transparent", color: isActive ? "#222222" : "#706b6b", border: isActive ? "none" : "1px solid rgba(228,220,209,0.25)" }}
-            >
-              {f.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Category filter pills */}
-      <div className="flex gap-2 overflow-x-auto" style={{ padding: "0 20px 20px", scrollbarWidth: "none" }}>
-        {CATEGORY_FILTERS.map((f) => {
-          const isActive = activeCategory === f.value;
-          return (
-            <button
-              key={f.value}
-              onClick={() => setActiveCategory(f.value)}
               className="flex-none font-montserrat font-semibold uppercase transition-colors"
               style={{ ...pillBase, background: isActive ? "#e4dcd1" : "transparent", color: isActive ? "#222222" : "#706b6b", border: isActive ? "none" : "1px solid rgba(228,220,209,0.25)" }}
             >
@@ -342,5 +268,13 @@ export default function LearnPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function LearnPage() {
+  return (
+    <Suspense>
+      <LearnPageInner />
+    </Suspense>
   );
 }
