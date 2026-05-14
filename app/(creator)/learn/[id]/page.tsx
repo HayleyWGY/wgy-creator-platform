@@ -213,10 +213,11 @@ export default function LearnDetailPage() {
       {/* ── WORKBOOK ── */}
       {isWorkbook && (
         <>
-          {/* Thumbnail image at top */}
-          {item.thumbnailUrl && (
-            <div style={{ margin: "14px 0 0", height: "260px", background: "#1a1a1a", overflow: "hidden", position: "relative" }}>
-              <Image src={item.thumbnailUrl} alt={item.title} fill style={{ objectFit: "contain" }} />
+          {/* Banner image at top */}
+          {bannerSrc && (
+            <div className="relative" style={{ margin: "14px 0 0", height: "220px", background: heroBg, overflow: "hidden" }}>
+              <Image src={bannerSrc} alt={item.title} fill style={{ objectFit: "cover" }} />
+              <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(34,34,34,0.4) 100%)" }} />
             </div>
           )}
 
