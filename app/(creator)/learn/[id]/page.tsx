@@ -105,18 +105,23 @@ export default function LearnDetailPage() {
   const isWorkbook = item.contentType === "workbook";
   const isVideo = item.contentType === "video";
 
-  function triggerPdfDownload() {
+  async function triggerPdfDownload() {
     if (!item?.pdfUrl) return;
-    const downloadUrl = item.pdfUrl.includes("cloudinary.com")
-      ? item.pdfUrl + "?fl_attachment=true"
-      : item.pdfUrl;
-    const link = document.createElement("a");
-    link.href = downloadUrl;
-    link.download = item.title + ".pdf";
-    link.target = "_blank";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      const res = await fetch(item.pdfUrl);
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = item.title + ".pdf";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(objectUrl);
+    } catch {
+      // Fallback: open in new tab if fetch fails (e.g. CORS)
+      window.open(item.pdfUrl, "_blank");
+    }
   }
 
   const publishedDate = item.publishedAt
