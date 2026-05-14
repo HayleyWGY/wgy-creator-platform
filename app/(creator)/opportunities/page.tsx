@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { CampaignCard } from "@/components/creator/campaign-card";
 import { OPPORTUNITY_FILTERS } from "@/lib/constants";
+import { getAge } from "@/lib/utils";
 
 interface Campaign {
   id: string;
@@ -20,15 +21,6 @@ interface Campaign {
   eventDate: string | null;
 }
 
-function getAge(createdAt: string): string {
-  const diff = Date.now() - new Date(createdAt).getTime();
-  const mins  = Math.floor(diff / 60000);
-  const hours = Math.floor(diff / 3600000);
-  const days  = Math.floor(diff / 86400000);
-  if (days > 0)  return `${days}d ago`;
-  if (hours > 0) return `${hours}h ago`;
-  return `${mins}m ago`;
-}
 
 export default function OpportunitiesPage() {
   const [activeFilter, setActiveFilter] = useState("All");

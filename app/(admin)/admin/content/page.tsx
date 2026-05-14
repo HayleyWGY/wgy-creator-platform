@@ -4,21 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { Plus, Pencil, Trash2, Eye, Search, Upload, X } from "lucide-react";
 import Image from "next/image";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
-
-function getEmbedUrl(url: string): string | null {
-  if (!url) return null;
-  if (url.includes("/embed/")) return url;
-  const youtubePatterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/|m\.youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/,
-  ];
-  for (const pattern of youtubePatterns) {
-    const match = url.match(pattern);
-    if (match) return `https://www.youtube.com/embed/${match[1]}?rel=0&modestbranding=1`;
-  }
-  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
-  if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
-  return null;
-}
+import { getEmbedUrl } from "@/lib/utils";
 
 interface ContentItem {
   id: string;

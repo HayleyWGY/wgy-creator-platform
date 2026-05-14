@@ -6,20 +6,25 @@ import { calculateReadingTime } from "@/lib/reading-time";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const status = searchParams.get("status");
+  const status      = searchParams.get("status");
   const contentType = searchParams.get("contentType");
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const where: Record<string, any> = {};
-  if (status) where.status = status;
-  if (contentType) where.contentType = contentType;
+  try {
+    const where: Record<string, unknown> = {};
+    if (status)      where.status      = status;
+    if (contentType) where.contentType = contentType;
 
-  const items = await prisma.postContent.findMany({
-    where,
-    orderBy: [{ sortOrder: "asc" }, { publishedAt: "desc" }, { createdAt: "desc" }],
-  });
+    const items = await prisma.postContent.findMany({
+      where,
+      orderBy: [{ sortOrder: "asc" }, { publishedAt: "desc" }, { createdAt: "desc" }],
+      take: 200, // prevent unbounded queries
+    });
 
-  return NextResponse.json(items);
+    return NextResponse.json(items);
+  } catch (err) {
+    console.error("[GET /api/content]", err);
+    return NextResponse.json({ error: "Failed to load content" }, { status: 500 });
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -28,31 +33,35 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const body = await req.json();
+  try {
+    const body = await req.json();
+    const readingTimeMinutes = body.body ? calculateReadingTime(body.body) : null;
 
-  const readingTimeMinutes = body.body ? calculateReadingTime(body.body) : null;
+    const item = await prisma.postContent.create({
+      data: {
+        title:               body.title,
+        contentType:         body.contentType,
+        body:                body.body ?? null,
+        pdfUrl:              body.pdfUrl ?? null,
+        editableTemplateUrl: body.editableTemplateUrl ?? null,
+        videoEmbedUrl:       body.videoEmbedUrl ?? null,
+        videoTranscript:     body.videoTranscript ?? null,
+        thumbnailUrl:        body.thumbnailUrl ?? null,
+        bannerImageUrl:      body.bannerImageUrl ?? null,
+        section:             body.section,
+        categories:          body.categories ?? [],
+        status:              body.status ?? "draft",
+        scheduledAt:         body.scheduledAt ? new Date(body.scheduledAt) : null,
+        publishedAt:         body.status === "published" ? new Date() : null,
+        authorId:            body.authorId ?? session.user.id,
+        sortOrder:           body.sortOrder ?? 0,
+        readingTimeMinutes,
+      },
+    });
 
-  const item = await prisma.postContent.create({
-    data: {
-      title: body.title,
-      contentType: body.contentType,
-      body: body.body ?? null,
-      pdfUrl: body.pdfUrl ?? null,
-      editableTemplateUrl: body.editableTemplateUrl ?? null,
-      videoEmbedUrl: body.videoEmbedUrl ?? null,
-      videoTranscript: body.videoTranscript ?? null,
-      thumbnailUrl: body.thumbnailUrl ?? null,
-      bannerImageUrl: body.bannerImageUrl ?? null,
-      section: body.section,
-      categories: body.categories ?? [],
-      status: body.status ?? "draft",
-      scheduledAt: body.scheduledAt ? new Date(body.scheduledAt) : null,
-      publishedAt: body.status === "published" ? new Date() : null,
-      authorId: body.authorId ?? session.user.id,
-      sortOrder: body.sortOrder ?? 0,
-      readingTimeMinutes,
-    },
-  });
-
-  return NextResponse.json(item, { status: 201 });
+    return NextResponse.json(item, { status: 201 });
+  } catch (err) {
+    console.error("[POST /api/content]", err);
+    return NextResponse.json({ error: "Failed to create content" }, { status: 500 });
+  }
 }

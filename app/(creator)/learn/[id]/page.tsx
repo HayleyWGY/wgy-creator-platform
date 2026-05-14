@@ -4,21 +4,8 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { ArrowLeft, Download, ExternalLink, ChevronRight } from "lucide-react";
-
-function getEmbedUrl(url: string): string | null {
-  if (!url) return null;
-  if (url.includes("/embed/")) return url;
-  const youtubePatterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/|m\.youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/,
-  ];
-  for (const pattern of youtubePatterns) {
-    const match = url.match(pattern);
-    if (match) return `https://www.youtube.com/embed/${match[1]}?rel=0&modestbranding=1`;
-  }
-  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
-  if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
-  return null;
-}
+import { getEmbedUrl } from "@/lib/utils";
+import { CONTENT_TYPE_BG, CONTENT_TYPE_PILL } from "@/lib/constants";
 
 function getTemplatePlatform(url: string): string {
   if (url.includes("canva.com")) return "Opens in Canva";
@@ -42,22 +29,6 @@ interface ContentItem {
   videoEmbedUrl: string | null;
   videoTranscript: string | null;
 }
-
-const TYPE_PILL_STYLE: Record<string, { bg: string; text: string; border?: string; label: string }> = {
-  blog_post:       { bg: "#8b6f5e", text: "#e4dcd1", label: "BLOG" },
-  workbook:        { bg: "#4a5e4a", text: "#e4dcd1", label: "WORKBOOK" },
-  video:           { bg: "#3d3550", text: "#e4dcd1", label: "VIDEO" },
-  course:          { bg: "#222222", text: "#e4dcd1", border: "1px solid rgba(228,220,209,0.2)", label: "COURSE" },
-  industry_update: { bg: "#706b6b", text: "#e4dcd1", label: "INDUSTRY UPDATE" },
-};
-
-const TYPE_BG: Record<string, string> = {
-  blog_post:       "#8b6f5e",
-  workbook:        "#4a5e4a",
-  video:           "#3d3550",
-  course:          "#222222",
-  industry_update: "#706b6b",
-};
 
 export default function LearnDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -99,8 +70,8 @@ export default function LearnDetailPage() {
     );
   }
 
-  const pillStyle = TYPE_PILL_STYLE[item.contentType] ?? TYPE_PILL_STYLE.blog_post;
-  const heroBg = TYPE_BG[item.contentType] ?? "#3a3a3a";
+  const pillStyle = CONTENT_TYPE_PILL[item.contentType] ?? CONTENT_TYPE_PILL.blog_post;
+  const heroBg = CONTENT_TYPE_BG[item.contentType] ?? "#3a3a3a";
   const bannerSrc = item.bannerImageUrl || item.thumbnailUrl;
   const isWorkbook = item.contentType === "workbook";
   const isVideo = item.contentType === "video";

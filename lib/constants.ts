@@ -1,5 +1,5 @@
 // ─── External URLs ────────────────────────────────────────────────────────────
-export const WGY_WEBSITE_URL = 'https://wegotyouagency.com'
+export const WGY_WEBSITE_URL    = 'https://wegotyouagency.com'
 export const ASA_GUIDELINES_URL = 'https://www.asa.org.uk'
 
 // ─── Navigation ───────────────────────────────────────────────────────────────
@@ -23,14 +23,6 @@ export const OPPORTUNITY_FILTERS = [
   'Events',
 ] as const
 
-export const LEARN_FILTERS = [
-  'All',
-  'Videos',
-  'Workbooks',
-  'Articles',
-  'Courses',
-] as const
-
 // ─── Community rooms ──────────────────────────────────────────────────────────
 // Channel IDs must stay in sync with Stream Chat channel configuration.
 // See lib/stream.ts for the StreamChat client.
@@ -42,3 +34,34 @@ export const COMMUNITY_ROOMS = [
   { id: 'events-chat',     name: 'Events Chat',                 emoji: '🎪' },
   { id: 'creator-corner',  name: 'The Creator Corner',          emoji: '⭐' },
 ] as const
+
+// ─── Learning content type styles ────────────────────────────────────────────
+// Single source of truth used by learn/page.tsx, learn/[id]/page.tsx, and home/page.tsx
+export const CONTENT_TYPE_BG: Record<string, string> = {
+  blog_post:       '#8b6f5e',
+  workbook:        '#4a5e4a',
+  video:           '#3d3550',
+  course:          '#222222',
+  industry_update: '#706b6b',
+}
+
+export const CONTENT_TYPE_LABEL: Record<string, string> = {
+  blog_post:       'BLOG',
+  workbook:        'WORKBOOK',
+  video:           'VIDEO',
+  course:          'COURSE',
+  industry_update: 'INDUSTRY UPDATE',
+}
+
+export const CONTENT_TYPE_PILL: Record<string, {
+  bg: string
+  text: string
+  border?: string
+  label: string
+}> = {
+  blog_post:       { bg: '#8b6f5e', text: '#e4dcd1', label: 'BLOG' },
+  workbook:        { bg: '#4a5e4a', text: '#e4dcd1', label: 'WORKBOOK' },
+  video:           { bg: '#3d3550', text: '#e4dcd1', label: 'VIDEO' },
+  course:          { bg: '#222222', text: '#e4dcd1', border: '1px solid rgba(228,220,209,0.2)', label: 'COURSE' },
+  industry_update: { bg: '#706b6b', text: '#e4dcd1', label: 'INDUSTRY UPDATE' },
+}

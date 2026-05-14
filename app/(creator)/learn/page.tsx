@@ -5,6 +5,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { CONTENT_TYPE_BG, CONTENT_TYPE_PILL } from "@/lib/constants";
 
 interface ContentItem {
   id: string;
@@ -30,29 +31,14 @@ const TYPE_FILTERS = [
   { label: "INDUSTRY UPDATE", value: "industry_update" },
 ];
 
-const TYPE_PILL_STYLE: Record<string, { bg: string; text: string; border?: string; label: string }> = {
-  blog_post:       { bg: "#8b6f5e", text: "#e4dcd1", label: "BLOG" },
-  workbook:        { bg: "#4a5e4a", text: "#e4dcd1", label: "WORKBOOK" },
-  video:           { bg: "#3d3550", text: "#e4dcd1", label: "VIDEO" },
-  course:          { bg: "#222222", text: "#e4dcd1", border: "1px solid rgba(228,220,209,0.2)", label: "COURSE" },
-  industry_update: { bg: "#706b6b", text: "#e4dcd1", label: "INDUSTRY UPDATE" },
-};
-
-const TYPE_BG: Record<string, string> = {
-  blog_post:       "#8b6f5e",
-  workbook:        "#4a5e4a",
-  video:           "#3d3550",
-  course:          "#222222",
-  industry_update: "#706b6b",
-};
 
 function ContentCard({ item }: { item: ContentItem }) {
   const router = useRouter();
   const isWorkbook = item.contentType === "workbook";
   const isVideo = item.contentType === "video";
   const hasThumbnail = !!item.thumbnailUrl;
-  const pillStyle = TYPE_PILL_STYLE[item.contentType] ?? TYPE_PILL_STYLE.blog_post;
-  const bg = TYPE_BG[item.contentType] ?? "#3a3a3a";
+  const pillStyle = CONTENT_TYPE_PILL[item.contentType] ?? CONTENT_TYPE_PILL.blog_post;
+  const bg = CONTENT_TYPE_BG[item.contentType] ?? "#3a3a3a";
 
   // Workbook: thumbnail image if available, then PDF icon fallback — fully clickable
   if (isWorkbook) {

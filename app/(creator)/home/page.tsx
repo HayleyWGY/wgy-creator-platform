@@ -7,6 +7,8 @@ import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { CampaignCard } from "@/components/creator/campaign-card";
 import { PillTag } from "@/components/ui/pill-tag";
+import { getAge } from "@/lib/utils";
+import { CONTENT_TYPE_BG, CONTENT_TYPE_LABEL } from "@/lib/constants";
 
 interface Campaign {
   id: string;
@@ -29,14 +31,6 @@ interface LearnItem {
   readingTimeMinutes: number | null;
 }
 
-function getAge(createdAt: string): string {
-  const diff = Date.now() - new Date(createdAt).getTime();
-  const days  = Math.floor(diff / 86400000);
-  const hours = Math.floor(diff / 3600000);
-  if (days > 0)  return `${days}d ago`;
-  if (hours > 0) return `${hours}h ago`;
-  return "Just now";
-}
 
 export default function HomePage() {
   const { data: session } = useSession();
@@ -172,9 +166,7 @@ export default function HomePage() {
           {learnItems.map((item) => {
             const isVideo = item.contentType === "video";
             const isWorkbook = item.contentType === "workbook";
-            const TYPE_BG: Record<string, string> = { blog_post: "#8b6f5e", workbook: "#4a5e4a", video: "#3d3550", course: "#222222", industry_update: "#706b6b" };
-            const TYPE_LABEL: Record<string, string> = { blog_post: "BLOG", workbook: "WORKBOOK", video: "VIDEO", course: "COURSE", industry_update: "UPDATE" };
-            const bg = TYPE_BG[item.contentType] ?? "#3a3a3a";
+            const bg = CONTENT_TYPE_BG[item.contentType] ?? "#3a3a3a";
             const meta = isWorkbook ? "Workbook" : isVideo ? "Video" : item.readingTimeMinutes ? `${item.readingTimeMinutes} min read` : item.contentType.replace(/_/g, " ");
             return (
               <Link
@@ -210,7 +202,7 @@ export default function HomePage() {
                       className="font-montserrat font-semibold uppercase"
                       style={{ fontSize: "8px", letterSpacing: "0.08em", background: "rgba(34,34,34,0.75)", color: "#e4dcd1", padding: "2px 6px", borderRadius: "20px" }}
                     >
-                      {TYPE_LABEL[item.contentType] ?? item.contentType.replace(/_/g, " ")}
+                      {CONTENT_TYPE_LABEL[item.contentType] ?? item.contentType.replace(/_/g, " ")}
                     </span>
                   </div>
                 </div>

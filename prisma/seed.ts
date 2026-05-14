@@ -54,9 +54,12 @@ async function main() {
   ]
 
   for (const template of templates) {
-    await prisma.messageTemplate.create({
-      data: template,
+    const existing = await prisma.messageTemplate.findFirst({
+      where: { sequenceName: template.sequenceName, dayOffset: template.dayOffset },
     })
+    if (!existing) {
+      await prisma.messageTemplate.create({ data: template })
+    }
   }
   console.log("✓ Message templates seeded")
 
