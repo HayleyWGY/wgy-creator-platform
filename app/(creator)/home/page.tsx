@@ -171,10 +171,11 @@ export default function HomePage() {
         <div className="flex gap-3 overflow-x-auto pl-5 pr-8 pb-1" style={{ scrollbarWidth: "none" }}>
           {learnItems.map((item) => {
             const isVideo = item.contentType === "video";
-            const isPdf = item.contentType === "pdf";
-            const isTemplate = item.contentType === "template";
-            const bg = isVideo ? "#3d3550" : isPdf ? "#2e3e2e" : isTemplate ? "#4a3a2e" : "#4a3a3a";
-            const meta = isVideo ? "Video" : isPdf ? "Download" : isTemplate ? "Template" : item.readingTimeMinutes ? `${item.readingTimeMinutes} min read` : "Article";
+            const isWorkbook = item.contentType === "workbook";
+            const TYPE_BG: Record<string, string> = { blog_post: "#8b6f5e", workbook: "#4a5e4a", video: "#3d3550", course: "#222222", industry_update: "#706b6b" };
+            const TYPE_LABEL: Record<string, string> = { blog_post: "BLOG", workbook: "WORKBOOK", video: "VIDEO", course: "COURSE", industry_update: "UPDATE" };
+            const bg = TYPE_BG[item.contentType] ?? "#3a3a3a";
+            const meta = isWorkbook ? "Workbook" : isVideo ? "Video" : item.readingTimeMinutes ? `${item.readingTimeMinutes} min read` : item.contentType.replace(/_/g, " ");
             return (
               <Link
                 key={item.id}
@@ -197,7 +198,7 @@ export default function HomePage() {
                     <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "rgba(228,220,209,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <Play size={12} color="#e4dcd1" fill="#e4dcd1" />
                     </div>
-                  ) : (isPdf || isTemplate) ? (
+                  ) : isWorkbook ? (
                     <FileText size={24} color="#e4dcd1" strokeWidth={1.5} />
                   ) : null}
 
@@ -209,7 +210,7 @@ export default function HomePage() {
                       className="font-montserrat font-semibold uppercase"
                       style={{ fontSize: "8px", letterSpacing: "0.08em", background: "rgba(34,34,34,0.75)", color: "#e4dcd1", padding: "2px 6px", borderRadius: "20px" }}
                     >
-                      {item.contentType}
+                      {TYPE_LABEL[item.contentType] ?? item.contentType.replace(/_/g, " ")}
                     </span>
                   </div>
                 </div>

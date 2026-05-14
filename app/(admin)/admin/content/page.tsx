@@ -27,29 +27,34 @@ interface ContentItem {
 }
 
 const CONTENT_TYPES = [
-  { value: "article", label: "Article" },
+  { value: "blog_post", label: "Blog Post" },
+  { value: "workbook", label: "Workbook" },
   { value: "video", label: "Video" },
-  { value: "pdf", label: "PDF Guide" },
-  { value: "template", label: "Template" },
-];
-
-const SECTIONS = [
-  { value: "pitching", label: "Pitching & Outreach" },
-  { value: "content", label: "Content Creation" },
-  { value: "brand-deals", label: "Brand Deals" },
-  { value: "growth", label: "Growth" },
-  { value: "mindset", label: "Mindset & Business" },
+  { value: "course", label: "Course" },
+  { value: "industry_update", label: "Industry Update" },
 ];
 
 const CATEGORY_OPTIONS = [
-  "Beginner", "Advanced", "Quick Read", "Deep Dive",
-  "Templates", "Scripts", "Case Study", "Checklist",
+  { label: "Social Media", value: "social_media" },
+  { label: "Content Creation", value: "content_creation" },
+  { label: "Brand Deals", value: "brand_deals" },
+  { label: "Growth", value: "growth" },
+  { label: "Mindset", value: "mindset" },
+  { label: "Tips & Tricks", value: "tips_and_tricks" },
 ];
+
+const TYPE_PILL: Record<string, { bg: string; text: string; border?: string; label: string }> = {
+  blog_post:       { bg: "#8b6f5e", text: "#e4dcd1", label: "BLOG" },
+  workbook:        { bg: "#4a5e4a", text: "#e4dcd1", label: "WORKBOOK" },
+  video:           { bg: "#3d3550", text: "#e4dcd1", label: "VIDEO" },
+  course:          { bg: "#222222", text: "#e4dcd1", border: "1px solid rgba(228,220,209,0.2)", label: "COURSE" },
+  industry_update: { bg: "#706b6b", text: "#e4dcd1", label: "INDUSTRY UPDATE" },
+};
 
 const EMPTY_FORM = {
   title: "",
-  contentType: "article",
-  section: "pitching",
+  contentType: "blog_post",
+  section: "general",
   categories: [] as string[],
   status: "draft",
   scheduledAt: "",
@@ -86,16 +91,13 @@ function StatusPill({ status }: { status: string }) {
 }
 
 function TypePill({ type }: { type: string }) {
-  const colours: Record<string, { bg: string; text: string }> = {
-    article: { bg: "rgba(228,220,209,0.15)", text: "#e4dcd1" },
-    video: { bg: "rgba(61,53,80,0.5)", text: "#c4b5fd" },
-    pdf: { bg: "rgba(39,174,96,0.15)", text: "#27AE60" },
-    template: { bg: "rgba(155,126,86,0.2)", text: "#9b7e56" },
-  };
-  const c = colours[type] ?? colours.article;
+  const p = TYPE_PILL[type] ?? TYPE_PILL.blog_post;
   return (
-    <span className="font-montserrat font-bold uppercase" style={{ fontSize: "8px", letterSpacing: "0.08em", background: c.bg, color: c.text, padding: "2px 7px", borderRadius: "20px" }}>
-      {type}
+    <span
+      className="font-montserrat font-bold uppercase"
+      style={{ fontSize: "8px", letterSpacing: "0.08em", background: p.bg, color: p.text, border: p.border, padding: "2px 7px", borderRadius: "20px" }}
+    >
+      {p.label}
     </span>
   );
 }
@@ -116,7 +118,6 @@ export default function ContentPage() {
   const thumbnailRef = useRef<HTMLInputElement>(null);
   const bannerRef = useRef<HTMLInputElement>(null);
   const pdfRef = useRef<HTMLInputElement>(null);
-  const templateRef = useRef<HTMLInputElement>(null);
 
   async function fetchItems() {
     setLoading(true);
@@ -139,7 +140,7 @@ export default function ContentPage() {
     setForm({
       title: item.title,
       contentType: item.contentType,
-      section: item.section,
+      section: item.section ?? "general",
       categories: item.categories ?? [],
       status: item.status,
       scheduledAt: item.scheduledAt ? item.scheduledAt.slice(0, 16) : "",
@@ -183,12 +184,12 @@ export default function ContentPage() {
     setUploadingField(null);
   }
 
-  function toggleCategory(cat: string) {
+  function toggleCategory(value: string) {
     setForm((f) => ({
       ...f,
-      categories: f.categories.includes(cat)
-        ? f.categories.filter((c) => c !== cat)
-        : [...f.categories, cat],
+      categories: f.categories.includes(value)
+        ? f.categories.filter((c) => c !== value)
+        : [...f.categories, value],
     }));
   }
 
@@ -198,6 +199,14 @@ export default function ContentPage() {
     const matchStatus = filterStatus === "all" || item.status === filterStatus;
     return matchSearch && matchType && matchStatus;
   });
+
+  const bodyConfig: Record<string, { label: string; placeholder: string }> = {
+    blog_post:       { label: "CONTENT",            placeholder: "Write your blog post..." },
+    workbook:        { label: "DESCRIPTION",         placeholder: "Describe what creators will learn from this workbook..." },
+    video:           { label: "DESCRIPTION",         placeholder: "Describe what creators will learn in this video..." },
+    course:          { label: "LESSON DESCRIPTION",  placeholder: "Describe what this lesson covers..." },
+    industry_update: { label: "CONTENT",             placeholder: "Write your industry update..." },
+  };
 
   return (
     <div style={{ padding: "32px" }}>
@@ -264,7 +273,6 @@ export default function ContentPage() {
               <tr className="border-b border-white/8" style={{ background: "rgba(255,255,255,0.04)" }}>
                 <th className="text-left font-montserrat font-bold uppercase text-[#706b6b] px-4 py-3" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Title</th>
                 <th className="text-left font-montserrat font-bold uppercase text-[#706b6b] px-4 py-3" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Type</th>
-                <th className="text-left font-montserrat font-bold uppercase text-[#706b6b] px-4 py-3" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Section</th>
                 <th className="text-left font-montserrat font-bold uppercase text-[#706b6b] px-4 py-3" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Status</th>
                 <th className="text-left font-montserrat font-bold uppercase text-[#706b6b] px-4 py-3" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Published</th>
                 <th className="px-4 py-3" />
@@ -288,11 +296,6 @@ export default function ContentPage() {
                     </div>
                   </td>
                   <td className="px-4 py-3"><TypePill type={item.contentType} /></td>
-                  <td className="px-4 py-3">
-                    <span className="font-montserrat text-white/50" style={{ fontSize: "12px" }}>
-                      {SECTIONS.find((s) => s.value === item.section)?.label ?? item.section}
-                    </span>
-                  </td>
                   <td className="px-4 py-3"><StatusPill status={item.status} /></td>
                   <td className="px-4 py-3">
                     <span className="font-montserrat text-white/40" style={{ fontSize: "12px" }}>
@@ -366,28 +369,16 @@ export default function ContentPage() {
                 />
               </div>
 
-              {/* Type + Section */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-montserrat font-bold uppercase text-[#706b6b] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Content Type</label>
-                  <select
-                    value={form.contentType}
-                    onChange={(e) => setForm((f) => ({ ...f, contentType: e.target.value }))}
-                    className="w-full bg-white/5 border border-white/10 rounded px-3 py-2.5 text-sm text-white focus:outline-none focus:border-white/30"
-                  >
-                    {CONTENT_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block font-montserrat font-bold uppercase text-[#706b6b] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Section</label>
-                  <select
-                    value={form.section}
-                    onChange={(e) => setForm((f) => ({ ...f, section: e.target.value }))}
-                    className="w-full bg-white/5 border border-white/10 rounded px-3 py-2.5 text-sm text-white focus:outline-none focus:border-white/30"
-                  >
-                    {SECTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
-                  </select>
-                </div>
+              {/* Content Type */}
+              <div>
+                <label className="block font-montserrat font-bold uppercase text-[#706b6b] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Content Type</label>
+                <select
+                  value={form.contentType}
+                  onChange={(e) => setForm((f) => ({ ...f, contentType: e.target.value }))}
+                  className="w-full bg-white/5 border border-white/10 rounded px-3 py-2.5 text-sm text-white focus:outline-none focus:border-white/30"
+                >
+                  {CONTENT_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </select>
               </div>
 
               {/* Categories */}
@@ -396,17 +387,17 @@ export default function ContentPage() {
                 <div className="flex flex-wrap gap-2">
                   {CATEGORY_OPTIONS.map((cat) => (
                     <button
-                      key={cat}
+                      key={cat.value}
                       type="button"
-                      onClick={() => toggleCategory(cat)}
+                      onClick={() => toggleCategory(cat.value)}
                       className={`font-montserrat font-semibold uppercase transition-colors rounded-full px-3 py-1 ${
-                        form.categories.includes(cat)
+                        form.categories.includes(cat.value)
                           ? "bg-[#e4dcd1] text-[#222222]"
                           : "border border-white/15 text-white/50 hover:border-white/30 hover:text-white/70"
                       }`}
                       style={{ fontSize: "9px", letterSpacing: "0.08em" }}
                     >
-                      {cat}
+                      {cat.label}
                     </button>
                   ))}
                 </div>
@@ -470,19 +461,48 @@ export default function ContentPage() {
                 </div>
               </div>
 
-              {/* Article body */}
-              {form.contentType === "article" && (
-                <div>
-                  <label className="block font-montserrat font-bold uppercase text-[#706b6b] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Article Body</label>
-                  <RichTextEditor
-                    value={form.body}
-                    onChange={(html) => setForm((f) => ({ ...f, body: html }))}
-                    placeholder="Write your article..."
-                  />
-                </div>
+              {/* Workbook: PDF upload + editable template link */}
+              {form.contentType === "workbook" && (
+                <>
+                  <div>
+                    <label className="block font-montserrat font-bold uppercase text-[#706b6b] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>PDF File</label>
+                    <input ref={pdfRef} type="file" accept=".pdf" className="hidden" onChange={(e) => e.target.files?.[0] && uploadFile(e.target.files[0], "pdfUrl")} />
+                    {form.pdfUrl ? (
+                      <div className="flex items-center gap-3 p-3 rounded" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)" }}>
+                        <span className="font-montserrat text-sm text-white/70 flex-1 truncate">{form.pdfUrl}</span>
+                        <button type="button" onClick={() => setForm((f) => ({ ...f, pdfUrl: "" }))} className="text-white/40 hover:text-white">
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => pdfRef.current?.click()}
+                        disabled={uploadingField === "pdfUrl"}
+                        className="w-full h-14 flex items-center justify-center gap-2 rounded hover:border-white/30 transition-colors text-white/30 hover:text-white/50"
+                        style={{ border: "1px dashed rgba(255,255,255,0.15)" }}
+                      >
+                        <Upload size={14} />
+                        <span className="font-montserrat text-sm">{uploadingField === "pdfUrl" ? "Uploading..." : "Upload PDF"}</span>
+                      </button>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block font-montserrat font-bold uppercase text-[#706b6b] mb-1.5" style={{ fontSize: "10px", letterSpacing: "0.10em" }}>Editable Template Link</label>
+                    <input
+                      value={form.editableTemplateUrl}
+                      onChange={(e) => setForm((f) => ({ ...f, editableTemplateUrl: e.target.value }))}
+                      placeholder="Paste Canva or Google Docs link"
+                      className="w-full bg-white/5 border border-white/10 rounded px-3 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:border-white/30"
+                    />
+                    <p className="font-montserrat mt-1.5" style={{ fontSize: "10px", color: "#706b6b" }}>
+                      Canva: canva.com/design/... · Google: docs.google.com or sheets.google.com
+                    </p>
+                  </div>
+                </>
               )}
 
-              {/* Video fields */}
+              {/* Video: embed URL + transcript */}
               {form.contentType === "video" && (
                 <>
                   <div>
@@ -507,65 +527,17 @@ export default function ContentPage() {
                 </>
               )}
 
-              {/* PDF fields */}
-              {form.contentType === "pdf" && (
+              {/* Body — RichTextEditor for ALL content types */}
+              {bodyConfig[form.contentType] && (
                 <div>
-                  <label className="block font-montserrat font-bold uppercase text-[#706b6b] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>PDF File</label>
-                  <input ref={pdfRef} type="file" accept=".pdf" className="hidden" onChange={(e) => e.target.files?.[0] && uploadFile(e.target.files[0], "pdfUrl")} />
-                  {form.pdfUrl ? (
-                    <div className="flex items-center gap-3 p-3 rounded" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)" }}>
-                      <span className="font-montserrat text-sm text-white/70 flex-1 truncate">{form.pdfUrl}</span>
-                      <button type="button" onClick={() => setForm((f) => ({ ...f, pdfUrl: "" }))} className="text-white/40 hover:text-white">
-                        <X size={14} />
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => pdfRef.current?.click()}
-                      disabled={uploadingField === "pdfUrl"}
-                      className="w-full h-14 flex items-center justify-center gap-2 rounded hover:border-white/30 transition-colors text-white/30 hover:text-white/50"
-                      style={{ border: "1px dashed rgba(255,255,255,0.15)" }}
-                    >
-                      <Upload size={14} />
-                      <span className="font-montserrat text-sm">{uploadingField === "pdfUrl" ? "Uploading..." : "Upload PDF"}</span>
-                    </button>
-                  )}
-                </div>
-              )}
-
-              {/* Template fields */}
-              {form.contentType === "template" && (
-                <div>
-                  <label className="block font-montserrat font-bold uppercase text-[#706b6b] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Editable Template URL / File</label>
-                  <input ref={templateRef} type="file" className="hidden" onChange={(e) => e.target.files?.[0] && uploadFile(e.target.files[0], "editableTemplateUrl")} />
-                  {form.editableTemplateUrl ? (
-                    <div className="flex items-center gap-3 p-3 rounded" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)" }}>
-                      <span className="font-montserrat text-sm text-white/70 flex-1 truncate">{form.editableTemplateUrl}</span>
-                      <button type="button" onClick={() => setForm((f) => ({ ...f, editableTemplateUrl: "" }))} className="text-white/40 hover:text-white">
-                        <X size={14} />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <button
-                        type="button"
-                        onClick={() => templateRef.current?.click()}
-                        disabled={uploadingField === "editableTemplateUrl"}
-                        className="w-full h-14 flex items-center justify-center gap-2 rounded hover:border-white/30 transition-colors text-white/30 hover:text-white/50"
-                        style={{ border: "1px dashed rgba(255,255,255,0.15)" }}
-                      >
-                        <Upload size={14} />
-                        <span className="font-montserrat text-sm">{uploadingField === "editableTemplateUrl" ? "Uploading..." : "Upload file"}</span>
-                      </button>
-                      <input
-                        value={form.editableTemplateUrl}
-                        onChange={(e) => setForm((f) => ({ ...f, editableTemplateUrl: e.target.value }))}
-                        placeholder="Or paste a Google Docs / Notion link..."
-                        className="w-full bg-white/5 border border-white/10 rounded px-3 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:border-white/30"
-                      />
-                    </div>
-                  )}
+                  <label className="block font-montserrat font-bold uppercase text-[#706b6b] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>
+                    {bodyConfig[form.contentType].label}
+                  </label>
+                  <RichTextEditor
+                    value={form.body}
+                    onChange={(html) => setForm((f) => ({ ...f, body: html }))}
+                    placeholder={bodyConfig[form.contentType].placeholder}
+                  />
                 </div>
               )}
 

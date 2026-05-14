@@ -3,13 +3,12 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { ArrowLeft, Download, ExternalLink, Clock, BookOpen, Play } from "lucide-react";
+import { ArrowLeft, Download, Link as LinkIcon, Clock, Play } from "lucide-react";
 
 interface ContentItem {
   id: string;
   title: string;
   contentType: string;
-  section: string;
   categories: string[];
   status: string;
   publishedAt: string | null;
@@ -23,13 +22,27 @@ interface ContentItem {
   videoTranscript: string | null;
 }
 
-const SECTION_LABELS: Record<string, string> = {
-  pitching: "Pitching & Outreach",
-  content: "Content Creation",
-  "brand-deals": "Brand Deals",
-  growth: "Growth",
-  mindset: "Mindset & Business",
+const TYPE_PILL_STYLE: Record<string, { bg: string; text: string; border?: string; label: string }> = {
+  blog_post:       { bg: "#8b6f5e", text: "#e4dcd1", label: "BLOG" },
+  workbook:        { bg: "#4a5e4a", text: "#e4dcd1", label: "WORKBOOK" },
+  video:           { bg: "#3d3550", text: "#e4dcd1", label: "VIDEO" },
+  course:          { bg: "#222222", text: "#e4dcd1", border: "1px solid rgba(228,220,209,0.2)", label: "COURSE" },
+  industry_update: { bg: "#706b6b", text: "#e4dcd1", label: "INDUSTRY UPDATE" },
 };
+
+const TYPE_BG: Record<string, string> = {
+  blog_post:       "#8b6f5e",
+  workbook:        "#4a5e4a",
+  video:           "#3d3550",
+  course:          "#222222",
+  industry_update: "#706b6b",
+};
+
+function getTemplatePlatform(url: string): string {
+  if (url.includes("canva.com")) return "Opens in Canva";
+  if (url.includes("google.com")) return "Opens in Google";
+  return "Open link";
+}
 
 export default function LearnDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -71,7 +84,11 @@ export default function LearnDetailPage() {
     );
   }
 
+  const pillStyle = TYPE_PILL_STYLE[item.contentType] ?? TYPE_PILL_STYLE.blog_post;
+  const heroBg = TYPE_BG[item.contentType] ?? "#3a3a3a";
   const bannerSrc = item.bannerImageUrl || item.thumbnailUrl;
+  const isWorkbook = item.contentType === "workbook";
+  const isVideo = item.contentType === "video";
 
   return (
     <div style={{ paddingBottom: "40px" }}>
@@ -86,38 +103,107 @@ export default function LearnDetailPage() {
         </button>
       </div>
 
-      {/* Banner / hero */}
-      {(item.contentType === "article" || item.contentType === "video") && (
+      {/* Workbook: header card */}
+      {isWorkbook && (
+        <div style={{ padding: "16px 20px 0" }}>
+          <div style={{ background: "#2a2a2a", borderRadius: "12px", padding: "20px", border: "1px solid rgba(228,220,209,0.08)" }}>
+            <span className="font-montserrat font-semibold uppercase" style={{ fontSize: "9px", letterSpacing: "0.10em", background: pillStyle.bg, color: pillStyle.text, padding: "3px 10px", borderRadius: "20px" }}>
+              {pillStyle.label}
+            </span>
+            <h1 className="font-playfair italic font-normal text-white mt-3" style={{ fontSize: "22px", lineHeight: 1.25 }}>
+              {item.title}
+            </h1>
+            {item.categories.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-3">
+                {item.categories.map((cat) => (
+                  <span key={cat} className="font-montserrat font-semibold uppercase" style={{ fontSize: "9px", letterSpacing: "0.08em", background: "#333", color: "#706b6b", padding: "3px 10px", borderRadius: "20px" }}>
+                    {cat.replace(/_/g, " ")}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* PDF download */}
+            {item.pdfUrl && (
+              <a
+                href={item.pdfUrl}
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  background: "#333333",
+                  borderRadius: "8px",
+                  padding: "12px 16px",
+                  marginTop: "16px",
+                  textDecoration: "none",
+                  cursor: "pointer",
+                }}
+              >
+                <Download size={16} color="#4a5e4a" />
+                <div>
+                  <p className="font-montserrat font-semibold text-white" style={{ fontSize: "13px" }}>Download Workbook</p>
+                  <p className="font-montserrat" style={{ fontSize: "10px", color: "#706b6b" }}>PDF</p>
+                </div>
+              </a>
+            )}
+
+            {/* Editable template */}
+            {item.editableTemplateUrl && (
+              <button
+                onClick={() => window.open(item.editableTemplateUrl!, "_blank")}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  background: "#2a2a2a",
+                  border: "1px solid rgba(228,220,209,0.08)",
+                  borderRadius: "8px",
+                  padding: "12px 16px",
+                  marginTop: "8px",
+                  width: "100%",
+                  cursor: "pointer",
+                }}
+              >
+                <LinkIcon size={16} color="#9b7e56" />
+                <div style={{ textAlign: "left" }}>
+                  <p className="font-montserrat font-semibold text-white" style={{ fontSize: "13px" }}>Open Editable Template</p>
+                  <p className="font-montserrat" style={{ fontSize: "10px", color: "#706b6b" }}>{getTemplatePlatform(item.editableTemplateUrl)}</p>
+                </div>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Non-workbook: banner / hero */}
+      {!isWorkbook && (
         <div
           className="relative"
-          style={{
-            height: bannerSrc ? "220px" : "160px",
-            margin: "14px 0 0",
-            background: item.contentType === "video" ? "#3d3550" : "#2e3e2e",
-          }}
+          style={{ height: bannerSrc ? "220px" : "160px", margin: "14px 0 0", background: heroBg }}
         >
-          {bannerSrc && (
-            <Image src={bannerSrc} alt={item.title} fill style={{ objectFit: "cover" }} />
-          )}
+          {bannerSrc && <Image src={bannerSrc} alt={item.title} fill style={{ objectFit: "cover" }} />}
           <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(34,34,34,0.85) 100%)" }} />
 
-          {/* Section badge */}
+          {/* Type badge */}
           <div className="absolute top-4 left-4">
             <span
               className="font-montserrat font-semibold uppercase"
-              style={{
-                fontSize: "9px",
-                letterSpacing: "0.10em",
-                background: "rgba(34,34,34,0.75)",
-                color: "#e4dcd1",
-                padding: "4px 12px",
-                borderRadius: "20px",
-                backdropFilter: "blur(4px)",
-              }}
+              style={{ fontSize: "9px", letterSpacing: "0.10em", background: "rgba(34,34,34,0.75)", color: "#e4dcd1", padding: "4px 12px", borderRadius: "20px", backdropFilter: "blur(4px)" }}
             >
-              {SECTION_LABELS[item.section] ?? item.section}
+              {pillStyle.label}
             </span>
           </div>
+
+          {/* Play overlay for video */}
+          {isVideo && (
+            <div className="absolute inset-0 flex items-center justify-center" style={{ paddingBottom: "60px" }}>
+              <div style={{ width: "44px", height: "44px", borderRadius: "50%", background: "rgba(228,220,209,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Play size={18} color="#e4dcd1" fill="#e4dcd1" />
+              </div>
+            </div>
+          )}
 
           {/* Title overlay */}
           <div className="absolute bottom-0 left-0 right-0" style={{ padding: "0 20px 18px" }}>
@@ -125,21 +211,15 @@ export default function LearnDetailPage() {
               {item.title}
             </h1>
             <div className="flex items-center gap-3 mt-1.5">
-              {item.contentType === "article" && item.readingTimeMinutes && (
+              {item.readingTimeMinutes && (
                 <div className="flex items-center gap-1">
                   <Clock size={11} color="#706b6b" />
                   <span className="font-montserrat text-white/40" style={{ fontSize: "11px" }}>{item.readingTimeMinutes} min read</span>
                 </div>
               )}
-              {item.contentType === "video" && (
-                <div className="flex items-center gap-1">
-                  <Play size={11} color="#706b6b" />
-                  <span className="font-montserrat text-white/40" style={{ fontSize: "11px" }}>Video</span>
-                </div>
-              )}
               {item.categories.map((cat) => (
                 <span key={cat} className="font-montserrat font-semibold uppercase text-white/30" style={{ fontSize: "9px", letterSpacing: "0.08em" }}>
-                  {cat}
+                  {cat.replace(/_/g, " ")}
                 </span>
               ))}
             </div>
@@ -147,91 +227,8 @@ export default function LearnDetailPage() {
         </div>
       )}
 
-      {/* PDF / Template — simple header card */}
-      {(item.contentType === "pdf" || item.contentType === "template") && (
-        <div style={{ padding: "16px 20px 0" }}>
-          <div
-            style={{
-              background: "#2a2a2a",
-              borderRadius: "12px",
-              padding: "20px",
-              border: "1px solid rgba(228,220,209,0.08)",
-            }}
-          >
-            <span
-              className="font-montserrat font-semibold uppercase"
-              style={{ fontSize: "9px", letterSpacing: "0.10em", color: item.contentType === "pdf" ? "#27AE60" : "#9b7e56" }}
-            >
-              {item.contentType === "pdf" ? "PDF Guide" : "Template"} · {SECTION_LABELS[item.section] ?? item.section}
-            </span>
-            <h1 className="font-playfair italic font-normal text-white mt-2" style={{ fontSize: "22px", lineHeight: 1.25 }}>
-              {item.title}
-            </h1>
-            {item.categories.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-3">
-                {item.categories.map((cat) => (
-                  <span
-                    key={cat}
-                    className="font-montserrat font-semibold uppercase"
-                    style={{ fontSize: "9px", letterSpacing: "0.08em", background: "#333", color: "#706b6b", padding: "3px 10px", borderRadius: "20px" }}
-                  >
-                    {cat}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {/* CTA */}
-            <div style={{ marginTop: "16px" }}>
-              {item.contentType === "pdf" && item.pdfUrl && (
-                <a
-                  href={item.pdfUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center gap-2 font-montserrat font-semibold uppercase"
-                  style={{
-                    fontSize: "11px",
-                    letterSpacing: "0.10em",
-                    background: "#e4dcd1",
-                    color: "#222222",
-                    padding: "12px 20px",
-                    borderRadius: "8px",
-                    display: "inline-flex",
-                    textDecoration: "none",
-                  }}
-                >
-                  <Download size={14} />
-                  Download PDF
-                </a>
-              )}
-              {item.contentType === "template" && item.editableTemplateUrl && (
-                <a
-                  href={item.editableTemplateUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center gap-2 font-montserrat font-semibold uppercase"
-                  style={{
-                    fontSize: "11px",
-                    letterSpacing: "0.10em",
-                    background: "#e4dcd1",
-                    color: "#222222",
-                    padding: "12px 20px",
-                    borderRadius: "8px",
-                    display: "inline-flex",
-                    textDecoration: "none",
-                  }}
-                >
-                  <ExternalLink size={14} />
-                  Open Template
-                </a>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Video embed */}
-      {item.contentType === "video" && item.videoEmbedUrl && (
+      {isVideo && item.videoEmbedUrl && (
         <div style={{ padding: "20px 20px 0" }}>
           <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, borderRadius: "10px", overflow: "hidden" }}>
             <iframe
@@ -245,31 +242,18 @@ export default function LearnDetailPage() {
         </div>
       )}
 
-      {/* Article body */}
-      {item.contentType === "article" && item.body && (
+      {/* Body (all types) */}
+      {item.body && (
         <div style={{ padding: "24px 20px 0" }}>
-          <div
-            className="rich-content"
-            dangerouslySetInnerHTML={{ __html: item.body }}
-          />
+          <div className="rich-content" dangerouslySetInnerHTML={{ __html: item.body }} />
         </div>
       )}
 
       {/* Video transcript */}
-      {item.contentType === "video" && item.videoTranscript && (
+      {isVideo && item.videoTranscript && (
         <div style={{ padding: "24px 20px 0" }}>
-          <div className="flex items-center gap-2 mb-3">
-            <BookOpen size={14} color="#706b6b" />
-            <span className="font-montserrat font-bold uppercase text-white/30" style={{ fontSize: "9px", letterSpacing: "0.12em" }}>Notes</span>
-          </div>
-          <div
-            style={{
-              background: "#2a2a2a",
-              borderRadius: "10px",
-              padding: "16px",
-              border: "1px solid rgba(228,220,209,0.06)",
-            }}
-          >
+          <p className="font-montserrat font-bold uppercase text-white/30 mb-3" style={{ fontSize: "9px", letterSpacing: "0.12em" }}>Notes</p>
+          <div style={{ background: "#2a2a2a", borderRadius: "10px", padding: "16px", border: "1px solid rgba(228,220,209,0.06)" }}>
             <p className="font-montserrat text-white/60" style={{ fontSize: "13px", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
               {item.videoTranscript}
             </p>
@@ -277,8 +261,8 @@ export default function LearnDetailPage() {
         </div>
       )}
 
-      {/* Categories */}
-      {item.categories.length > 0 && item.contentType !== "pdf" && item.contentType !== "template" && (
+      {/* Category tags (non-workbook) */}
+      {item.categories.length > 0 && !isWorkbook && (
         <div style={{ padding: "24px 20px 0" }}>
           <div className="flex flex-wrap gap-2">
             {item.categories.map((cat) => (
@@ -287,7 +271,7 @@ export default function LearnDetailPage() {
                 className="font-montserrat font-semibold uppercase"
                 style={{ fontSize: "9px", letterSpacing: "0.08em", background: "#2a2a2a", color: "#706b6b", padding: "4px 12px", borderRadius: "20px", border: "1px solid rgba(255,255,255,0.06)" }}
               >
-                {cat}
+                {cat.replace(/_/g, " ")}
               </span>
             ))}
           </div>

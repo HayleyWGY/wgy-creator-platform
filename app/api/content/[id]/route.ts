@@ -24,10 +24,7 @@ export async function PATCH(
 
   const body = await req.json();
 
-  const readingTimeMinutes =
-    body.contentType === "article" && body.body
-      ? calculateReadingTime(body.body)
-      : undefined;
+  const readingTimeMinutes = body.body ? calculateReadingTime(body.body) : undefined;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data: Record<string, any> = {
