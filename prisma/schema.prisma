@@ -1,0 +1,181 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Creator {
+  id                String         @id @default(cuid())
+  email             String         @unique
+  passwordHash      String
+  firstName         String
+  lastName          String
+  bio               String?
+  profileImageUrl   String?
+  instagramHandle   String?
+  tiktokHandle      String?
+  youtubeUrl        String?
+  otherSocialLinks  Json?
+  addressLine1      String?
+  addressLine2      String?
+  city              String?
+  postcode          String?
+  country           String?
+  stripeCustomerId  String?
+  stripeSubId       String?
+  membershipStatus  String         @default("active")
+  membershipType    String         @default("paid")
+  isAdmin           Boolean        @default(false)
+  isClient          Boolean        @default(false)
+  joinedAt          DateTime       @default(now())
+  lastSeenAt        DateTime       @default(now())
+  tags              CreatorTag[]
+  posts             Post[]
+  comments          Comment[]
+  likes             Like[]
+  notifications     Notification[]
+}
+
+model Section {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  group       String
+  iconEmoji   String?
+  sortOrder   Int     @default(0)
+  isVisible   Boolean @default(true)
+  sectionType String  @default("post_feed")
+  posts       Post[]
+}
+
+model Post {
+  id            String    @id @default(cuid())
+  sectionId     String
+  section       Section   @relation(fields: [sectionId], references: [id])
+  authorId      String
+  author        Creator   @relation(fields: [authorId], references: [id])
+  title         String
+  body          String
+  coverImageUrl String?
+  brandName     String?
+  applyLinkUrl  String?
+  postType      String    @default("campaign")
+  status        String    @default("draft")
+  publishedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  likesCount    Int       @default(0)
+  commentsCount Int       @default(0)
+  isPinned               Boolean   @default(false)
+  eventDate              DateTime?
+  eventLocation          String?
+  eventPrice             Int?
+  slug                   String?   @unique
+  brandDescription       String?
+  brandWebsite           String?
+  brandInstagram         String?
+  brandTikTok            String?
+  brandLogoUrl           String?
+  opportunityDescription String?
+  deliverables           Json?
+  spotsRemaining         Int?
+  campaignType           String?
+  paymentAmount          String?
+  paymentTerms           String?
+  eventTime              String?
+  comments               Comment[]
+  likes                  Like[]
+}
+
+model Tag {
+  id          String       @id @default(cuid())
+  name        String
+  colour      String       @default("#e4dcd1")
+  createdById String
+  createdAt   DateTime     @default(now())
+  creators    CreatorTag[]
+}
+
+model CreatorTag {
+  creatorId          String
+  creator            Creator  @relation(fields: [creatorId], references: [id])
+  tagId              String
+  tag                Tag      @relation(fields: [tagId], references: [id])
+  assignedAt         DateTime @default(now())
+  assignedById       String
+  isVisibleToCreator Boolean  @default(true)
+
+  @@id([creatorId, tagId])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id])
+  authorId  String
+  author    Creator  @relation(fields: [authorId], references: [id])
+  body      String
+  createdAt DateTime @default(now())
+  isDeleted Boolean  @default(false)
+}
+
+model Like {
+  creatorId String
+  creator   Creator  @relation(fields: [creatorId], references: [id])
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@id([creatorId, postId])
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  recipientId String
+  recipient   Creator  @relation(fields: [recipientId], references: [id])
+  type        String
+  referenceId String?
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model PostContent {
+  id             String    @id @default(cuid())
+  title          String
+  contentType    String
+  body           String?
+  pdfUrl         String?
+  videoEmbedUrl  String?
+  thumbnailUrl   String?
+  section        String
+  status         String    @default("draft")
+  scheduledAt    DateTime?
+  publishedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  authorId       String
+  likesCount     Int       @default(0)
+  commentsCount  Int       @default(0)
+}
+
+model MessageTemplate {
+  id           String    @id @default(cuid())
+  sequenceName String
+  dayOffset    Int
+  subject      String
+  body         String
+  isActive     Boolean   @default(true)
+  sortOrder    Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  sentLogs     OnboardingMessageSent[]
+}
+
+model OnboardingMessageSent {
+  id              String          @id @default(cuid())
+  creatorId       String
+  templateId      String
+  template        MessageTemplate @relation(fields: [templateId], references: [id])
+  sentAt          DateTime        @default(now())
+  streamMessageId String?
+}

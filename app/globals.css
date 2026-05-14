@@ -2,26 +2,113 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --font-playfair: 'Playfair Display', serif;
+    --font-montserrat: 'Montserrat', sans-serif;
+
+    /* shadcn CSS vars remapped to WGY dark theme */
+    --background: #222222;
+    --foreground: #ffffff;
+    --card: #2a2a2a;
+    --card-foreground: #ffffff;
+    --popover: #2a2a2a;
+    --popover-foreground: #ffffff;
+    --primary: #e4dcd1;
+    --primary-foreground: #222222;
+    --secondary: #333333;
+    --secondary-foreground: #ffffff;
+    --muted: #333333;
+    --muted-foreground: #706b6b;
+    --accent: #e4dcd1;
+    --accent-foreground: #222222;
+    --destructive: #C0392B;
+    --border: rgba(255, 255, 255, 0.08);
+    --input: rgba(255, 255, 255, 0.08);
+    --ring: #e4dcd1;
+    --radius: 0.5rem;
+  }
+
+  * {
+    @apply border-[rgba(255,255,255,0.06)];
+    box-sizing: border-box;
+  }
+
+  html {
+    font-family: var(--font-montserrat), sans-serif;
+  }
+
+  body {
+    background-color: #222222;
+    color: #ffffff;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-family: var(--font-montserrat), sans-serif;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-}
+@layer components {
+  /* Display — Playfair Display Italic, large hero text */
+  .text-display {
+    font-family: var(--font-playfair), serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(28px, 4vw, 32px);
+    letter-spacing: 0.04em;
+    line-height: 1.2;
+  }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+  /* Page Heading — Playfair Display Italic, top-of-page titles (26px) */
+  .text-page-heading {
+    font-family: var(--font-playfair), serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 26px;
+    line-height: 1.2;
+  }
+
+  /* Heading Large — Playfair Display Italic, section headings */
+  .text-heading-large {
+    font-family: var(--font-playfair), serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(22px, 3vw, 24px);
+    letter-spacing: 0.04em;
+    line-height: 1.3;
+  }
+
+  /* Section Label — Montserrat Bold uppercase micro label */
+  .text-section-label {
+    font-family: var(--font-montserrat), sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: clamp(10px, 1.5vw, 11px);
+    letter-spacing: 0.14em;
+    color: #e4dcd1;
+  }
+
+  /* Body — Montserrat Regular, general content */
+  .text-body {
+    font-family: var(--font-montserrat), sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  /* Caption — Montserrat Regular small, secondary info */
+  .text-caption {
+    font-family: var(--font-montserrat), sans-serif;
+    font-weight: 400;
+    font-size: clamp(11px, 1.5vw, 12px);
+    color: #706b6b;
+    line-height: 1.5;
+  }
+
+  /* Button — Montserrat SemiBold, CTA text */
+  .text-button {
+    font-family: var(--font-montserrat), sans-serif;
+    font-weight: 600;
+    font-size: clamp(13px, 1.8vw, 14px);
+    letter-spacing: 0.01em;
   }
 }
