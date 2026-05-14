@@ -5,6 +5,21 @@ import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { ArrowLeft, Download, Link as LinkIcon, Clock, Play } from "lucide-react";
 
+function getEmbedUrl(url: string): string | null {
+  if (!url) return null;
+  if (url.includes("/embed/")) return url;
+  const youtubePatterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/|m\.youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/,
+  ];
+  for (const pattern of youtubePatterns) {
+    const match = url.match(pattern);
+    if (match) return `https://www.youtube.com/embed/${match[1]}?rel=0&modestbranding=1`;
+  }
+  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+  if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+  return null;
+}
+
 interface ContentItem {
   id: string;
   title: string;
@@ -228,15 +243,18 @@ export default function LearnDetailPage() {
       )}
 
       {/* Video embed */}
-      {isVideo && item.videoEmbedUrl && (
+      {isVideo && item.videoEmbedUrl && getEmbedUrl(item.videoEmbedUrl) && (
         <div style={{ padding: "20px 20px 0" }}>
-          <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, borderRadius: "10px", overflow: "hidden" }}>
+          <div style={{ position: "relative", background: "#000000", borderRadius: "8px", overflow: "hidden", aspectRatio: "16/9" }}>
             <iframe
-              src={item.videoEmbedUrl}
-              title={item.title}
+              src={getEmbedUrl(item.videoEmbedUrl)!}
+              width="100%"
+              height="100%"
+              frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
-              style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
+              referrerPolicy="strict-origin-when-cross-origin"
+              style={{ display: "block", border: "none" }}
             />
           </div>
         </div>

@@ -5,6 +5,21 @@ import { Plus, Pencil, Trash2, Eye, Search, Upload, X } from "lucide-react";
 import Image from "next/image";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
 
+function getEmbedUrl(url: string): string | null {
+  if (!url) return null;
+  if (url.includes("/embed/")) return url;
+  const youtubePatterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/|m\.youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/,
+  ];
+  for (const pattern of youtubePatterns) {
+    const match = url.match(pattern);
+    if (match) return `https://www.youtube.com/embed/${match[1]}?rel=0&modestbranding=1`;
+  }
+  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+  if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+  return null;
+}
+
 interface ContentItem {
   id: string;
   title: string;
@@ -502,17 +517,31 @@ export default function ContentPage() {
                 </>
               )}
 
-              {/* Video: embed URL + transcript */}
+              {/* Video: embed URL + preview + transcript */}
               {form.contentType === "video" && (
                 <>
                   <div>
-                    <label className="block font-montserrat font-bold uppercase text-[#706b6b] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Video Embed URL</label>
+                    <label className="block font-montserrat font-bold uppercase text-[#706b6b] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Video URL</label>
                     <input
                       value={form.videoEmbedUrl}
                       onChange={(e) => setForm((f) => ({ ...f, videoEmbedUrl: e.target.value }))}
-                      placeholder="https://www.youtube.com/embed/..."
+                      placeholder="https://www.youtube.com/watch?v=... or youtu.be/..."
                       className="w-full bg-white/5 border border-white/10 rounded px-3 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:border-white/30"
                     />
+                    {form.videoEmbedUrl && getEmbedUrl(form.videoEmbedUrl) && (
+                      <div style={{ marginTop: "10px", position: "relative", background: "#000000", borderRadius: "8px", overflow: "hidden", height: "160px" }}>
+                        <iframe
+                          src={getEmbedUrl(form.videoEmbedUrl)!}
+                          width="100%"
+                          height="100%"
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          referrerPolicy="strict-origin-when-cross-origin"
+                          style={{ display: "block", border: "none" }}
+                        />
+                      </div>
+                    )}
                   </div>
                   <div>
                     <label className="block font-montserrat font-bold uppercase text-[#706b6b] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Transcript / Notes (optional)</label>
