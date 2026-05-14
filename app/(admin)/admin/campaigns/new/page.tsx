@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Upload, Globe, Link as LinkIcon, Music2, X, Plus, BellRing, Loader2 } from "lucide-react";
@@ -330,7 +331,7 @@ export default function NewCampaignPage() {
                   style={{ border: "2px dashed rgba(228,220,209,0.2)", borderRadius: "12px", height: "160px", background: "#333333", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", gap: "6px", overflow: "hidden", position: "relative" }}>
                   {uploadingCover ? <Loader2 size={28} color="#706b6b" strokeWidth={1.5} className="animate-spin" />
                     : coverImageUrl ? (
-                      <><img src={coverImageUrl} alt="Cover" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+                      <><Image src={coverImageUrl} alt="Cover" fill style={{ objectFit: "cover" }} />
                         <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "6px" }}>
                           <Upload size={20} color="#e4dcd1" strokeWidth={1.5} />
                           <p className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#e4dcd1" }}>Click to replace</p>
@@ -349,7 +350,7 @@ export default function NewCampaignPage() {
                   style={{ border: "2px dashed rgba(228,220,209,0.2)", borderRadius: "12px", height: "100px", background: "#333333", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", gap: "4px", overflow: "hidden", position: "relative" }}>
                   {uploadingLogo ? <Loader2 size={22} color="#706b6b" strokeWidth={1.5} className="animate-spin" />
                     : brandLogoUrl ? (
-                      <><img src={brandLogoUrl} alt="Logo" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+                      <><Image src={brandLogoUrl} alt="Logo" fill style={{ objectFit: "cover" }} />
                         <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "4px" }}>
                           <Upload size={16} color="#e4dcd1" strokeWidth={1.5} />
                           <p className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#e4dcd1" }}>Click to replace</p>
@@ -395,7 +396,7 @@ export default function NewCampaignPage() {
             <p className="font-montserrat font-bold uppercase" style={{ fontSize: "9px", letterSpacing: "0.12em", color: "#706b6b" }}>Preview</p>
             <div style={{ marginTop: "10px", borderRadius: "10px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)" }}>
               <div style={{ height: "80px", background: coverImageUrl ? "transparent" : "#333333", position: "relative", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-                {coverImageUrl && <img src={coverImageUrl} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />}
+                {coverImageUrl && <Image src={coverImageUrl} alt="" fill style={{ objectFit: "cover" }} />}
                 <span className="font-playfair font-normal" style={{ fontSize: "14px", color: brand ? "#ffffff" : "rgba(255,255,255,0.3)", position: "relative", zIndex: 1, textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>
                   {brand || "Brand name"}
                 </span>

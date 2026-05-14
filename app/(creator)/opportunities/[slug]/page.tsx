@@ -5,6 +5,7 @@ import {
   Globe, Music2, Camera, Info, CalendarDays, Clock, MapPin,
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ASA_GUIDELINES_URL } from "@/lib/constants";
@@ -117,7 +118,7 @@ export default function CampaignDetailPage() {
       {/* ── Hero ─────────────────────────────────────────── */}
       <div className="relative w-full aspect-video" style={{ background: COVER_BG }}>
         {campaign.coverImageUrl && (
-          <img src={campaign.coverImageUrl} alt={campaign.brandName} className="absolute inset-0 w-full h-full object-cover" />
+          <Image src={campaign.coverImageUrl} alt={campaign.brandName} fill style={{ objectFit: "cover" }} />
         )}
         <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.66) 40%, rgba(0,0,0,0.78) 100%)" }} />
 
@@ -141,7 +142,7 @@ export default function CampaignDetailPage() {
           style={{ width: "80px", height: "80px", borderRadius: "50%", background: "#ffffff", bottom: "-40px", left: "20px", boxShadow: "0 2px 12px rgba(0,0,0,0.3)", overflow: "hidden" }}
         >
           {campaign.brandLogoUrl ? (
-            <img src={campaign.brandLogoUrl} alt={campaign.brandName} className="w-full h-full object-cover" />
+            <Image src={campaign.brandLogoUrl} alt={campaign.brandName} fill style={{ objectFit: "cover" }} />
           ) : (
             <span className="font-montserrat font-semibold" style={{ fontSize: "20px", color: "#706b6b" }}>
               {campaign.brandInitials}

@@ -1,6 +1,6 @@
 "use client";
 
-import { Heart, MessageCircle, Bookmark, Image } from "lucide-react";
+import { Heart, MessageCircle, Bookmark, Image as ImageIcon } from "lucide-react";
 import { useState } from "react";
 import { PillTag } from "@/components/ui/pill-tag";
 
@@ -141,7 +141,7 @@ export default function CommunityPage() {
               gap: "6px",
             }}
           >
-            <Image size={24} color="#706b6b" strokeWidth={1.5} />
+            <ImageIcon size={24} color="#706b6b" strokeWidth={1.5} />
             <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#706b6b" }}>[Image]</span>
           </div>
 

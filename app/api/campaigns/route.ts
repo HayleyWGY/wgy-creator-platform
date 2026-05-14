@@ -75,7 +75,7 @@ export async function GET(req: NextRequest) {
       });
       // If no sections are tagged OPPORTUNITIES, skip the section constraint entirely
       if (opportunitySections.length > 0) {
-        where.sectionId = { in: opportunitySections.map((s) => s.id) };
+        where.sectionId = { in: opportunitySections.map((s: { id: string }) => s.id) };
       }
     }
 

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Heart, MessageCircle, Bell } from "lucide-react";
 import { useState } from "react";
 
@@ -52,10 +53,11 @@ export function CampaignCard({
         style={{ height: "140px", backgroundColor: imageBg }}
       >
         {coverImageUrl && (
-          <img
+          <Image
             src={coverImageUrl}
             alt={brandName}
-            className="w-full h-full object-cover"
+            fill
+            style={{ objectFit: "cover" }}
           />
         )}
         {/* Gradient overlay */}

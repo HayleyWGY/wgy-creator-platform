@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import Image from "next/image";
 import { Camera } from "lucide-react";
 
 const MAX_BIO = 160;
@@ -107,10 +108,11 @@ export default function ProfileSetupPage() {
           }}
         >
           {avatarPreview ? (
-            <img
+            <Image
               src={avatarPreview}
               alt="Avatar"
-              className="w-full h-full object-cover"
+              fill
+              style={{ objectFit: "cover" }}
             />
           ) : (
             <Camera size={24} color="#706b6b" strokeWidth={1.5} />
