@@ -109,3 +109,106 @@
     letter-spacing: 0.01em;
   }
 }
+
+/* ProseMirror / Tiptap rich text editor styles */
+.prose-editor .ProseMirror {
+  outline: none;
+  min-height: 220px;
+}
+
+.prose-editor .ProseMirror p {
+  margin: 0 0 0.75em;
+  line-height: 1.7;
+}
+
+.prose-editor .ProseMirror h2 {
+  font-family: var(--font-playfair), serif;
+  font-style: italic;
+  font-size: 1.25rem;
+  font-weight: 400;
+  margin: 1.25em 0 0.5em;
+  color: #e4dcd1;
+}
+
+.prose-editor .ProseMirror h3 {
+  font-family: var(--font-montserrat), sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 1em 0 0.4em;
+  color: #e4dcd1;
+}
+
+.prose-editor .ProseMirror ul,
+.prose-editor .ProseMirror ol {
+  padding-left: 1.5em;
+  margin: 0 0 0.75em;
+}
+
+.prose-editor .ProseMirror li {
+  margin-bottom: 0.25em;
+}
+
+.prose-editor .ProseMirror a {
+  color: #e4dcd1;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.prose-editor .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: rgba(255, 255, 255, 0.3);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Creator-facing rich text content (learn detail page) */
+.rich-content h2 {
+  font-family: var(--font-playfair), serif;
+  font-style: italic;
+  font-size: 1.4rem;
+  font-weight: 400;
+  margin: 1.5em 0 0.6em;
+  color: #e4dcd1;
+}
+
+.rich-content h3 {
+  font-family: var(--font-montserrat), sans-serif;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 1.25em 0 0.4em;
+  color: #e4dcd1;
+}
+
+.rich-content p {
+  margin: 0 0 1em;
+  line-height: 1.75;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.rich-content ul,
+.rich-content ol {
+  padding-left: 1.5em;
+  margin: 0 0 1em;
+}
+
+.rich-content li {
+  margin-bottom: 0.35em;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.rich-content a {
+  color: #e4dcd1;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.rich-content strong {
+  font-weight: 600;
+  color: #ffffff;
+}

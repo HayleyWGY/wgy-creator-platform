@@ -3,6 +3,7 @@
 import { Heart, MessageCircle, Bookmark, Play, FileText } from "lucide-react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { CampaignCard } from "@/components/creator/campaign-card";
 import { PillTag } from "@/components/ui/pill-tag";
@@ -20,6 +21,14 @@ interface Campaign {
   eventDate: string | null;
 }
 
+interface LearnItem {
+  id: string;
+  title: string;
+  contentType: string;
+  thumbnailUrl: string | null;
+  readingTimeMinutes: number | null;
+}
+
 function getAge(createdAt: string): string {
   const diff = Date.now() - new Date(createdAt).getTime();
   const days  = Math.floor(diff / 86400000);
@@ -29,22 +38,21 @@ function getAge(createdAt: string): string {
   return "Just now";
 }
 
-const LEARNING = [
-  { type: "VIDEO",   bg: "#3d3550", title: "Mastering Brand Negotiations", meta: "45 min"      },
-  { type: "PDF",     bg: "#4a5e4a", title: "2026 Creator Checklist",       meta: "Download"    },
-  { type: "ARTICLE", bg: "#8b6f5e", title: "10 Ways to Increase Engagement", meta: "5 min read" },
-];
-
 export default function HomePage() {
   const { data: session } = useSession();
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [learnItems, setLearnItems] = useState<LearnItem[]>([]);
 
   useEffect(() => {
     fetch("/api/campaigns?limit=3")
       .then((r) => r.json())
       .then((data) => setCampaigns(data.campaigns ?? []))
+      .catch(() => {});
+    fetch("/api/content?status=published")
+      .then((r) => r.json())
+      .then((data: LearnItem[]) => setLearnItems(data.slice(0, 3)))
       .catch(() => {});
   }, []);
 
@@ -161,50 +169,68 @@ export default function HomePage() {
         </div>
 
         <div className="flex gap-3 overflow-x-auto pl-5 pr-8 pb-1" style={{ scrollbarWidth: "none" }}>
-          {LEARNING.map((item, i) => (
-            <div
-              key={i}
-              style={{
-                flex: "0 0 200px",
-                background: "#2a2a2a",
-                borderRadius: "12px",
-                overflow: "hidden",
-                border: "1px solid rgba(228,220,209,0.08)",
-              }}
-            >
-              {/* Thumbnail area */}
-              <div style={{ height: "140px", background: item.bg, position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                {item.type === "VIDEO" && (
-                  <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "rgba(228,220,209,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <Play size={12} color="#e4dcd1" fill="#e4dcd1" />
+          {learnItems.map((item) => {
+            const isVideo = item.contentType === "video";
+            const isPdf = item.contentType === "pdf";
+            const isTemplate = item.contentType === "template";
+            const bg = isVideo ? "#3d3550" : isPdf ? "#2e3e2e" : isTemplate ? "#4a3a2e" : "#4a3a3a";
+            const meta = isVideo ? "Video" : isPdf ? "Download" : isTemplate ? "Template" : item.readingTimeMinutes ? `${item.readingTimeMinutes} min read` : "Article";
+            return (
+              <Link
+                key={item.id}
+                href={`/learn/${item.id}`}
+                style={{
+                  flex: "0 0 200px",
+                  background: "#2a2a2a",
+                  borderRadius: "12px",
+                  overflow: "hidden",
+                  border: "1px solid rgba(228,220,209,0.08)",
+                  textDecoration: "none",
+                  display: "block",
+                }}
+              >
+                {/* Thumbnail area */}
+                <div style={{ height: "140px", background: bg, position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  {item.thumbnailUrl ? (
+                    <Image src={item.thumbnailUrl} alt={item.title} fill style={{ objectFit: "cover" }} />
+                  ) : isVideo ? (
+                    <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "rgba(228,220,209,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <Play size={12} color="#e4dcd1" fill="#e4dcd1" />
+                    </div>
+                  ) : (isPdf || isTemplate) ? (
+                    <FileText size={24} color="#e4dcd1" strokeWidth={1.5} />
+                  ) : null}
+
+                  {item.thumbnailUrl && <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.2)" }} />}
+
+                  {/* Type pill */}
+                  <div style={{ position: "absolute", top: "8px", left: "8px" }}>
+                    <span
+                      className="font-montserrat font-semibold uppercase"
+                      style={{ fontSize: "8px", letterSpacing: "0.08em", background: "rgba(34,34,34,0.75)", color: "#e4dcd1", padding: "2px 6px", borderRadius: "20px" }}
+                    >
+                      {item.contentType}
+                    </span>
                   </div>
-                )}
-                {item.type === "PDF" && (
-                  <FileText size={24} color="#e4dcd1" strokeWidth={1.5} />
-                )}
-
-                {/* Type pill */}
-                <div style={{ position: "absolute", top: "8px", left: "8px" }}>
-                  <span
-                    className="font-montserrat font-semibold uppercase"
-                    style={{ fontSize: "8px", letterSpacing: "0.08em", background: "#706b6b", color: "#e4dcd1", padding: "2px 6px", borderRadius: "20px" }}
-                  >
-                    {item.type}
-                  </span>
                 </div>
-              </div>
 
-              {/* Card body */}
-              <div style={{ padding: "10px" }}>
-                <p className="font-playfair font-normal text-white" style={{ fontSize: "13px", lineHeight: 1.3 }}>
-                  {item.title}
-                </p>
-                <p className="font-montserrat font-normal" style={{ fontSize: "10px", color: "#706b6b", marginTop: "4px" }}>
-                  {item.meta}
-                </p>
-              </div>
-            </div>
-          ))}
+                {/* Card body */}
+                <div style={{ padding: "10px" }}>
+                  <p className="font-playfair font-normal text-white" style={{ fontSize: "13px", lineHeight: 1.3 }}>
+                    {item.title}
+                  </p>
+                  <p className="font-montserrat font-normal" style={{ fontSize: "10px", color: "#706b6b", marginTop: "4px" }}>
+                    {meta}
+                  </p>
+                </div>
+              </Link>
+            );
+          })}
+          {learnItems.length === 0 && (
+            <p className="font-montserrat text-white/20 pl-1" style={{ fontSize: "12px", paddingTop: "16px" }}>
+              Coming soon
+            </p>
+          )}
         </div>
 
         <div className="px-5 mt-2 flex justify-end">

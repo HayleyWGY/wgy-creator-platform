@@ -141,21 +141,28 @@ model Notification {
 }
 
 model PostContent {
-  id             String    @id @default(cuid())
-  title          String
-  contentType    String
-  body           String?
-  pdfUrl         String?
-  videoEmbedUrl  String?
-  thumbnailUrl   String?
-  section        String
-  status         String    @default("draft")
-  scheduledAt    DateTime?
-  publishedAt    DateTime?
-  createdAt      DateTime  @default(now())
-  authorId       String
-  likesCount     Int       @default(0)
-  commentsCount  Int       @default(0)
+  id                   String    @id @default(cuid())
+  title                String
+  contentType          String
+  body                 String?
+  pdfUrl               String?
+  editableTemplateUrl  String?
+  videoEmbedUrl        String?
+  videoTranscript      String?
+  thumbnailUrl         String?
+  bannerImageUrl       String?
+  section              String
+  categories           String[]
+  status               String    @default("draft")
+  scheduledAt          DateTime?
+  publishedAt          DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  authorId             String
+  likesCount           Int       @default(0)
+  commentsCount        Int       @default(0)
+  sortOrder            Int       @default(0)
+  readingTimeMinutes   Int?
 }
 
 model MessageTemplate {
