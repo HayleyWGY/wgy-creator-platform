@@ -117,7 +117,8 @@ export default function LearnDetailPage() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      URL.revokeObjectURL(objectUrl);
+      // Delay revoke so the browser has time to read the blob URL
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
     } catch {
       // Fallback: open in new tab if fetch fails (e.g. CORS)
       window.open(item.pdfUrl, "_blank");
