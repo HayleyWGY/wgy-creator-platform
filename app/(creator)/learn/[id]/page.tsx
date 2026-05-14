@@ -107,12 +107,7 @@ export default function LearnDetailPage() {
 
   function triggerPdfDownload() {
     if (!item?.pdfUrl) return;
-    // Insert fl_attachment into Cloudinary URL path so Cloudinary serves
-    // the file with Content-Disposition: attachment — no CORS issues
-    const downloadUrl = item.pdfUrl.includes("cloudinary.com")
-      ? item.pdfUrl.replace("/upload/", "/upload/fl_attachment/")
-      : item.pdfUrl;
-    window.open(downloadUrl, "_blank");
+    window.open(item.pdfUrl, "_blank");
   }
 
   const publishedDate = item.publishedAt
@@ -258,8 +253,8 @@ export default function LearnDetailPage() {
                   <Download size={18} color="#e4dcd1" />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <p className="font-montserrat font-semibold text-white" style={{ fontSize: "14px" }}>Download PDF</p>
-                  <p className="font-montserrat" style={{ fontSize: "11px", color: "#706b6b" }}>Tap to download</p>
+                  <p className="font-montserrat font-semibold text-white" style={{ fontSize: "14px" }}>View PDF</p>
+                  <p className="font-montserrat" style={{ fontSize: "11px", color: "#706b6b" }}>Opens in new tab</p>
                 </div>
                 <ChevronRight size={16} color="#706b6b" />
               </div>
