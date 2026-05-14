@@ -107,14 +107,12 @@ export default function LearnDetailPage() {
 
   function triggerPdfDownload() {
     if (!item?.pdfUrl) return;
-    const filename = encodeURIComponent(item.title + ".pdf");
-    const proxyUrl = `/api/download?url=${encodeURIComponent(item.pdfUrl)}&filename=${filename}`;
-    const link = document.createElement("a");
-    link.href = proxyUrl;
-    link.download = item.title + ".pdf";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Insert fl_attachment into Cloudinary URL path so Cloudinary serves
+    // the file with Content-Disposition: attachment — no CORS issues
+    const downloadUrl = item.pdfUrl.includes("cloudinary.com")
+      ? item.pdfUrl.replace("/upload/", "/upload/fl_attachment/")
+      : item.pdfUrl;
+    window.open(downloadUrl, "_blank");
   }
 
   const publishedDate = item.publishedAt
