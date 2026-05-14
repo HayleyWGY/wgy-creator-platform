@@ -107,7 +107,8 @@ export default function LearnDetailPage() {
 
   function triggerPdfDownload() {
     if (!item?.pdfUrl) return;
-    window.open(item.pdfUrl, "_blank");
+    const filename = item.title.replace(/[^a-z0-9]/gi, "_").toLowerCase() + ".pdf";
+    window.open(`/api/download?url=${encodeURIComponent(item.pdfUrl)}&filename=${encodeURIComponent(filename)}`, "_blank");
   }
 
   const publishedDate = item.publishedAt
