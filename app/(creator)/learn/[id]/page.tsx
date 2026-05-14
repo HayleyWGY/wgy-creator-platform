@@ -107,8 +107,7 @@ export default function LearnDetailPage() {
 
   function triggerPdfDownload() {
     if (!item?.pdfUrl) return;
-    const filename = item.title.replace(/[^a-z0-9]/gi, "_").toLowerCase() + ".pdf";
-    window.open(`/api/download?url=${encodeURIComponent(item.pdfUrl)}&filename=${encodeURIComponent(filename)}`, "_blank");
+    window.open(item.pdfUrl, "_blank");
   }
 
   const publishedDate = item.publishedAt
@@ -199,19 +198,27 @@ export default function LearnDetailPage() {
       {/* ── WORKBOOK ── */}
       {isWorkbook && (
         <>
-          {/* Banner image at top */}
-          {bannerSrc && (
-            <div className="relative" style={{ margin: "14px 0 0", height: "220px", background: heroBg, overflow: "hidden" }}>
-              <Image src={bannerSrc} alt={item.title} fill style={{ objectFit: "cover" }} />
-              <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(34,34,34,0.4) 100%)" }} />
+          {/* Banner / hero — title overlaid like other types */}
+          <div
+            className="relative"
+            style={{ height: bannerSrc ? "220px" : "160px", margin: "14px 0 0", background: heroBg }}
+          >
+            {bannerSrc && <Image src={bannerSrc} alt={item.title} fill style={{ objectFit: "cover" }} />}
+            <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(34,34,34,0.85) 100%)" }} />
+            <div className="absolute top-4 left-4">
+              <span className="font-montserrat font-semibold uppercase" style={{ fontSize: "9px", letterSpacing: "0.10em", background: "rgba(34,34,34,0.75)", color: "#e4dcd1", padding: "4px 12px", borderRadius: "20px", backdropFilter: "blur(4px)" }}>
+                {pillStyle.label}
+              </span>
             </div>
-          )}
+            <div className="absolute bottom-0 left-0 right-0" style={{ padding: "0 20px 18px" }}>
+              <h1 className="font-playfair italic font-normal text-white" style={{ fontSize: "22px", lineHeight: 1.25 }}>
+                {item.title}
+              </h1>
+            </div>
+          </div>
 
-          {/* Type pill + categories */}
+          {/* Categories */}
           <div style={{ padding: "16px 20px 0", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px" }}>
-            <span className="font-montserrat font-semibold uppercase" style={{ fontSize: "9px", letterSpacing: "0.10em", background: pillStyle.bg, color: pillStyle.text, padding: "3px 10px", borderRadius: "20px" }}>
-              {pillStyle.label}
-            </span>
             {item.categories.map((cat) => (
               <button
                 key={cat}
@@ -223,11 +230,6 @@ export default function LearnDetailPage() {
               </button>
             ))}
           </div>
-
-          {/* Title */}
-          <h1 className="font-playfair italic font-normal text-white" style={{ fontSize: "22px", lineHeight: 1.25, padding: "16px 20px 4px" }}>
-            {item.title}
-          </h1>
 
           {/* Meta row */}
           <div style={{ padding: "0 20px 12px", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "12px" }}>

@@ -193,7 +193,8 @@ export default function ContentPage() {
     setUploadingField(field);
     const fd = new FormData();
     fd.append("file", file);
-    const res = await fetch("/api/upload", { method: "POST", body: fd });
+    const endpoint = field === "pdfUrl" ? "/api/upload-pdf" : "/api/upload";
+    const res = await fetch(endpoint, { method: "POST", body: fd });
     const data = await res.json();
     if (data.url) setForm((f) => ({ ...f, [field]: data.url }));
     setUploadingField(null);
