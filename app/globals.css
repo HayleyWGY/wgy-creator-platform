@@ -4,9 +4,6 @@
 
 @layer base {
   :root {
-    --font-playfair: 'Playfair Display', serif;
-    --font-montserrat: 'Montserrat', sans-serif;
-
     /* shadcn CSS vars remapped to WGY dark theme */
     --background: #222222;
     --foreground: #ffffff;
