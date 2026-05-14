@@ -105,24 +105,16 @@ export default function LearnDetailPage() {
   const isWorkbook = item.contentType === "workbook";
   const isVideo = item.contentType === "video";
 
-  async function triggerPdfDownload() {
+  function triggerPdfDownload() {
     if (!item?.pdfUrl) return;
-    try {
-      const res = await fetch(item.pdfUrl);
-      const blob = await res.blob();
-      const objectUrl = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = objectUrl;
-      link.download = item.title + ".pdf";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      // Delay revoke so the browser has time to read the blob URL
-      setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
-    } catch {
-      // Fallback: open in new tab if fetch fails (e.g. CORS)
-      window.open(item.pdfUrl, "_blank");
-    }
+    const filename = encodeURIComponent(item.title + ".pdf");
+    const proxyUrl = `/api/download?url=${encodeURIComponent(item.pdfUrl)}&filename=${filename}`;
+    const link = document.createElement("a");
+    link.href = proxyUrl;
+    link.download = item.title + ".pdf";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 
   const publishedDate = item.publishedAt
