@@ -86,7 +86,8 @@ export async function GET(req: NextRequest) {
       include: { section: { select: { name: true, slug: true } } },
     });
 
-    const campaigns = posts.map((p) => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const campaigns = posts.map((p: any) => ({
       id:                    p.id,
       slug:                  p.slug ?? p.id,
       brandName:             p.brandName ?? "",
