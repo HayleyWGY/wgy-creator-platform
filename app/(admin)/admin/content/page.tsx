@@ -196,7 +196,11 @@ export default function ContentPage() {
     const endpoint = field === "pdfUrl" ? "/api/upload-pdf" : "/api/upload";
     const res = await fetch(endpoint, { method: "POST", body: fd });
     const data = await res.json();
-    if (data.url) setForm((f) => ({ ...f, [field]: data.url }));
+    if (data.url) {
+      setForm((f) => ({ ...f, [field]: data.url }));
+    } else {
+      alert(`Upload failed: ${data.error ?? "unknown error"}`);
+    }
     setUploadingField(null);
   }
 

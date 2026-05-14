@@ -267,10 +267,10 @@ export default function LearnDetailPage() {
             {item.editableTemplateUrl && (
               <div
                 onClick={() => window.open(item.editableTemplateUrl!, "_blank")}
-                style={{ background: "rgba(155,126,86,0.1)", borderRadius: "12px", padding: "16px 20px", display: "flex", alignItems: "center", gap: "14px", cursor: "pointer" }}
+                style={{ background: "#2a2a2a", borderRadius: "12px", padding: "16px 20px", display: "flex", alignItems: "center", gap: "14px", cursor: "pointer" }}
               >
-                <div style={{ width: "40px", height: "40px", background: "rgba(155,126,86,0.2)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <ExternalLink size={18} color="#9b7e56" />
+                <div style={{ width: "40px", height: "40px", background: "#333333", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <ExternalLink size={18} color="#e4dcd1" />
                 </div>
                 <div style={{ flex: 1 }}>
                   <p className="font-montserrat font-semibold text-white" style={{ fontSize: "14px" }}>Open Editable Template</p>
