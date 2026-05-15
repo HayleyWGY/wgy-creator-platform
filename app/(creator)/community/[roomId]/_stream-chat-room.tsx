@@ -1,13 +1,68 @@
 'use client'
-import { useEffect, useState } from 'react'
-import { useChatContext, Channel, MessageList, MessageComposer, Window } from 'stream-chat-react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
+import {
+  useChatContext,
+  useMessageContext,
+  useDeleteHandler,
+  ComponentProvider,
+  Channel,
+  MessageList,
+  MessageComposer,
+  MessageUI,
+  Window,
+} from 'stream-chat-react'
+import type { MessageUIComponentProps } from 'stream-chat-react'
+import type { LocalMessage, Message, SendMessageOptions } from 'stream-chat'
 import type { Channel as StreamChannel } from 'stream-chat'
 import { COMMUNITY_ROOMS } from '@/lib/stream'
+import { Trash2 } from 'lucide-react'
 
-export default function StreamChatRoom({ roomId }: { roomId: string }) {
+// ─── Admin delete button — isAdmin captured via closure ───────────────────────
+function createAdminMessage(isAdmin: boolean) {
+  return function AdminMessage(props: MessageUIComponentProps) {
+    const { message } = useMessageContext('AdminMessage')
+    const handleDelete = useDeleteHandler(message)
+    const isDeleted = message.type === 'deleted' || !!message.deleted_at
+
+    return (
+      <div className="relative group">
+        <MessageUI {...props} />
+        {isAdmin && !isDeleted && (
+          <button
+            onClick={() => handleDelete()}
+            title="Delete message"
+            className="
+              absolute top-1 right-1
+              opacity-0 group-hover:opacity-100
+              transition-opacity
+              w-6 h-6 flex items-center justify-center
+              rounded-full bg-[#1a1a1a]/80
+              hover:bg-red-900/80
+            "
+          >
+            <Trash2 size={11} color="#888" />
+          </button>
+        )}
+      </div>
+    )
+  }
+}
+
+// ─── Main chat room ────────────────────────────────────────────────────────────
+export default function StreamChatRoom({
+  roomId,
+  isAdmin,
+}: {
+  roomId: string
+  isAdmin: boolean
+}) {
   const { client } = useChatContext()
-  const [channel, setChannel]   = useState<StreamChannel | null>(null)
-  const [loading, setLoading]   = useState(true)
+  const [channel, setChannel] = useState<StreamChannel | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [blockedMsg, setBlockedMsg] = useState('')
+
+  // Stable component reference — only recreates when isAdmin changes
+  const AdminMessage = useMemo(() => createAdminMessage(isAdmin), [isAdmin])
 
   const room = COMMUNITY_ROOMS.find(r => r.id === roomId)
 
@@ -38,6 +93,33 @@ export default function StreamChatRoom({ roomId }: { roomId: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [client, roomId])
 
+  // Intercept @everyone / @all / @channel for non-admins
+  const overrideSubmitHandler = useCallback(
+    async ({
+      message,
+    }: {
+      cid: string
+      localMessage: LocalMessage
+      message: Message
+      sendOptions: SendMessageOptions
+    }) => {
+      const text = message.text ?? ''
+      const hasForbidden = /@everyone|@all|@channel/i.test(text)
+
+      if (!isAdmin && hasForbidden) {
+        setBlockedMsg('Only WGY admins can use @everyone in chat rooms.')
+        setTimeout(() => setBlockedMsg(''), 3500)
+        return
+      }
+
+      setBlockedMsg('')
+      if (channel) {
+        await channel.sendMessage(message)
+      }
+    },
+    [channel, isAdmin],
+  )
+
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center h-full">
@@ -56,10 +138,17 @@ export default function StreamChatRoom({ roomId }: { roomId: string }) {
 
   return (
     <Channel channel={channel}>
-      <Window>
-        <MessageList />
-        <MessageComposer />
-      </Window>
+      <ComponentProvider value={{ Message: AdminMessage }}>
+        <Window>
+          <MessageList />
+          {blockedMsg && (
+            <p className="px-4 py-2 text-xs font-montserrat text-red-400 bg-[#1a1a1a] border-t border-white/5">
+              {blockedMsg}
+            </p>
+          )}
+          <MessageComposer overrideSubmitHandler={overrideSubmitHandler} />
+        </Window>
+      </ComponentProvider>
     </Channel>
   )
 }

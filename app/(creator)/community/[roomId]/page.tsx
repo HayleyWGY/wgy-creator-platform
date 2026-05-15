@@ -45,7 +45,7 @@ export default function ChatRoomPage({ params }: { params: { roomId: string } })
 
       {/* Stream Chat UI */}
       <div className="flex-1 overflow-hidden">
-        <StreamChatRoom roomId={params.roomId} />
+        <StreamChatRoom roomId={params.roomId} isAdmin={!!session?.user?.isAdmin} />
       </div>
     </div>
   )

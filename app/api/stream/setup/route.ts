@@ -34,6 +34,13 @@ export async function POST() {
     const client = getStreamServerClient()
     const userId = session.user.id
 
+    // Ensure user exists in Stream before channel operations
+    await client.upsertUser({
+      id: userId,
+      name: `${session.user.firstName} ${session.user.lastName}`,
+      role: session.user.isAdmin ? 'admin' : 'user',
+    })
+
     // Create/update all community channels and add user as member
     for (const room of COMMUNITY_ROOMS) {
       try {

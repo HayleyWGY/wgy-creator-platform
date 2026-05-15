@@ -215,69 +215,148 @@
   color: #ffffff;
 }
 
-/* ─── Stream Chat WGY Dark Theme ─────────────────────────────────────────── */
-.str-chat {
-  --str-chat__primary-color: #e4dcd1;
-  --str-chat__active-primary-color: #c8bfb5;
-  --str-chat__surface-color: #2a2a2a;
-  --str-chat__secondary-surface-color: #333333;
-  --str-chat__primary-surface-color: #1a1a1a;
-  --str-chat__background-color: #222222;
-  --str-chat__text-color: #ffffff;
-  --str-chat__secondary-text-color: #706b6b;
-  --str-chat__icon-color: #706b6b;
-  --str-chat__font-family: 'Montserrat', sans-serif;
-  --str-chat__own-message-bubble-color: #9b7e56;
-  --str-chat__message-bubble-color: #2a2a2a;
+/* ─── Stream Chat WGY Theme - Full Override ───────────────────────────────── */
+
+/* Force dark background throughout */
+.str-chat,
+.str-chat__container,
+.str-chat__main-panel,
+.str-chat-channel,
+.str-chat-channel-list {
+  background-color: #222222 !important;
+  color: white !important;
+  height: 100% !important;
 }
 
-.str-chat__channel-header {
-  display: none !important;
-}
-
-.str-chat__list {
-  background: #222222 !important;
+/* Message list area */
+.str-chat__list,
+.str-chat__virtual-list {
+  background-color: #222222 !important;
   padding: 12px 16px !important;
 }
 
-.str-chat__message-input {
-  background: #2a2a2a !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+/* Message input container - CRITICAL */
+.str-chat__message-input,
+.str-chat__message-input-inner,
+[class*="MessageInput"],
+[class*="message-input"] {
+  background-color: #2a2a2a !important;
+  border-top: 1px solid rgba(255,255,255,0.06) !important;
   padding: 12px 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+  min-height: 60px !important;
+  position: relative !important;
+  z-index: 10 !important;
 }
 
-.str-chat__textarea textarea {
-  background: #333333 !important;
+/* Textarea inside input */
+.str-chat__textarea,
+.str-chat__textarea textarea,
+.str-chat__message-textarea,
+[class*="MessageTextarea"],
+textarea[class*="str-chat"] {
+  display: block !important;
+  background-color: #333333 !important;
   color: white !important;
   border-radius: 8px !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
   font-family: 'Montserrat', sans-serif !important;
   font-size: 13px !important;
+  padding: 10px 14px !important;
+  width: 100% !important;
+  min-height: 40px !important;
+  resize: none !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
-.str-chat__message-bubble {
+.str-chat__textarea textarea:focus,
+.str-chat__message-textarea:focus {
+  border-color: #e4dcd1 !important;
+  outline: none !important;
+}
+
+/* Send button */
+.str-chat__send-button,
+[class*="SendButton"],
+button[class*="send"] {
+  color: #e4dcd1 !important;
+  background: transparent !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: flex !important;
+}
+
+/* Message bubbles */
+.str-chat__message-bubble,
+[class*="MessageBubble"] {
   font-family: 'Montserrat', sans-serif !important;
   font-size: 13px !important;
   line-height: 1.5 !important;
 }
 
-.str-chat__message--me .str-chat__message-bubble {
-  background: #9b7e56 !important;
+/* Own messages */
+.str-chat__message--me .str-chat__message-bubble,
+[class*="message--me"] [class*="bubble"] {
+  background-color: #9b7e56 !important;
+  color: white !important;
   border-radius: 12px 0 12px 12px !important;
 }
 
+/* Other messages */
 .str-chat__message:not(.str-chat__message--me) .str-chat__message-bubble {
-  background: #2a2a2a !important;
+  background-color: #2a2a2a !important;
+  color: white !important;
   border-radius: 0 12px 12px 12px !important;
 }
 
-.str-chat__avatar {
-  background: #e4dcd1 !important;
+/* Avatar */
+.str-chat__avatar,
+.str-chat__avatar-image {
+  background-color: #e4dcd1 !important;
   color: #222222 !important;
   font-family: 'Montserrat', sans-serif !important;
   font-weight: 700 !important;
 }
 
-.str-chat__send-button {
-  color: #e4dcd1 !important;
+/* Hide default channel header */
+.str-chat__channel-header,
+[class*="ChannelHeader"] {
+  display: none !important;
+}
+
+/* Timestamps */
+.str-chat__message-data,
+.str-chat__message-simple-timestamp {
+  color: #706b6b !important;
+  font-size: 10px !important;
+  font-family: 'Montserrat', sans-serif !important;
+}
+
+/* Empty state text */
+.str-chat__empty-channel,
+[class*="EmptyStateIndicator"] {
+  color: #706b6b !important;
+  font-family: 'Montserrat', sans-serif !important;
+}
+
+/* Make sure the Window component fills available height */
+.str-chat__container {
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.str-chat__main-panel {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+.str-chat__list {
+  flex: 1 !important;
+  overflow-y: auto !important;
 }
