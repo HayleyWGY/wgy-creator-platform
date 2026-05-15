@@ -38,7 +38,7 @@ export async function POST() {
     for (const room of COMMUNITY_ROOMS) {
       try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const channelData: any = { name: room.name, created_by_id: 'wgy-system', members: [userId] }
+        const channelData: any = { name: room.name, created_by_id: userId, members: [userId] }
         const channel = client.channel('messaging', room.id, channelData)
         await channel.create()
         await channel.addMembers([userId])
