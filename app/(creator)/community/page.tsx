@@ -1,169 +1,110 @@
-"use client";
+'use client'
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { COMMUNITY_ROOMS } from '@/lib/stream'
+import { CreatorPostCard, type CreatorPost } from '@/components/creator/creator-post-card'
 
-import { Heart, MessageCircle, Bookmark, Image as ImageIcon } from "lucide-react";
-import { useState } from "react";
-import { PillTag } from "@/components/ui/pill-tag";
-
-const ROOMS = [
-  { emoji: "💬", name: "Group Chat",                   sub: "830 members",       unread: 3  },
-  { emoji: "🔗", name: "Share Your Social Links",      sub: "2,609 posts"                   },
-  { emoji: "💰", name: "Affiliate Links",              sub: "No new messages"               },
-  { emoji: "👀", name: "Looking for Creator Collabs",  sub: "105 posts",         unread: 1  },
-  { emoji: "🎪", name: "Events Chat",                  sub: "15 posts"                      },
-  { emoji: "⭐", name: "The Creator Corner",           sub: "11 posts",          unread: 11 },
-];
+// Rooms list — unread counts loaded via StreamRoomsWithUnread
+// when Stream client is available (rendered from community/[roomId] page)
+function RoomsList() {
+  const router = useRouter()
+  return (
+    <div className="flex flex-col gap-2">
+      {COMMUNITY_ROOMS.map(room => (
+        <div
+          key={room.id}
+          onClick={() => router.push(`/community/${room.id}`)}
+          className="flex items-center gap-3 p-4 rounded-xl bg-[#2a2a2a] cursor-pointer active:opacity-80 transition-opacity"
+        >
+          <div className="w-10 h-10 rounded-xl bg-[#333333] flex items-center justify-center text-lg flex-shrink-0">
+            {room.emoji}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-white font-montserrat font-semibold text-sm">{room.name}</p>
+            <p className="text-[#706b6b] text-xs truncate mt-0.5">{room.description}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 export default function CommunityPage() {
-  const [liked1, setLiked1]         = useState(false);
-  const [bookmarked1, setBookmarked1] = useState(false);
-  const [liked2, setLiked2]         = useState(false);
-  const [bookmarked2, setBookmarked2] = useState(false);
+  const router = useRouter()
+  const [posts, setPosts]           = useState<CreatorPost[]>([])
+  const [postsLoading, setPostsLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/creator-posts?limit=10')
+      .then(r => r.json())
+      .then(d => { setPosts(d.posts || []); setPostsLoading(false) })
+      .catch(() => setPostsLoading(false))
+  }, [])
 
   return (
-    <div>
+    <div className="pb-20 bg-[#222222] min-h-screen">
+
       {/* Header */}
-      <div className="px-5 pt-6 pb-4">
+      <div className="px-5 pt-4 pb-2">
         <h1 className="text-page-heading text-white">Community</h1>
       </div>
 
-      {/* Chat Rooms label */}
-      <div className="px-5 mb-2">
-        <span className="text-section-label">Chat Rooms</span>
+      {/* Chat Rooms */}
+      <div className="px-5 mt-3">
+        <p className="font-montserrat font-bold uppercase text-[10px] tracking-[0.14em] text-[#706b6b] mb-3">
+          CHAT ROOMS
+        </p>
+        <RoomsList />
       </div>
 
-      {/* Rooms list */}
-      <div>
-        {ROOMS.map((room, i) => (
-          <div key={i}>
-            <button
-              className="w-full flex items-center gap-3 px-5 py-[14px] text-left transition-opacity active:opacity-70"
-              style={{ background: "#222222" }}
-            >
-              <div className="w-10 h-10 flex-none flex items-center justify-center" style={{ background: "#2a2a2a", borderRadius: "10px" }}>
-                <span style={{ fontSize: "20px" }}>{room.emoji}</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-montserrat font-semibold text-white leading-tight" style={{ fontSize: "13px" }}>
-                  {room.name}
-                </p>
-                <p className="font-montserrat font-normal mt-0.5" style={{ fontSize: "11px", color: "#706b6b" }}>
-                  {room.sub}
-                </p>
-              </div>
-              {room.unread && (
-                <div className="w-5 h-5 rounded-full flex items-center justify-center flex-none" style={{ background: "#e4dcd1" }}>
-                  <span className="font-montserrat font-bold" style={{ fontSize: "9px", color: "#222222" }}>
-                    {room.unread > 9 ? "9+" : room.unread}
-                  </span>
-                </div>
-              )}
-            </button>
-            {i < ROOMS.length - 1 && (
-              <div className="mx-5" style={{ height: "1px", background: "rgba(255,255,255,0.06)" }} />
+      {/* Creator Corner */}
+      <div className="px-5 mt-6">
+        <div className="flex items-center justify-between mb-3">
+          <p className="font-montserrat font-bold uppercase text-[10px] tracking-[0.14em] text-[#e4dcd1]">
+            CREATOR CORNER
+          </p>
+          <button
+            onClick={() => router.push('/community/creator-corner')}
+            className="text-[#e4dcd1] font-montserrat font-semibold text-[11px]"
+          >
+            View all →
+          </button>
+        </div>
+
+        {/* New post prompt */}
+        <button
+          onClick={() => router.push('/community/creator-corner/new')}
+          className="w-full p-4 rounded-xl bg-[#2a2a2a] text-left mb-3 border border-white/5 active:opacity-80 transition-opacity"
+        >
+          <p className="text-[#706b6b] font-montserrat text-sm">
+            Share something with the community...
+          </p>
+        </button>
+
+        {/* Recent posts */}
+        {postsLoading ? (
+          <div className="flex flex-col gap-3">
+            {[1, 2].map(i => (
+              <div key={i} className="h-24 bg-[#2a2a2a] rounded-xl animate-pulse" />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {posts.slice(0, 5).map(post => (
+              <CreatorPostCard
+                key={post.id}
+                post={post}
+                onDeleted={() => setPosts(prev => prev.filter(p => p.id !== post.id))}
+              />
+            ))}
+            {posts.length === 0 && (
+              <p className="text-center py-8 font-montserrat text-[#706b6b] text-sm">
+                No posts yet. Be the first!
+              </p>
             )}
           </div>
-        ))}
-      </div>
-
-      {/* Divider */}
-      <div className="my-5 mx-5" style={{ height: "1px", background: "rgba(255,255,255,0.06)" }} />
-
-      {/* Creator Corner Posts */}
-      <div className="px-5 pb-6">
-        <span className="text-section-label">Creator Corner Posts</span>
-
-        {/* Post 1 — Sophie Chen */}
-        <div
-          className="mt-3 rounded-card p-[14px]"
-          style={{ background: "#2a2a2a", border: "1px solid rgba(228,220,209,0.08)" }}
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-[34px] h-[34px] rounded-full flex items-center justify-center flex-none" style={{ background: "#e4dcd1" }}>
-              <span className="font-montserrat font-semibold" style={{ fontSize: "11px", color: "#222222" }}>SC</span>
-            </div>
-            <div className="flex items-center gap-2 flex-1 min-w-0">
-              <span className="font-montserrat font-semibold text-white" style={{ fontSize: "12px" }}>Sophie Chen</span>
-              <PillTag label="Creator" />
-            </div>
-            <span className="font-montserrat flex-none" style={{ fontSize: "10px", color: "#706b6b" }}>3h ago</span>
-          </div>
-
-          <p className="font-montserrat font-normal leading-[1.6] mb-3" style={{ fontSize: "12px", color: "#c8c3bc" }}>
-            Just wrapped an incredible Boots UK shoot — the team was amazing and I&apos;m obsessed with the content we created. Can&apos;t wait to share! ✨
-          </p>
-
-          <div className="flex items-center gap-4">
-            <button onClick={() => setLiked1(!liked1)} className="flex items-center gap-1.5">
-              <Heart size={14} fill={liked1 ? "#e4dcd1" : "none"} color={liked1 ? "#e4dcd1" : "#706b6b"} />
-              <span className="font-montserrat" style={{ fontSize: "10px", color: "#706b6b" }}>22</span>
-            </button>
-            <button className="flex items-center gap-1.5">
-              <MessageCircle size={14} color="#706b6b" />
-              <span className="font-montserrat" style={{ fontSize: "10px", color: "#706b6b" }}>8</span>
-            </button>
-            <button onClick={() => setBookmarked1(!bookmarked1)} className="ml-auto">
-              <Bookmark size={14} fill={bookmarked1 ? "#e4dcd1" : "none"} color={bookmarked1 ? "#e4dcd1" : "#706b6b"} />
-            </button>
-          </div>
-        </div>
-
-        {/* Post 2 — Maya Patel (with image) */}
-        <div
-          className="mt-3 rounded-card p-[14px]"
-          style={{ background: "#2a2a2a", border: "1px solid rgba(228,220,209,0.08)" }}
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-[34px] h-[34px] rounded-full flex items-center justify-center flex-none" style={{ background: "#9b7e56" }}>
-              <span className="font-montserrat font-semibold" style={{ fontSize: "11px", color: "#ffffff" }}>MP</span>
-            </div>
-            <div className="flex items-center gap-2 flex-1 min-w-0">
-              <span className="font-montserrat font-semibold text-white" style={{ fontSize: "12px" }}>Maya Patel</span>
-              <PillTag label="Creator" />
-            </div>
-            <span className="font-montserrat flex-none" style={{ fontSize: "10px", color: "#706b6b" }}>5h ago</span>
-          </div>
-
-          <p className="font-montserrat font-normal leading-[1.6]" style={{ fontSize: "12px", color: "#c8c3bc", marginBottom: "10px" }}>
-            Just posted my first paid collab and honestly could not be happier with how it turned out! The brand were so easy to work with. Has anyone else been working with Kaleidos? 🎨
-          </p>
-
-          {/* Post image placeholder */}
-          <div
-            style={{
-              width: "100%",
-              height: "160px",
-              borderRadius: "8px",
-              background: "#3d3550",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "6px",
-            }}
-          >
-            <ImageIcon size={24} color="#706b6b" strokeWidth={1.5} />
-            <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#706b6b" }}>[Image]</span>
-          </div>
-
-          {/* Actions */}
-          <div
-            className="flex items-center gap-4"
-            style={{ marginTop: "10px", paddingTop: "10px", borderTop: "1px solid rgba(255,255,255,0.06)" }}
-          >
-            <button onClick={() => setLiked2(!liked2)} className="flex items-center gap-1.5">
-              <Heart size={14} fill={liked2 ? "#e4dcd1" : "none"} color={liked2 ? "#e4dcd1" : "#706b6b"} />
-              <span className="font-montserrat" style={{ fontSize: "10px", color: "#706b6b" }}>18</span>
-            </button>
-            <button className="flex items-center gap-1.5">
-              <MessageCircle size={14} color="#706b6b" />
-              <span className="font-montserrat" style={{ fontSize: "10px", color: "#706b6b" }}>4</span>
-            </button>
-            <button onClick={() => setBookmarked2(!bookmarked2)} className="ml-auto">
-              <Bookmark size={14} fill={bookmarked2 ? "#e4dcd1" : "none"} color={bookmarked2 ? "#e4dcd1" : "#706b6b"} />
-            </button>
-          </div>
-        </div>
+        )}
       </div>
     </div>
-  );
+  )
 }

@@ -31,11 +31,14 @@ model Creator {
   isClient          Boolean        @default(false)
   joinedAt          DateTime       @default(now())
   lastSeenAt        DateTime       @default(now())
-  tags              CreatorTag[]
-  posts             Post[]
-  comments          Comment[]
-  likes             Like[]
-  notifications     Notification[]
+  tags                CreatorTag[]
+  posts               Post[]
+  comments            Comment[]
+  likes               Like[]
+  notifications       Notification[]
+  creatorPosts        CreatorPost[]
+  creatorPostComments CreatorPostComment[]
+  creatorPostLikes    CreatorPostLike[]
 }
 
 model Section {
@@ -176,6 +179,43 @@ model MessageTemplate {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   sentLogs     OnboardingMessageSent[]
+}
+
+model CreatorPost {
+  id            String               @id @default(cuid())
+  authorId      String
+  author        Creator              @relation(fields: [authorId], references: [id])
+  body          String               @db.Text
+  imageUrl      String?
+  likesCount    Int                  @default(0)
+  commentsCount Int                  @default(0)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  isDeleted     Boolean              @default(false)
+  comments      CreatorPostComment[]
+  likes         CreatorPostLike[]
+}
+
+model CreatorPostComment {
+  id        String      @id @default(cuid())
+  postId    String
+  post      CreatorPost @relation(fields: [postId], references: [id])
+  authorId  String
+  author    Creator     @relation(fields: [authorId], references: [id])
+  body      String      @db.Text
+  createdAt DateTime    @default(now())
+  isDeleted Boolean     @default(false)
+}
+
+model CreatorPostLike {
+  id        String      @id @default(cuid())
+  postId    String
+  post      CreatorPost @relation(fields: [postId], references: [id])
+  creatorId String
+  creator   Creator     @relation(fields: [creatorId], references: [id])
+  createdAt DateTime    @default(now())
+
+  @@unique([postId, creatorId])
 }
 
 model OnboardingMessageSent {
