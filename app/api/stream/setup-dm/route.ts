@@ -13,11 +13,7 @@ export async function POST() {
 
     const client = getStreamServerClient()
 
-    // Get admin user from database
-    const admin = await prisma.creator.findFirst({
-      where: { isAdmin: true },
-    })
-
+    const admin = await prisma.creator.findFirst({ where: { isAdmin: true } })
     if (!admin) {
       return NextResponse.json({ error: 'Admin not found' }, { status: 404 })
     }
@@ -25,7 +21,7 @@ export async function POST() {
     const creatorId = session.user.id
     const adminId = admin.id
 
-    // Ensure both users exist in Stream
+    // Upsert both users in Stream
     await client.upsertUsers([
       {
         id: creatorId,
@@ -39,24 +35,26 @@ export async function POST() {
       },
     ])
 
-    // Create consistent channel ID — sort so same channel is found regardless of who initiates
-    const channelId = [creatorId, adminId]
-      .sort()
-      .join('_dm_')
+    // Consistent channel ID (sorted so same channel regardless of who initiates)
+    const members = [creatorId, adminId].sort()
+    const channelId = members
+      .join('---')
       .replace(/[^a-zA-Z0-9_-]/g, '_')
+      .slice(0, 64)
 
-    // Create or get the DM channel
     const channel = client.channel('messaging', channelId, {
-      members: [creatorId, adminId],
-      created_by_id: creatorId,
+      members,
+      created_by_id: adminId,
     })
 
     await channel.create()
-    await channel.addMembers([creatorId, adminId])
 
     return NextResponse.json({ channelId, success: true })
-  } catch (error) {
-    console.error('DM setup error:', error)
-    return NextResponse.json({ error: 'DM setup failed' }, { status: 500 })
+  } catch (err: unknown) {
+    console.error('DM setup error:', err)
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : 'Setup failed' },
+      { status: 500 },
+    )
   }
 }

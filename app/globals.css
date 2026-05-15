@@ -215,113 +215,54 @@
   color: #ffffff;
 }
 
-/* ─── Stream Chat WGY Theme (v14 class names) ─────────────────────────────── */
+/* ─── Stream Chat dark theme ─────────────────────────────────────────────── */
 
-/* Global background and text */
-.str-chat,
-.str-chat *,
-.str-chat__channel {
+/* v14 uses CSS custom properties scoped to str-chat__theme-dark */
+.str-chat__theme-dark {
+  --str-chat__background-color: #222222;
+  --str-chat__surface-color: #2a2a2a;
+  --str-chat__secondary-surface-color: #333333;
+  --str-chat__tertiary-surface-color: #1c1c1c;
+  --str-chat__primary-color: #e4dcd1;
+  --str-chat__active-primary-color: #c8bfb5;
+  --str-chat__text-color: #ffffff;
+  --str-chat__secondary-text-color: #706b6b;
+  --str-chat__icon-color: #706b6b;
+  --str-chat__own-message-bubble-color: #9b7e56;
+  --str-chat__message-bubble-color: #2a2a2a;
+  --str-chat__font-family: 'Montserrat', sans-serif;
+}
+
+/* Ensure message composer (input bar) is always visible */
+.str-chat__theme-dark .str-chat__message-composer {
+  background: var(--str-chat__surface-color) !important;
+  border-top: 1px solid rgba(255,255,255,0.06) !important;
+  min-height: 60px !important;
+}
+
+.str-chat__theme-dark .str-chat__message-composer-container {
+  background: var(--str-chat__surface-color) !important;
+}
+
+.str-chat__theme-dark .str-chat__textarea textarea,
+.str-chat__theme-dark .str-chat__message-textarea {
+  background: var(--str-chat__secondary-surface-color) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  border-radius: 8px !important;
   font-family: 'Montserrat', sans-serif !important;
-  box-sizing: border-box;
-}
-
-.str-chat {
-  background-color: #222222 !important;
-  color: #ffffff !important;
-  height: 100% !important;
-}
-
-/* Message list */
-.str-chat__list,
-.str-chat__virtual-list {
-  background-color: #222222 !important;
-  padding: 12px 16px !important;
-}
-
-/* Message bubbles — v14 uses str-chat__message-bubble-wrapper and str-chat__message-text */
-.str-chat__message-bubble {
-  font-size: 13px !important;
-  line-height: 1.5 !important;
-}
-
-.str-chat__message--me .str-chat__message-bubble {
-  background-color: #9b7e56 !important;
-  color: #ffffff !important;
-  border-radius: 12px 0 12px 12px !important;
-}
-
-.str-chat__message:not(.str-chat__message--me) .str-chat__message-bubble {
-  background-color: #2a2a2a !important;
-  color: #ffffff !important;
-  border-radius: 0 12px 12px 12px !important;
-}
-
-/* Message text content */
-.str-chat__message-text,
-.str-chat__message-text p {
-  color: #ffffff !important;
   font-size: 13px !important;
 }
 
-/* Avatar */
-.str-chat__avatar {
-  background-color: #e4dcd1 !important;
-  color: #222222 !important;
-  font-weight: 700 !important;
+.str-chat__theme-dark .str-chat__send-button {
+  color: var(--str-chat__primary-color) !important;
 }
 
-.str-chat__avatar-initials {
-  color: #222222 !important;
-}
-
-/* Timestamps */
-.str-chat__message-data,
-.str-chat__message-simple-timestamp,
-.str-chat__message-metadata {
-  color: #706b6b !important;
-  font-size: 10px !important;
-}
-
-/* Date separator */
-.str-chat__date-separator-date {
-  color: #706b6b !important;
-  font-size: 10px !important;
-}
-
-.str-chat__date-separator-line {
-  background-color: rgba(255,255,255,0.06) !important;
-}
-
-/* Empty state */
-.str-chat__empty-channel {
-  background-color: #222222 !important;
-  color: #706b6b !important;
-}
-
-/* Hide default channel header */
-.str-chat__channel-header {
+.str-chat__theme-dark .str-chat__channel-header {
   display: none !important;
 }
 
-/* v14 MessageComposer (used in DM page) */
-.str-chat__message-composer {
-  background-color: #2a2a2a !important;
-  border-top: 1px solid rgba(255,255,255,0.06) !important;
-}
-
-.str-chat__message-composer-container {
-  background-color: #2a2a2a !important;
-}
-
-.str-chat__textarea textarea,
-.str-chat__message-textarea {
-  background-color: #333333 !important;
-  color: #ffffff !important;
-  border: 1px solid rgba(255,255,255,0.08) !important;
-  border-radius: 8px !important;
-  font-size: 13px !important;
-}
-
-.str-chat__send-button {
-  color: #e4dcd1 !important;
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
