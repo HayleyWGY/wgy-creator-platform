@@ -7,14 +7,6 @@ import { useSession } from 'next-auth/react'
 import { useChatContext, Channel, MessageList, MessageComposer, Window } from 'stream-chat-react'
 import type { Channel as StreamChannel } from 'stream-chat'
 
-const COMMUNITY_IDS = [
-  'group-chat',
-  'share-social-links',
-  'affiliate-links',
-  'creator-collabs',
-  'events-chat',
-]
-
 export default function DMThreadPage() {
   const { data: session } = useSession()
   const { client } = useChatContext()
@@ -26,27 +18,17 @@ export default function DMThreadPage() {
 
     async function getOrCreateDMChannel() {
       try {
-        // Ensure DM is set up server-side with both members
-        await fetch('/api/stream/setup-dm', { method: 'POST' })
+        // Set up DM server-side — returns the deterministic channelId
+        const res = await fetch('/api/stream/setup-dm', { method: 'POST' })
+        const { channelId } = await res.json()
 
-        // Query for channels this user is a member of
-        const channels = await client.queryChannels(
-          {
-            type: 'messaging',
-            members: { $eq: [session!.user.id] },
-          },
-          { last_message_at: -1 },
-          { watch: true, state: true, message_limit: 30 },
-        )
+        if (!channelId) throw new Error('No channel ID returned')
 
-        // Filter to DM channels only (exclude community rooms)
-        const dmChannels = channels.filter(ch => !COMMUNITY_IDS.includes(ch.id ?? ''))
-
-        if (dmChannels.length > 0) {
-          setChannel(dmChannels[0])
-        } else {
-          setChannel(null)
-        }
+        // Watch the channel directly using the known ID
+        const ch = client.channel('messaging', channelId)
+        await ch.watch()
+        await ch.markRead()
+        setChannel(ch)
       } catch (err) {
         console.error('DM channel error:', err)
       } finally {
@@ -55,6 +37,11 @@ export default function DMThreadPage() {
     }
 
     getOrCreateDMChannel()
+
+    return () => {
+      channel?.stopWatching()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [client, session])
 
   return (
@@ -101,8 +88,7 @@ export default function DMThreadPage() {
           </Channel>
         ) : (
           <div className="flex flex-col items-center justify-center h-full gap-2">
-            <p className="font-montserrat text-[#706b6b] text-sm">No messages yet.</p>
-            <p className="font-montserrat text-[#706b6b] text-xs">Send a message to start the conversation.</p>
+            <p className="font-montserrat text-[#706b6b] text-sm">Could not connect to messages.</p>
           </div>
         )}
       </div>

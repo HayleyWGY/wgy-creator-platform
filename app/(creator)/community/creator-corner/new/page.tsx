@@ -23,7 +23,7 @@ export default function NewPostPage() {
       formData.append('file', file)
       formData.append('folder', 'creator-posts')
 
-      const res  = await fetch('/api/upload', { method: 'POST', body: formData })
+      const res  = await fetch('/api/upload-image', { method: 'POST', body: formData })
       const data = await res.json()
       if (data.url) setImageUrl(data.url)
       else setError('Image upload failed')
