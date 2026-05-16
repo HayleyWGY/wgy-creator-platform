@@ -18,6 +18,7 @@ import {
   BarChart2,
   Settings,
   LogOut,
+  MessageCircle,
   LucideIcon,
 } from "lucide-react";
 
@@ -25,6 +26,7 @@ const NAV_ITEMS: { label: string; icon: LucideIcon; href: string }[] = [
   { label: "Dashboard",  icon: LayoutDashboard, href: "/admin/dashboard"  },
   { label: "Campaigns",  icon: Megaphone,       href: "/admin/campaigns"  },
   { label: "Approvals",  icon: CheckSquare,     href: "/admin/approvals"  },
+  { label: "Community",  icon: MessageCircle,   href: "/admin/community"  },
   { label: "Inbox",      icon: Inbox,           href: "/admin/inbox"      },
   { label: "Creators",   icon: Users,           href: "/admin/creators"   },
   { label: "Tags",       icon: Tag,             href: "/admin/tags"       },

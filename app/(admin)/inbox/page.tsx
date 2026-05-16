@@ -1,8 +1,6 @@
 'use client'
-import { useEffect, useState, useRef, FormEvent } from 'react'
-import { useSession } from 'next-auth/react'
-import { Send, ImageIcon, Trash2, Search } from 'lucide-react'
-import { useChatPoll } from '@/lib/use-chat-poll'
+import { useEffect, useRef, useState, FormEvent } from 'react'
+import { Search, Send, ImageIcon, Trash2 } from 'lucide-react'
 
 interface Creator {
   id: string
@@ -15,6 +13,7 @@ interface Creator {
 interface DmMessageSender {
   id: string
   firstName: string
+  lastName: string
   isAdmin: boolean
 }
 
@@ -41,27 +40,21 @@ interface DmMessageFull {
   }
 }
 
-interface ThreadDetail {
-  id: string
-  creator: Creator
-  messages: DmMessageFull[]
-}
-
-function Avatar({ name, imageUrl, isAdmin }: { name: string; imageUrl: string | null; isAdmin?: boolean }) {
+function Avatar({ name, imageUrl, isWgy }: { name: string; imageUrl?: string | null; isWgy?: boolean }) {
   if (imageUrl) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img src={imageUrl} alt="" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
     )
   }
-  const initials = name.slice(0, 2).toUpperCase()
+  const initials = isWgy ? 'WG' : name.slice(0, 2).toUpperCase()
   return (
     <div style={{
       width: 36, height: 36, borderRadius: '50%',
-      background: isAdmin ? '#e4dcd1' : '#3a3a3a',
+      background: isWgy ? '#9b7e56' : '#e4dcd1',
       display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
     }}>
-      <span style={{ fontSize: 12, fontWeight: 700, color: isAdmin ? '#222' : '#fff', fontFamily: 'Montserrat, sans-serif' }}>
+      <span style={{ fontSize: 12, fontWeight: 700, color: '#222', fontFamily: 'Montserrat, sans-serif' }}>
         {initials}
       </span>
     </div>
@@ -89,71 +82,82 @@ function formatDate(iso: string) {
 }
 
 export default function AdminInboxPage() {
-  useSession()
   const [threads, setThreads] = useState<ThreadListItem[]>([])
+  const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [activeThreadId, setActiveThreadId] = useState<string | null>(null)
-  const [activeThread, setActiveThread] = useState<ThreadDetail | null>(null)
-  const [body, setBody] = useState('')
+  const [activeThread, setActiveThread] = useState<ThreadListItem | null>(null)
+  const [messages, setMessages] = useState<DmMessageFull[]>([])
+  const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
   const [uploading, setUploading] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
-  // Load thread list
-  useChatPoll<{ threads: ThreadListItem[] }>(
-    '/api/chat/dm/admin',
-    (data) => setThreads(data.threads || []),
-    3000,
-    true,
-  )
+  // Load thread list on mount
+  useEffect(() => {
+    fetch('/api/chat/dm/admin')
+      .then(r => r.json())
+      .then(data => { setThreads(data.threads || []); setLoading(false) })
+      .catch(() => setLoading(false))
+  }, [])
 
-  // Load active thread
-  useChatPoll<{ thread: ThreadDetail }>(
-    activeThreadId ? `/api/chat/dm/${activeThreadId}` : '',
-    (data) => {
-      if (!data.thread) return
-      setActiveThread(data.thread)
-    },
-    3000,
-    !!activeThreadId,
-  )
+  // Poll thread list every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetch('/api/chat/dm/admin')
+        .then(r => r.json())
+        .then(data => setThreads(data.threads || []))
+        .catch(() => {})
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [])
+
+  // Poll active thread messages every 3 seconds
+  useEffect(() => {
+    if (!activeThread) return
+    const interval = setInterval(async () => {
+      const res = await fetch(`/api/chat/dm/${activeThread.id}`)
+      const data = await res.json()
+      setMessages(data.thread?.messages || [])
+    }, 3000)
+    return () => clearInterval(interval)
+  }, [activeThread])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [activeThread?.messages])
+  }, [messages])
 
-  async function openThread(threadId: string) {
-    setActiveThreadId(threadId)
-    const res = await fetch(`/api/chat/dm/${threadId}`)
-    if (res.ok) {
-      const data = await res.json()
-      setActiveThread(data.thread)
-    }
+  async function loadThread(thread: ThreadListItem) {
+    setActiveThread(thread)
+    setMessages([])
+    const res = await fetch(`/api/chat/dm/${thread.id}`)
+    const data = await res.json()
+    setMessages(data.thread?.messages || [])
   }
 
-  async function sendMessage(e: FormEvent) {
-    e.preventDefault()
-    if (!body.trim() || sending || !activeThread) return
+  async function handleSend(e?: FormEvent) {
+    e?.preventDefault()
+    if (!input.trim() || sending || !activeThread) return
     setSending(true)
-    const text = body.trim()
-    setBody('')
+    const text = input.trim()
+    setInput('')
 
-    try {
-      const res = await fetch('/api/chat/dm/admin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ creatorId: activeThread.creator.id, body: text }),
-      })
-      if (res.ok) {
-        const { message } = await res.json()
-        setActiveThread(prev => prev ? { ...prev, messages: [...prev.messages, message] } : prev)
-      }
-    } finally {
-      setSending(false)
-      inputRef.current?.focus()
+    const res = await fetch('/api/chat/dm/admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ body: text, creatorId: activeThread.creator.id }),
+    })
+
+    if (res.ok) {
+      const data = await res.json()
+      setMessages(prev => [...prev, data.message])
+      setThreads(prev => prev.map(t =>
+        t.id === activeThread.id ? { ...t, messages: [data.message] } : t
+      ))
     }
+    setSending(false)
+    inputRef.current?.focus()
   }
 
   async function uploadImage(file: File) {
@@ -162,39 +166,40 @@ export default function AdminInboxPage() {
     try {
       const form = new FormData()
       form.append('file', file)
-      const res = await fetch('/api/upload-image', { method: 'POST', body: form })
+      form.append('bucket', 'creator-posts')
+      const res = await fetch('/api/upload-supabase', { method: 'POST', body: form })
       if (!res.ok) return
       const { url } = await res.json()
 
       const msgRes = await fetch('/api/chat/dm/admin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ creatorId: activeThread.creator.id, body: '', imageUrl: url }),
+        body: JSON.stringify({ body: '', imageUrl: url, creatorId: activeThread.creator.id }),
       })
       if (msgRes.ok) {
-        const { message } = await msgRes.json()
-        setActiveThread(prev => prev ? { ...prev, messages: [...prev.messages, message] } : prev)
+        const data = await msgRes.json()
+        setMessages(prev => [...prev, data.message])
       }
     } finally {
       setUploading(false)
     }
   }
 
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSend()
+    }
+  }
+
   async function deleteMessage(messageId: string) {
-    if (!activeThreadId) return
-    await fetch(`/api/chat/dm/${activeThreadId}`, {
+    if (!activeThread) return
+    await fetch(`/api/chat/dm/${activeThread.id}`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ messageId }),
     })
-    setActiveThread(prev => prev ? { ...prev, messages: prev.messages.filter(m => m.id !== messageId) } : prev)
-  }
-
-  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      sendMessage(e as unknown as FormEvent)
-    }
+    setMessages(prev => prev.filter(m => m.id !== messageId))
   }
 
   const filtered = threads.filter(t =>
@@ -203,7 +208,7 @@ export default function AdminInboxPage() {
 
   // Group messages by date
   const grouped: { date: string; messages: DmMessageFull[] }[] = []
-  for (const msg of activeThread?.messages ?? []) {
+  for (const msg of messages) {
     const d = formatDate(msg.createdAt)
     if (!grouped.length || grouped[grouped.length - 1].date !== d) {
       grouped.push({ date: d, messages: [msg] })
@@ -214,7 +219,8 @@ export default function AdminInboxPage() {
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: '#222222' }}>
-      {/* Left panel — thread list */}
+
+      {/* ── Left panel ── */}
       <div style={{ width: 300, borderRight: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
         {/* Header */}
         <div style={{ padding: '20px 16px 12px' }}>
@@ -234,38 +240,40 @@ export default function AdminInboxPage() {
             placeholder="Search creators..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            style={{
-              width: '100%', background: '#2a2a2a', border: 'none', borderRadius: 8,
-              padding: '8px 12px 8px 30px', color: 'white', fontSize: 12,
-              fontFamily: 'Montserrat, sans-serif', outline: 'none', boxSizing: 'border-box',
-            }}
+            style={{ width: '100%', background: '#2a2a2a', border: 'none', borderRadius: 8, padding: '8px 12px 8px 30px', color: 'white', fontSize: 12, fontFamily: 'Montserrat, sans-serif', outline: 'none', boxSizing: 'border-box' }}
           />
         </div>
 
         {/* Thread list */}
         <div style={{ flex: 1, overflowY: 'auto' }}>
-          {filtered.length === 0 && (
+          {loading && (
+            <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 12, padding: '16px', textAlign: 'center' }}>
+              Loading...
+            </p>
+          )}
+          {!loading && filtered.length === 0 && (
             <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 12, padding: '16px', textAlign: 'center' }}>
               No conversations yet
             </p>
           )}
           {filtered.map(t => {
             const last = t.messages[0]
-            const isActive = t.id === activeThreadId
+            const isActive = t.id === activeThread?.id
             return (
               <button
                 key={t.id}
-                onClick={() => openThread(t.id)}
+                onClick={() => loadThread(t)}
                 style={{
                   width: '100%', display: 'flex', gap: 10, padding: '12px 16px', textAlign: 'left',
                   background: isActive ? '#2a2a2a' : 'transparent',
                   borderBottom: '1px solid rgba(255,255,255,0.04)',
                   border: 'none', cursor: 'pointer',
                   borderLeft: isActive ? '2px solid #e4dcd1' : '2px solid transparent',
+                  boxSizing: 'border-box',
                 }}
               >
                 <Avatar
-                  name={`${t.creator.firstName}${t.creator.lastName}`}
+                  name={`${t.creator.firstName[0]}${t.creator.lastName[0]}`}
                   imageUrl={t.creator.profileImageUrl}
                 />
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -296,7 +304,7 @@ export default function AdminInboxPage() {
         </div>
       </div>
 
-      {/* Right panel — conversation */}
+      {/* ── Right panel ── */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         {!activeThread ? (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -307,12 +315,9 @@ export default function AdminInboxPage() {
         ) : (
           <>
             {/* Conversation header */}
-            <div style={{
-              padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)',
-              display: 'flex', alignItems: 'center', gap: 10,
-            }}>
+            <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 10 }}>
               <Avatar
-                name={`${activeThread.creator.firstName}${activeThread.creator.lastName}`}
+                name={`${activeThread.creator.firstName[0]}${activeThread.creator.lastName[0]}`}
                 imageUrl={activeThread.creator.profileImageUrl}
               />
               <div>
@@ -327,10 +332,10 @@ export default function AdminInboxPage() {
 
             {/* Messages */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px 0' }}>
-              {activeThread.messages.length === 0 && (
+              {messages.length === 0 && (
                 <div style={{ textAlign: 'center', paddingTop: 48 }}>
                   <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 14 }}>
-                    No messages yet — start the conversation!
+                    No messages yet
                   </p>
                 </div>
               )}
@@ -347,16 +352,15 @@ export default function AdminInboxPage() {
                       <div key={msg.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 12, flexDirection: isOwn ? 'row-reverse' : 'row' }}>
                         {!isOwn && (
                           <Avatar
-                            name={`${msg.sender.firstName}${msg.sender.lastName}`}
+                            name={`${msg.sender.firstName[0]}${msg.sender.lastName[0]}`}
                             imageUrl={msg.sender.profileImageUrl}
                           />
                         )}
+                        {isOwn && <Avatar name="WG" isWgy />}
                         <div style={{ maxWidth: '65%' }}>
-                          {!isOwn && (
-                            <p style={{ margin: '0 0 3px 2px', fontSize: 10, fontFamily: 'Montserrat, sans-serif', fontWeight: 700, color: '#706b6b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                              {msg.sender.firstName}
-                            </p>
-                          )}
+                          <p style={{ margin: '0 0 3px', fontSize: 10, fontFamily: 'Montserrat, sans-serif', fontWeight: 700, color: isOwn ? '#9b7e56' : '#706b6b', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: isOwn ? 'right' : 'left' }}>
+                            {isOwn ? 'WGY' : msg.sender.firstName}
+                          </p>
                           <div style={{ background: isOwn ? '#e4dcd1' : '#2a2a2a', borderRadius: isOwn ? '16px 16px 4px 16px' : '16px 16px 16px 4px', padding: '10px 14px' }}>
                             {msg.imageUrl && (
                               // eslint-disable-next-line @next/next/no-img-element
@@ -370,8 +374,7 @@ export default function AdminInboxPage() {
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2, justifyContent: isOwn ? 'flex-end' : 'flex-start' }}>
                             <span style={{ fontSize: 10, color: '#706b6b', fontFamily: 'Montserrat, sans-serif' }}>
-                              {formatTime(msg.createdAt)}
-                              {isOwn && msg.isRead && ' · Read'}
+                              {formatTime(msg.createdAt)}{isOwn && msg.isRead && ' · Read'}
                             </span>
                             <button
                               onClick={() => deleteMessage(msg.id)}
@@ -391,11 +394,8 @@ export default function AdminInboxPage() {
 
             {/* Input */}
             <form
-              onSubmit={sendMessage}
-              style={{
-                display: 'flex', alignItems: 'flex-end', gap: 8,
-                padding: '12px 20px', borderTop: '1px solid rgba(255,255,255,0.06)', flexShrink: 0,
-              }}
+              onSubmit={handleSend}
+              style={{ display: 'flex', alignItems: 'flex-end', gap: 8, padding: '12px 20px', borderTop: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}
             >
               <input
                 ref={fileRef}
@@ -418,8 +418,8 @@ export default function AdminInboxPage() {
               </button>
               <textarea
                 ref={inputRef}
-                value={body}
-                onChange={e => setBody(e.target.value)}
+                value={input}
+                onChange={e => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder={`Message ${activeThread.creator.firstName}...`}
                 rows={1}
@@ -427,10 +427,10 @@ export default function AdminInboxPage() {
               />
               <button
                 type="submit"
-                disabled={!body.trim() || sending}
-                style={{ width: 36, height: 36, borderRadius: '50%', background: body.trim() ? '#e4dcd1' : '#2a2a2a', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: body.trim() ? 'pointer' : 'default', flexShrink: 0, transition: 'background 0.15s' }}
+                disabled={!input.trim() || sending}
+                style={{ width: 36, height: 36, borderRadius: '50%', background: input.trim() ? '#e4dcd1' : '#2a2a2a', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: input.trim() ? 'pointer' : 'default', flexShrink: 0, transition: 'background 0.15s' }}
               >
-                <Send size={14} color={body.trim() ? '#222' : '#706b6b'} />
+                <Send size={14} color={input.trim() ? '#222' : '#706b6b'} />
               </button>
             </form>
           </>

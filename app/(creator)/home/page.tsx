@@ -103,8 +103,8 @@ export default function HomePage() {
       <div className="mx-5 my-4" style={{ height: "1px", background: "rgba(255,255,255,0.06)" }} />
 
       {/* Creator Corner */}
-      <div className="px-5">
-        <div className="flex items-center justify-between mb-3">
+      <div>
+        <div className="px-5 mb-3 flex items-center justify-between">
           <span className="text-section-label">Creator Corner</span>
           <Link href="/community/creator-corner" className="font-montserrat font-semibold" style={{ fontSize: "11px", color: "#e4dcd1", textDecoration: "none" }}>
             View all →
@@ -112,45 +112,68 @@ export default function HomePage() {
         </div>
 
         {creatorPosts.length > 0 ? (
-          <div className="flex flex-col gap-3">
-            {creatorPosts.map(post => {
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              gap: 12,
+              overflowX: "auto",
+              padding: "0 20px 12px",
+              msOverflowStyle: "none",
+              scrollbarWidth: "none",
+            }}
+          >
+            {creatorPosts.slice(0, 5).map(post => {
               const initials = `${post.author.firstName[0]}${post.author.lastName[0]}`;
-              const preview  = post.body.length > 140 ? post.body.slice(0, 140) + "..." : post.body;
               return (
                 <div
                   key={post.id}
                   onClick={() => router.push(`/community/creator-corner/${post.id}`)}
-                  className="rounded-card p-[14px] cursor-pointer active:opacity-80 transition-opacity"
-                  style={{ background: "#2a2a2a", border: "1px solid rgba(228,220,209,0.08)" }}
+                  style={{
+                    flexShrink: 0,
+                    width: 260,
+                    background: "#2a2a2a",
+                    borderRadius: 12,
+                    padding: 14,
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    cursor: "pointer",
+                  }}
                 >
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-[30px] h-[30px] rounded-full flex items-center justify-center flex-none" style={{ background: "#e4dcd1" }}>
+                  {/* Author row */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#e4dcd1", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
                       {post.author.profileImageUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={post.author.profileImageUrl} alt={initials} className="w-full h-full rounded-full object-cover" />
+                        <img src={post.author.profileImageUrl} alt={initials} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                       ) : (
-                        <span className="font-montserrat font-semibold" style={{ fontSize: "10px", color: "#222222" }}>{initials}</span>
+                        <span className="font-montserrat" style={{ fontSize: 10, fontWeight: 700, color: "#222222" }}>{initials}</span>
                       )}
                     </div>
-                    <span className="font-montserrat font-semibold text-white" style={{ fontSize: "12px" }}>
+                    <span className="font-montserrat" style={{ fontSize: 12, fontWeight: 600, color: "white", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {post.author.firstName} {post.author.lastName}
                     </span>
-                    <span className="font-montserrat flex-none ml-auto" style={{ fontSize: "10px", color: "#706b6b" }}>{getAge(post.createdAt)}</span>
+                    <span className="font-montserrat" style={{ fontSize: 10, color: "#706b6b", flexShrink: 0 }}>{getAge(post.createdAt)}</span>
                   </div>
-                  <p className="font-montserrat font-normal leading-[1.6]" style={{ fontSize: "12px", color: "#c8c3bc" }}>{preview}</p>
-                  <div className="flex items-center gap-4 mt-2">
-                    <span className="font-montserrat" style={{ fontSize: "10px", color: "#706b6b" }}>♥ {post.likesCount}</span>
-                    <span className="font-montserrat" style={{ fontSize: "10px", color: "#706b6b" }}>💬 {post.commentsCount}</span>
+
+                  {/* Body — 3 line clamp, no images */}
+                  <p className="font-montserrat" style={{
+                    fontSize: 12, color: "#c8c3bc", lineHeight: 1.5, marginTop: 8,
+                    display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden",
+                  }}>
+                    {post.body}
+                  </p>
+
+                  {/* Actions */}
+                  <div style={{ display: "flex", gap: 12, marginTop: 10, paddingTop: 8, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                    <span className="font-montserrat" style={{ fontSize: 11, color: "#706b6b" }}>♥ {post.likesCount}</span>
+                    <span className="font-montserrat" style={{ fontSize: 11, color: "#706b6b" }}>💬 {post.commentsCount}</span>
                   </div>
                 </div>
               );
             })}
           </div>
         ) : (
-          <div
-            className="rounded-card p-[14px]"
-            style={{ background: "#2a2a2a", border: "1px solid rgba(228,220,209,0.08)" }}
-          >
+          <div className="mx-5 rounded-xl p-[14px]" style={{ background: "#2a2a2a", border: "1px solid rgba(228,220,209,0.08)" }}>
             <p className="font-montserrat text-center" style={{ fontSize: "12px", color: "#706b6b" }}>
               No posts yet — be the first to share something!
             </p>

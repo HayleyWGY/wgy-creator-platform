@@ -86,11 +86,15 @@ export function CreatorPostCard({ post, onDeleted, truncate = true }: CreatorPos
       {/* Post body */}
       <p className="text-[#c8c3bc] font-montserrat text-[13px] leading-relaxed">{preview}</p>
 
-      {/* Image — only on detail page */}
-      {!truncate && post.imageUrl && (
-        <div className="mt-3 rounded-xl overflow-hidden">
+      {/* Image — shown on community feed and detail page, not on home page */}
+      {post.imageUrl && (
+        <div style={{ marginTop: 10, borderRadius: 8, overflow: 'hidden' }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={post.imageUrl} alt="Post image" className="w-full object-cover max-h-64" />
+          <img
+            src={post.imageUrl}
+            alt="Post image"
+            style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block' }}
+          />
         </div>
       )}
 
