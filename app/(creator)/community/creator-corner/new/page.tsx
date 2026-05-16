@@ -13,22 +13,40 @@ export default function NewPostPage() {
 
   const wordCount = body.trim() ? body.trim().split(/\s+/).length : 0
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
 
+    if (!file.type.startsWith('image/')) {
+      setError('Please select an image file')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image must be under 5MB')
+      return
+    }
+
     setUploading(true)
+    setError('')
+
     try {
       const formData = new FormData()
       formData.append('file', file)
-      formData.append('folder', 'creator-posts')
+      formData.append('bucket', 'creator-posts')
 
-      const res  = await fetch('/api/upload-image', { method: 'POST', body: formData })
+      const res = await fetch('/api/upload-supabase', { method: 'POST', body: formData })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Upload failed')
+      }
       const data = await res.json()
       if (data.url) setImageUrl(data.url)
-      else setError('Image upload failed')
-    } catch {
-      setError('Image upload failed')
+      else throw new Error('No URL returned')
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Upload failed'
+      console.error('Image upload error:', err)
+      setError('Image upload failed. Please try again.')
+      void message
     } finally {
       setUploading(false)
     }
@@ -112,9 +130,27 @@ export default function NewPostPage() {
 
         {!imageUrl && (
           <div className="mt-4">
-            <label className="flex items-center gap-2 text-[#706b6b] font-montserrat text-sm cursor-pointer hover:text-[#e4dcd1] transition-colors">
-              <ImageIcon size={18} />
-              {uploading ? 'Uploading...' : 'Add image'}
+            <label className={`flex items-center gap-2 font-montserrat text-sm transition-colors ${uploading ? 'text-[#e4dcd1] cursor-wait' : 'text-[#706b6b] cursor-pointer hover:text-[#e4dcd1]'}`}>
+              {uploading ? (
+                <>
+                  <span
+                    style={{
+                      width: 18, height: 18, borderRadius: '50%',
+                      border: '2px solid rgba(228,220,209,0.3)',
+                      borderTopColor: '#e4dcd1',
+                      display: 'inline-block',
+                      animation: 'spin 0.7s linear infinite',
+                      flexShrink: 0,
+                    }}
+                  />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <ImageIcon size={18} />
+                  Add photo
+                </>
+              )}
               <input
                 type="file"
                 accept="image/*"

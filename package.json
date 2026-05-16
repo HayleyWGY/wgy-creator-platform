@@ -15,6 +15,7 @@
     "@base-ui/react": "^1.4.1",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
+    "@supabase/supabase-js": "^2.105.4",
     "@tiptap/extension-character-count": "^3.23.4",
     "@tiptap/extension-heading": "^3.23.4",
     "@tiptap/extension-image": "^3.23.4",
