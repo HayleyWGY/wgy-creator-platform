@@ -39,6 +39,9 @@ model Creator {
   creatorPosts        CreatorPost[]
   creatorPostComments CreatorPostComment[]
   creatorPostLikes    CreatorPostLike[]
+  chatMessages        ChatMessage[]
+  dmThread            DmThread?
+  dmMessagesSent      DmMessage[]         @relation("DmSender")
 }
 
 model Section {
@@ -225,4 +228,50 @@ model OnboardingMessageSent {
   template        MessageTemplate @relation(fields: [templateId], references: [id])
   sentAt          DateTime        @default(now())
   streamMessageId String?
+}
+
+model ChatRoom {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  name        String
+  emoji       String
+  description String
+  sortOrder   Int           @default(0)
+  messages    ChatMessage[]
+}
+
+model ChatMessage {
+  id        String    @id @default(cuid())
+  roomId    String
+  room      ChatRoom  @relation(fields: [roomId], references: [id])
+  authorId  String
+  author    Creator   @relation(fields: [authorId], references: [id])
+  body      String    @db.Text
+  imageUrl  String?
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model DmThread {
+  id        String      @id @default(cuid())
+  creatorId String      @unique
+  creator   Creator     @relation(fields: [creatorId], references: [id])
+  messages  DmMessage[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model DmMessage {
+  id        String    @id @default(cuid())
+  threadId  String
+  thread    DmThread  @relation(fields: [threadId], references: [id])
+  senderId  String
+  sender    Creator   @relation("DmSender", fields: [senderId], references: [id])
+  body      String    @db.Text
+  imageUrl  String?
+  isRead    Boolean   @default(false)
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
 }

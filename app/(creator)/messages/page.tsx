@@ -1,159 +1,118 @@
-"use client";
+'use client'
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Lock } from 'lucide-react'
 
-import { Search, PenSquare, Lock } from "lucide-react";
-import Link from "next/link";
-
-const THREADS = [
-  {
-    id: "wgy-main",
-    name: "WGY LTD",
-    initials: "WG",
-    online: true,
-    preview: "Hey! We are hosting a WGY x Sculpted...",
-    time: "3 weeks ago",
-    unread: 1,
-  },
-  {
-    id: "wgy-welcome",
-    name: "WGY LTD",
-    initials: "WG",
-    online: false,
-    preview: "Welcome to WGY! Here is how to get...",
-    time: "2 months ago",
-    unread: 0,
-  },
-];
+interface DmThread {
+  id: string
+  updatedAt: string
+  messages: Array<{
+    body: string
+    createdAt: string
+    sender: { firstName: string; isAdmin: boolean }
+  }>
+  _count: { messages: number }
+}
 
 export default function MessagesPage() {
+  const router = useRouter()
+  const [thread, setThread] = useState<DmThread | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/chat/dm')
+      .then(r => r.json())
+      .then(d => { setThread(d.thread); setLoading(false) })
+      .catch(() => setLoading(false))
+  }, [])
+
+  const lastMessage = thread?.messages?.[thread.messages.length - 1]
+  const unreadCount = thread?._count?.messages ?? 0
+
+  function formatTime(iso: string) {
+    const d = new Date(iso)
+    const now = new Date()
+    const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000)
+    if (diffDays === 0) return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+    if (diffDays === 1) return 'Yesterday'
+    if (diffDays < 7) return d.toLocaleDateString('en-GB', { weekday: 'short' })
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+  }
+
   return (
-    <div>
+    <div className="pb-20 bg-[#222222] min-h-screen">
       {/* Header */}
-      <div
-        className="px-5 pt-6 pb-4 flex items-center justify-between"
-      >
-        <h1 className="text-page-heading text-white">
-          Messages
-        </h1>
-        <PenSquare size={20} color="#e4dcd1" strokeWidth={1.5} />
+      <div className="px-5 pt-4 pb-2">
+        <h1 className="text-page-heading text-white">Messages</h1>
       </div>
 
-      {/* Search */}
-      <div className="relative flex items-center mx-5 mb-4" style={{ height: "44px" }}>
-        <Search
-          size={15}
-          color="#706b6b"
-          className="absolute left-3"
-          style={{ pointerEvents: "none" }}
-        />
-        <input
-          type="text"
-          placeholder="Search messages..."
-          className="w-full h-full font-montserrat font-normal outline-none"
-          style={{
-            background: "#2a2a2a",
-            borderRadius: "8px",
-            paddingLeft: "36px",
-            paddingRight: "16px",
-            fontSize: "13px",
-            color: "#ffffff",
-            caretColor: "#e4dcd1",
-          }}
-        />
-        <style>{`input::placeholder { color: #706b6b; }`}</style>
-      </div>
-
-      {/* Thread list */}
-      <div>
-        {THREADS.map((thread) => (
-          <Link
-            key={thread.id}
-            href={`/messages/${thread.id}`}
-            className="flex gap-3 px-5 py-[14px] no-underline"
-            style={{
-              background: "#222222",
-              borderBottom: "1px solid rgba(255,255,255,0.04)",
-              textDecoration: "none",
-            }}
+      <div className="mt-2">
+        {loading ? (
+          <div className="mx-5 h-16 bg-[#2a2a2a] rounded-xl animate-pulse" />
+        ) : (
+          <button
+            onClick={() => router.push('/messages/wgy')}
+            className="w-full flex gap-3 px-5 py-[14px] text-left active:opacity-80 transition-opacity"
+            style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}
           >
             {/* Avatar */}
             <div className="relative flex-none">
               <div
                 className="w-11 h-11 rounded-full flex items-center justify-center"
-                style={{ background: "#e4dcd1" }}
+                style={{ background: '#e4dcd1' }}
               >
-                <span
-                  className="font-montserrat font-bold"
-                  style={{ fontSize: "14px", color: "#222222" }}
-                >
-                  {thread.initials}
+                <span className="font-montserrat font-bold" style={{ fontSize: 14, color: '#222222' }}>
+                  WG
                 </span>
               </div>
-              {thread.online && (
-                <span
-                  className="absolute bottom-0 right-0 w-3 h-3 rounded-full"
-                  style={{ background: "#27AE60", border: "2px solid #222222" }}
-                />
-              )}
+              <span
+                className="absolute bottom-0 right-0 w-3 h-3 rounded-full"
+                style={{ background: '#27AE60', border: '2px solid #222222' }}
+              />
             </div>
 
             {/* Content */}
             <div className="flex-1 min-w-0">
-              <p
-                className="font-montserrat font-semibold text-white"
-                style={{ fontSize: "13px" }}
-              >
-                {thread.name}
+              <p className="font-montserrat font-semibold text-white" style={{ fontSize: 13 }}>
+                WGY LTD
               </p>
-              <p
-                className="font-montserrat font-normal mt-[2px] truncate"
-                style={{ fontSize: "12px", color: "#706b6b" }}
-              >
-                {thread.preview}
+              <p className="font-montserrat font-normal mt-[2px] truncate" style={{ fontSize: 12, color: '#706b6b' }}>
+                {lastMessage
+                  ? `${lastMessage.sender.isAdmin ? 'WGY' : 'You'}: ${lastMessage.body || '[image]'}`
+                  : 'Start a conversation with WGY'
+                }
               </p>
             </div>
 
             {/* Right */}
             <div className="flex-shrink-0 flex flex-col items-end gap-1.5">
-              <span
-                className="font-montserrat font-normal"
-                style={{ fontSize: "10px", color: "#706b6b" }}
-              >
-                {thread.time}
-              </span>
-              {thread.unread > 0 && (
+              {lastMessage && (
+                <span className="font-montserrat font-normal" style={{ fontSize: 10, color: '#706b6b' }}>
+                  {formatTime(lastMessage.createdAt)}
+                </span>
+              )}
+              {unreadCount > 0 && (
                 <div
                   className="flex items-center justify-center"
-                  style={{
-                    minWidth: "20px",
-                    height: "20px",
-                    borderRadius: "50%",
-                    background: "#e4dcd1",
-                    padding: "0 4px",
-                  }}
+                  style={{ minWidth: 20, height: 20, borderRadius: '50%', background: '#e4dcd1', padding: '0 4px' }}
                 >
-                  <span
-                    className="font-montserrat font-bold"
-                    style={{ fontSize: "9px", color: "#222222" }}
-                  >
-                    {thread.unread}
+                  <span className="font-montserrat font-bold" style={{ fontSize: 9, color: '#222222' }}>
+                    {unreadCount}
                   </span>
                 </div>
               )}
             </div>
-          </Link>
-        ))}
+          </button>
+        )}
       </div>
 
       {/* Footer note */}
-      <div className="flex items-center justify-center gap-1.5 px-5 pt-5">
+      <div className="flex items-center justify-center gap-1.5 px-5 pt-6">
         <Lock size={12} color="#706b6b" strokeWidth={1.5} />
-        <p
-          className="font-montserrat font-normal"
-          style={{ fontSize: "11px", color: "#706b6b" }}
-        >
+        <p className="font-montserrat font-normal" style={{ fontSize: 11, color: '#706b6b' }}>
           Messages are between you and WGY only
         </p>
       </div>
     </div>
-  );
+  )
 }
