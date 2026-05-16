@@ -1,11 +1,9 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { COMMUNITY_ROOMS } from '@/lib/stream'
+import { COMMUNITY_ROOMS } from '@/lib/constants'
 import { CreatorPostCard, type CreatorPost } from '@/components/creator/creator-post-card'
 
-// Rooms list — unread counts loaded via StreamRoomsWithUnread
-// when Stream client is available (rendered from community/[roomId] page)
 function RoomsList() {
   const router = useRouter()
   return (

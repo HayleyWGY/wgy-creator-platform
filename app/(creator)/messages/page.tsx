@@ -1,12 +1,5 @@
 "use client";
 
-// TODO Phase 1B Part 2: Replace static messages
-// with Stream Chat real-time integration
-// Required env vars:
-// NEXT_PUBLIC_STREAM_API_KEY=
-// STREAM_API_SECRET=
-// See getstream.io for setup guide
-
 import { Search, PenSquare, Lock } from "lucide-react";
 import Link from "next/link";
 

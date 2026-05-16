@@ -24,15 +24,14 @@ export const OPPORTUNITY_FILTERS = [
 ] as const
 
 // ─── Community rooms ──────────────────────────────────────────────────────────
-// Channel IDs must stay in sync with Stream Chat channel configuration.
-// See lib/stream.ts for the StreamChat client.
+// Community room definitions — used by community page and chat room pages.
 export const COMMUNITY_ROOMS = [
-  { id: 'group-chat',      name: 'Group Chat',                 emoji: '💬', memberCount: 830 },
-  { id: 'social-links',    name: 'Share Your Social Links',     emoji: '🔗' },
-  { id: 'affiliate-links', name: 'Affiliate Links',             emoji: '💰' },
-  { id: 'creator-collabs', name: 'Looking for Creator Collabs', emoji: '👀' },
-  { id: 'events-chat',     name: 'Events Chat',                 emoji: '🎪' },
-  { id: 'creator-corner',  name: 'The Creator Corner',          emoji: '⭐' },
+  { id: 'group-chat',      name: 'Group Chat',                 emoji: '💬', description: 'General chat for all WGY creators' },
+  { id: 'social-links',    name: 'Share Your Social Links',    emoji: '🔗', description: 'Drop your Instagram, TikTok and YouTube links' },
+  { id: 'affiliate-links', name: 'Affiliate Links',            emoji: '💰', description: 'Share your affiliate codes and links' },
+  { id: 'creator-collabs', name: 'Looking for Creator Collabs',emoji: '👀', description: 'Find other creators to collaborate with' },
+  { id: 'events-chat',     name: 'Events Chat',                emoji: '🎪', description: 'Upcoming WGY events and meetups' },
+  { id: 'creator-corner',  name: 'The Creator Corner',         emoji: '⭐', description: 'Posts and updates from the community' },
 ] as const
 
 // ─── Learning content type styles ────────────────────────────────────────────
