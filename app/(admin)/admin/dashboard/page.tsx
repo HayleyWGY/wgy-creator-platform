@@ -1,42 +1,38 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  UserPlus,
   FileText,
-  CheckCircle,
   MessageSquare,
-  XCircle,
   LucideIcon,
 } from "lucide-react";
-
-// TODO Phase 3: Replace all static data with DB queries
 
 const STAT_CARDS = [
   {
     label: "Total Creators",
-    value: "1,024",
-    trend: "+12 this month",
+    value: "—",
+    trend: "",
     accentBorder: false,
     accentNumber: false,
   },
   {
     label: "Active Subscriptions",
-    value: "987",
-    trend: "96% of members",
+    value: "—",
+    trend: "",
     accentBorder: false,
     accentNumber: false,
   },
   {
     label: "Pending Approvals",
-    value: "2",
+    value: "—",
     trend: "Awaiting your review",
     accentBorder: true,
     accentNumber: true,
   },
   {
     label: "Unread DMs",
-    value: "7",
+    value: "—",
     trend: "From creators",
     accentBorder: true,
     accentNumber: true,
@@ -59,20 +55,23 @@ const RECENT_CAMPAIGNS = [
   { name: "Iconic Bronze TikTok",      section: "TikTok Commission",  status: "CLOSED", colour: "#444444" },
 ];
 
-const RECENT_ACTIVITY: {
+interface ActivityItem {
   icon: LucideIcon;
   title: string;
   sub: string;
   time: string;
   iconColour?: string;
-}[] = [
-  { icon: UserPlus,      title: "New creator joined",      sub: "maya.chen@email.com",            time: "2m ago" },
-  { icon: FileText,      title: "Client post submitted",   sub: "Glow Beauty — Summer Range",     time: "1h ago" },
-  { icon: CheckCircle,   title: "Post approved",           sub: "FW Beauty Gifting went live",    time: "2h ago" },
-  { icon: UserPlus,      title: "New creator joined",      sub: "sophie.james@email.com",         time: "3h ago" },
-  { icon: MessageSquare, title: "New DM received",         sub: "Laura Edwards messaged WGY",     time: "5h ago" },
-  { icon: XCircle,       title: "Payment failed",          sub: "samantha.johnson@email.com",     time: "1d ago", iconColour: "#C0392B" },
-];
+  createdAt: string;
+}
+
+function getAge(date: string) {
+  const diff = Date.now() - new Date(date).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 60) return `${mins}m ago`
+  const hours = Math.floor(mins / 60)
+  if (hours < 24) return `${hours}h ago`
+  return `${Math.floor(hours / 24)}d ago`
+}
 
 function StatusPill({ status }: { status: string }) {
   if (status === "LIVE") {
@@ -106,6 +105,69 @@ function StatusPill({ status }: { status: string }) {
 }
 
 export default function DashboardPage() {
+  const [activity, setActivity] = useState<ActivityItem[]>([])
+  const [unreadDms, setUnreadDms] = useState<number | null>(null)
+
+  useEffect(() => {
+    // Fetch DM threads for unread count + recent DM activity
+    fetch('/api/chat/dm/admin')
+      .then(r => r.json())
+      .then(data => {
+        const threads = (data.threads || []) as {
+          creator: { firstName: string; lastName: string }
+          unreadCount: number
+          messages: { createdAt: string; sender?: { isAdmin?: boolean } }[]
+        }[]
+        const totalUnread = threads.reduce((sum, t) => sum + (t.unreadCount || 0), 0)
+        setUnreadDms(totalUnread)
+
+        const dmItems: ActivityItem[] = threads
+          .filter(t => t.messages?.[0])
+          .map(t => {
+            const msg = t.messages[0]
+            const fromCreator = !msg.sender?.isAdmin
+            return {
+              icon: MessageSquare,
+              title: fromCreator ? 'New DM received' : 'You replied to a DM',
+              sub: `${t.creator.firstName} ${t.creator.lastName}`,
+              time: getAge(msg.createdAt),
+              createdAt: msg.createdAt,
+            }
+          })
+
+        // Fetch creator posts for post activity
+        fetch('/api/creator-posts?limit=5')
+          .then(r => r.json())
+          .then(postData => {
+            const posts = (postData.posts || []) as {
+              author: { firstName: string; lastName: string }
+              body: string
+              createdAt: string
+            }[]
+            const postItems: ActivityItem[] = posts.map(p => ({
+              icon: FileText,
+              title: 'New Creator Corner post',
+              sub: `${p.author.firstName} ${p.author.lastName} — "${p.body.slice(0, 40)}${p.body.length > 40 ? '…' : ''}"`,
+              time: getAge(p.createdAt),
+              createdAt: p.createdAt,
+            }))
+
+            const combined = [...dmItems, ...postItems]
+              .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+              .slice(0, 6)
+
+            setActivity(combined)
+          })
+          .catch(() => {})
+      })
+      .catch(() => {})
+  }, [])
+
+  const statCards = STAT_CARDS.map(card => {
+    if (card.label === 'Unread DMs') return { ...card, value: unreadDms !== null ? String(unreadDms) : '—' }
+    return card
+  })
+
   return (
     <div style={{ padding: "32px" }}>
       {/* Header */}
@@ -137,7 +199,7 @@ export default function DashboardPage() {
           marginTop: "24px",
         }}
       >
-        {STAT_CARDS.map((card) => (
+        {statCards.map((card) => (
           <div
             key={card.label}
             style={{
@@ -329,7 +391,12 @@ export default function DashboardPage() {
           <span className="text-section-label">Recent Activity</span>
 
           <div style={{ marginTop: "8px" }}>
-            {RECENT_ACTIVITY.map((item, i) => {
+            {activity.length === 0 && (
+              <p className="font-montserrat" style={{ fontSize: "12px", color: "#706b6b", padding: "16px 0" }}>
+                No recent activity
+              </p>
+            )}
+            {activity.map((item, i) => {
               const Icon = item.icon;
               const colour = item.iconColour ?? "#e4dcd1";
               return (
@@ -339,7 +406,7 @@ export default function DashboardPage() {
                     padding: "10px 0",
                     display: "flex",
                     gap: "10px",
-                    borderBottom: i < RECENT_ACTIVITY.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
+                    borderBottom: i < activity.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
                   }}
                 >
                   <div

@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 interface Author {
   id: string
@@ -18,8 +19,35 @@ interface Post {
   commentsCount: number
 }
 
+interface ChatRoom {
+  id: string
+  slug: string
+  name: string
+  emoji: string
+  description: string | null
+  _count: { messages: number }
+  messages: { createdAt: string }[]
+}
+
+const ROOMS = [
+  { slug: 'group-chat',      emoji: '💬', name: 'Group Chat' },
+  { slug: 'social-links',    emoji: '🔗', name: 'Social Links' },
+  { slug: 'affiliate-links', emoji: '💰', name: 'Affiliate Links' },
+  { slug: 'creator-collabs', emoji: '🤝', name: 'Creator Collabs' },
+  { slug: 'events-chat',     emoji: '📅', name: 'Events Chat' },
+]
+
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+function getAge(date: string) {
+  const diff = Date.now() - new Date(date).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 60) return `${mins}m ago`
+  const hours = Math.floor(mins / 60)
+  if (hours < 24) return `${hours}h ago`
+  return `${Math.floor(hours / 24)}d ago`
 }
 
 function Avatar({ author }: { author: Author }) {
@@ -38,14 +66,22 @@ function Avatar({ author }: { author: Author }) {
 }
 
 export default function AdminCommunityPage() {
+  const router = useRouter()
   const [posts, setPosts] = useState<Post[]>([])
-  const [loading, setLoading] = useState(true)
+  const [rooms, setRooms] = useState<ChatRoom[]>([])
+  const [loadingPosts, setLoadingPosts] = useState(true)
+  const [loadingRooms, setLoadingRooms] = useState(true)
 
   useEffect(() => {
     fetch('/api/creator-posts?limit=50')
       .then(r => r.json())
-      .then(data => { setPosts(data.posts || []); setLoading(false) })
-      .catch(() => setLoading(false))
+      .then(data => { setPosts(data.posts || []); setLoadingPosts(false) })
+      .catch(() => setLoadingPosts(false))
+
+    fetch('/api/chat/rooms')
+      .then(r => r.json())
+      .then(data => { setRooms(data.rooms || []); setLoadingRooms(false) })
+      .catch(() => setLoadingRooms(false))
   }, [])
 
   async function deletePost(id: string) {
@@ -55,36 +91,72 @@ export default function AdminCommunityPage() {
   }
 
   return (
-    <div style={{ padding: '32px' }}>
+    <div style={{ padding: '32px', maxWidth: 1100 }}>
       {/* Header */}
       <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', margin: '0 0 4px' }}>
         COMMUNITY
       </p>
-      <p style={{ color: 'white', fontFamily: 'Playfair Display, serif', fontStyle: 'italic', fontSize: 32, margin: '0 0 4px' }}>
-        Creator Corner Posts
-      </p>
-      <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 13, margin: '0 0 24px' }}>
-        All posts from creators. You can delete any post.
+      <p style={{ color: 'white', fontFamily: 'Playfair Display, serif', fontStyle: 'italic', fontSize: 32, margin: '0 0 24px' }}>
+        Community Overview
       </p>
 
-      {/* Table */}
+      {/* Chat Rooms */}
+      <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', margin: '0 0 12px' }}>
+        CHAT ROOMS
+      </p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 40 }}>
+        {(loadingRooms ? ROOMS : ROOMS).map(room => {
+          const liveRoom = rooms.find(r => r.slug === room.slug)
+          const lastMsg = liveRoom?.messages?.[0]
+          return (
+            <div
+              key={room.slug}
+              style={{ background: '#2a2a2a', borderRadius: 12, padding: '16px 18px', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer' }}
+              onClick={() => router.push(`/admin/community/rooms/${room.slug}`)}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                <span style={{ fontSize: 20 }}>{room.emoji}</span>
+                <span style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 600, fontSize: 14, color: 'white' }}>{room.name}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 11, color: '#706b6b' }}>
+                  {liveRoom ? `${liveRoom._count?.messages ?? 0} messages` : loadingRooms ? '…' : '0 messages'}
+                </span>
+                {lastMsg && (
+                  <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 10, color: '#706b6b' }}>
+                    {getAge(lastMsg.createdAt)}
+                  </span>
+                )}
+              </div>
+              <div style={{ marginTop: 10 }}>
+                <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 11, color: '#9b7e56' }}>View messages →</span>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Creator Corner Posts */}
+      <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', margin: '0 0 12px' }}>
+        CREATOR CORNER POSTS
+      </p>
       <div style={{ background: '#2a2a2a', borderRadius: 12, overflow: 'hidden' }}>
         {/* Table header */}
-        <div style={{ background: '#1a1a1a', padding: '12px 20px', display: 'grid', gridTemplateColumns: '180px 1fr 80px 110px 80px', gap: 12, alignItems: 'center' }}>
-          {['CREATOR', 'POST', 'IMAGE', 'DATE', 'ACTIONS'].map(label => (
+        <div style={{ background: '#1a1a1a', padding: '12px 20px', display: 'grid', gridTemplateColumns: '180px 1fr 60px 120px 160px', gap: 12, alignItems: 'center' }}>
+          {['CREATOR', 'POST', 'IMG', 'DATE', 'ACTIONS'].map(label => (
             <span key={label} style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#706b6b' }}>
               {label}
             </span>
           ))}
         </div>
 
-        {loading && (
+        {loadingPosts && (
           <div style={{ padding: '32px', textAlign: 'center' }}>
             <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 13 }}>Loading...</p>
           </div>
         )}
 
-        {!loading && posts.length === 0 && (
+        {!loadingPosts && posts.length === 0 && (
           <div style={{ padding: '32px', textAlign: 'center' }}>
             <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 13 }}>No posts yet</p>
           </div>
@@ -96,7 +168,7 @@ export default function AdminCommunityPage() {
             style={{
               padding: '14px 20px',
               display: 'grid',
-              gridTemplateColumns: '180px 1fr 80px 110px 80px',
+              gridTemplateColumns: '180px 1fr 60px 120px 160px',
               gap: 12,
               alignItems: 'center',
               borderBottom: i < posts.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
@@ -120,7 +192,7 @@ export default function AdminCommunityPage() {
               // eslint-disable-next-line @next/next/no-img-element
               <img src={post.imageUrl} alt="" style={{ width: 40, height: 40, borderRadius: 6, objectFit: 'cover', display: 'block' }} />
             ) : (
-              <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 11, color: '#706b6b' }}>No image</span>
+              <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 11, color: '#706b6b' }}>—</span>
             )}
 
             {/* Date */}
@@ -129,12 +201,20 @@ export default function AdminCommunityPage() {
             </span>
 
             {/* Actions */}
-            <button
-              onClick={() => deletePost(post.id)}
-              style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'Montserrat, sans-serif', fontWeight: 600, fontSize: 11, color: '#C0392B', textAlign: 'left' }}
-            >
-              Delete
-            </button>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={() => router.push(`/admin/community/posts/${post.id}`)}
+                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'Montserrat, sans-serif', fontWeight: 600, fontSize: 11, color: '#e4dcd1' }}
+              >
+                View
+              </button>
+              <button
+                onClick={() => deletePost(post.id)}
+                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'Montserrat, sans-serif', fontWeight: 600, fontSize: 11, color: '#C0392B' }}
+              >
+                Delete
+              </button>
+            </div>
           </div>
         ))}
       </div>

@@ -79,7 +79,7 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
   const initials = `${post.author.firstName[0]}${post.author.lastName[0]}`
 
   return (
-    <div className="pb-24 min-h-screen bg-[#222222]">
+    <div className="min-h-screen bg-[#222222]" style={{ paddingBottom: 160 }}>
 
       {/* Header */}
       <div className="flex items-center gap-3 px-5 pt-4 pb-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
@@ -157,24 +157,63 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
 
       {/* Fixed comment input */}
       <div
-        className="fixed bottom-0 left-0 right-0 px-5 py-3 bg-[#222222]"
-        style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}
+        style={{
+          position: 'fixed',
+          bottom: 64,
+          left: 0,
+          right: 0,
+          padding: '12px 16px',
+          background: '#222222',
+          borderTop: '1px solid rgba(255,255,255,0.06)',
+          display: 'flex',
+          gap: 10,
+          alignItems: 'flex-end',
+          zIndex: 50,
+        }}
       >
-        <div className="max-w-[390px] mx-auto flex gap-3 items-end">
+        <div className="max-w-[390px] mx-auto flex gap-3 items-end w-full">
           <textarea
             value={comment}
             onChange={e => setComment(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault()
+                handleComment()
+              }
+            }}
             placeholder="Write a comment..."
             rows={1}
-            className="flex-1 bg-[#2a2a2a] text-white font-montserrat text-[13px] rounded-xl px-4 py-3 focus:outline-none resize-none"
-            style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+            style={{
+              flex: 1,
+              background: '#2a2a2a',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 8,
+              padding: '10px 14px',
+              color: 'white',
+              fontFamily: 'Montserrat, sans-serif',
+              fontSize: 13,
+              resize: 'none',
+              outline: 'none',
+              minHeight: 42,
+            }}
           />
           <button
             onClick={handleComment}
             disabled={!comment.trim() || submitting}
-            className="w-10 h-10 rounded-full bg-[#e4dcd1] flex items-center justify-center flex-shrink-0 disabled:opacity-40 transition-opacity"
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: '50%',
+              background: comment.trim() ? '#e4dcd1' : '#333333',
+              border: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: comment.trim() ? 'pointer' : 'default',
+              flexShrink: 0,
+            }}
           >
-            <Send size={16} color="#222222" />
+            <Send size={16} color={comment.trim() ? '#222222' : '#706b6b'} />
           </button>
         </div>
       </div>
