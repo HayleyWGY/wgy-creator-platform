@@ -1,6 +1,6 @@
 import { BottomNav } from "@/components/creator/bottom-nav";
-import { Bell, Search, MessageCircle } from "lucide-react";
-import Link from "next/link";
+import { NavHeader } from "@/components/creator/NavHeader";
+import { Search } from "lucide-react";
 
 export default function CreatorLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -24,22 +24,9 @@ export default function CreatorLayout({ children }: { children: React.ReactNode 
             style={{ height: "24px", width: "auto", display: "block" }}
           />
 
-          {/* Right icons */}
+          {/* Right icons — real unread badges */}
           <div className="flex items-center gap-4">
-            <Link href="/messages" className="relative">
-              <MessageCircle size={20} color="#706b6b" strokeWidth={1.5} />
-              <span
-                className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
-                style={{ background: "#e4dcd1" }}
-              />
-            </Link>
-            <Link href="/notifications" className="relative">
-              <Bell size={20} color="#706b6b" strokeWidth={1.5} />
-              <span
-                className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
-                style={{ background: "#e4dcd1" }}
-              />
-            </Link>
+            <NavHeader />
             <button>
               <Search size={20} color="#706b6b" strokeWidth={1.5} />
             </button>

@@ -10,7 +10,16 @@ export async function GET(
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const room = await prisma.chatRoom.findUnique({ where: { slug: params.slug } })
+  const room = await prisma.chatRoom.findUnique({
+    where: { slug: params.slug },
+    include: {
+      pinnedMessage: {
+        include: {
+          author: { select: { firstName: true, lastName: true, isAdmin: true } },
+        },
+      },
+    },
+  })
   if (!room) return NextResponse.json({ error: 'Room not found' }, { status: 404 })
 
   const messages = await prisma.chatMessage.findMany({
@@ -22,7 +31,7 @@ export async function GET(
     take: 100,
   })
 
-  return NextResponse.json({ messages })
+  return NextResponse.json({ messages, roomId: room.id, pinnedMessage: room.pinnedMessage || null })
 }
 
 export async function POST(

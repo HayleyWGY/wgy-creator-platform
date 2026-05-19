@@ -65,6 +65,7 @@ export default function ChatRoomPage({ params }: { params: { roomId: string } })
   const router = useRouter()
   const { data: session } = useSession()
   const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [pinnedMessage, setPinnedMessage] = useState<{ id: string; body: string; author: { firstName: string; lastName: string; isAdmin: boolean } } | null>(null)
   const [body, setBody] = useState('')
   const [sending, setSending] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -75,14 +76,14 @@ export default function ChatRoomPage({ params }: { params: { roomId: string } })
   const roomName = room?.name ?? slug.replace(/-/g, ' ')
   const roomEmoji = room?.emoji ?? '💬'
 
-  useChatPoll<{ messages: ChatMessage[] }>(
+  useChatPoll<{ messages: ChatMessage[]; pinnedMessage: typeof pinnedMessage }>(
     `/api/chat/rooms/${slug}/messages`,
     (data) => {
       setMessages(prev => {
-        // Only update if something changed (avoid re-renders)
         if (prev.length === data.messages.length) return prev
         return data.messages
       })
+      setPinnedMessage(data.pinnedMessage || null)
     },
     3000,
     true,
@@ -162,6 +163,31 @@ export default function ChatRoomPage({ params }: { params: { roomId: string } })
           {roomName}
         </span>
       </div>
+
+      {/* Pinned message banner */}
+      {pinnedMessage && (
+        <div style={{
+          margin: '0 16px 12px',
+          background: 'rgba(155,126,86,0.15)',
+          border: '1px solid rgba(155,126,86,0.3)',
+          borderRadius: 10,
+          padding: '10px 14px',
+          display: 'flex',
+          gap: 10,
+          alignItems: 'flex-start',
+          flexShrink: 0,
+        }}>
+          <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>📌</span>
+          <div>
+            <p style={{ margin: '0 0 3px', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.10em', color: '#9b7e56' }}>
+              PINNED MESSAGE
+            </p>
+            <p style={{ margin: 0, fontFamily: 'Montserrat, sans-serif', fontSize: 12, color: '#c8c3bc', lineHeight: 1.5 }}>
+              {pinnedMessage.body}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Messages */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 0' }}>

@@ -23,6 +23,11 @@ model Creator {
   city              String?
   postcode          String?
   country           String?
+  contentNiches     String[]       @default([])
+  dateOfBirth       DateTime?
+  address           String?        @db.Text
+  contactNumber     String?
+  gender            String?
   stripeCustomerId  String?
   stripeSubId       String?
   membershipStatus  String         @default("active")
@@ -138,9 +143,11 @@ model Like {
 
 model Notification {
   id          String   @id @default(cuid())
-  recipientId String
-  recipient   Creator  @relation(fields: [recipientId], references: [id])
+  creatorId   String
+  creator     Creator  @relation(fields: [creatorId], references: [id])
   type        String
+  title       String
+  description String
   referenceId String?
   isRead      Boolean  @default(false)
   createdAt   DateTime @default(now())
@@ -200,14 +207,17 @@ model CreatorPost {
 }
 
 model CreatorPostComment {
-  id        String      @id @default(cuid())
+  id        String               @id @default(cuid())
   postId    String
-  post      CreatorPost @relation(fields: [postId], references: [id])
+  post      CreatorPost          @relation(fields: [postId], references: [id])
   authorId  String
-  author    Creator     @relation(fields: [authorId], references: [id])
-  body      String      @db.Text
-  createdAt DateTime    @default(now())
-  isDeleted Boolean     @default(false)
+  author    Creator              @relation(fields: [authorId], references: [id])
+  body      String               @db.Text
+  parentId  String?
+  parent    CreatorPostComment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   CreatorPostComment[] @relation("CommentReplies")
+  createdAt DateTime             @default(now())
+  isDeleted Boolean              @default(false)
 }
 
 model CreatorPostLike {
@@ -231,26 +241,31 @@ model OnboardingMessageSent {
 }
 
 model ChatRoom {
-  id          String        @id @default(cuid())
-  slug        String        @unique
-  name        String
-  emoji       String
-  description String
-  sortOrder   Int           @default(0)
-  messages    ChatMessage[]
+  id              String        @id @default(cuid())
+  slug            String        @unique
+  name            String
+  emoji           String
+  description     String
+  isActive        Boolean       @default(true)
+  sortOrder       Int           @default(0)
+  pinnedMessageId String?
+  pinnedMessage   ChatMessage?  @relation("PinnedMessage", fields: [pinnedMessageId], references: [id])
+  messages        ChatMessage[] @relation("RoomMessages")
+  createdAt       DateTime      @default(now())
 }
 
 model ChatMessage {
-  id        String    @id @default(cuid())
-  roomId    String
-  room      ChatRoom  @relation(fields: [roomId], references: [id])
-  authorId  String
-  author    Creator   @relation(fields: [authorId], references: [id])
-  body      String    @db.Text
-  imageUrl  String?
-  isDeleted Boolean   @default(false)
-  deletedAt DateTime?
-  createdAt DateTime  @default(now())
+  id           String     @id @default(cuid())
+  roomId       String
+  room         ChatRoom   @relation("RoomMessages", fields: [roomId], references: [id])
+  pinnedInRoom ChatRoom[] @relation("PinnedMessage")
+  authorId     String
+  author       Creator    @relation(fields: [authorId], references: [id])
+  body         String     @db.Text
+  imageUrl     String?
+  isDeleted    Boolean    @default(false)
+  deletedAt    DateTime?
+  createdAt    DateTime   @default(now())
 }
 
 model DmThread {

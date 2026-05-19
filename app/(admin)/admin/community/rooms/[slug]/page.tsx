@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Send, Trash2 } from 'lucide-react'
+import { ArrowLeft, Send, Trash2, Pin } from 'lucide-react'
 
 interface Author {
   id: string
@@ -17,6 +17,12 @@ interface Message {
   createdAt: string
   isDeleted: boolean
   author: Author
+}
+
+interface PinnedMessage {
+  id: string
+  body: string
+  author: { firstName: string; lastName: string; isAdmin: boolean }
 }
 
 const ROOM_META: Record<string, { emoji: string; name: string }> = {
@@ -39,6 +45,7 @@ function getAge(date: string) {
 export default function AdminRoomPage({ params }: { params: { slug: string } }) {
   const router = useRouter()
   const [messages, setMessages] = useState<Message[]>([])
+  const [pinnedMessage, setPinnedMessage] = useState<PinnedMessage | null>(null)
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -50,6 +57,7 @@ export default function AdminRoomPage({ params }: { params: { slug: string } }) 
       if (!res.ok) return
       const data = await res.json()
       setMessages(data.messages || [])
+      setPinnedMessage(data.pinnedMessage || null)
     } catch {}
   }, [params.slug])
 
@@ -91,6 +99,20 @@ export default function AdminRoomPage({ params }: { params: { slug: string } }) 
     setMessages(prev => prev.map(m => m.id === msgId ? { ...m, isDeleted: true, body: '[deleted]' } : m))
   }
 
+  const handlePin = async (messageId: string) => {
+    await fetch(`/api/chat/rooms/${params.slug}/pin`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messageId }),
+    })
+    loadMessages()
+  }
+
+  const handleUnpin = async () => {
+    await fetch(`/api/chat/rooms/${params.slug}/pin`, { method: 'DELETE' })
+    loadMessages()
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', background: '#222222' }}>
       {/* Header */}
@@ -108,6 +130,37 @@ export default function AdminRoomPage({ params }: { params: { slug: string } }) 
         </div>
       </div>
 
+      {/* Pinned message banner */}
+      {pinnedMessage && (
+        <div style={{
+          margin: '12px 24px 0',
+          background: 'rgba(155,126,86,0.15)',
+          border: '1px solid rgba(155,126,86,0.3)',
+          borderRadius: 10,
+          padding: '10px 14px',
+          display: 'flex',
+          gap: 10,
+          alignItems: 'flex-start',
+          flexShrink: 0,
+        }}>
+          <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>📌</span>
+          <div style={{ flex: 1 }}>
+            <p style={{ margin: '0 0 3px', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.10em', color: '#9b7e56' }}>
+              PINNED MESSAGE
+            </p>
+            <p style={{ margin: 0, fontFamily: 'Montserrat, sans-serif', fontSize: 12, color: '#c8c3bc', lineHeight: 1.5 }}>
+              {pinnedMessage.body}
+            </p>
+          </div>
+          <button
+            onClick={handleUnpin}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9b7e56', fontFamily: 'Montserrat, sans-serif', fontSize: 11, fontWeight: 600, flexShrink: 0, padding: '2px 0' }}
+          >
+            Unpin
+          </button>
+        </div>
+      )}
+
       {/* Messages */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
         {messages.length === 0 && (
@@ -118,6 +171,7 @@ export default function AdminRoomPage({ params }: { params: { slug: string } }) 
         {messages.map(msg => {
           const isAdmin = msg.author?.isAdmin
           const initials = `${msg.author?.firstName?.[0] || ''}${msg.author?.lastName?.[0] || ''}`
+          const isPinned = pinnedMessage?.id === msg.id
           return (
             <div key={msg.id} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
               <div style={{ width: 32, height: 32, borderRadius: '50%', background: isAdmin ? '#9b7e56' : '#e4dcd1', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -133,6 +187,9 @@ export default function AdminRoomPage({ params }: { params: { slug: string } }) 
                   <span style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 10 }}>
                     {getAge(msg.createdAt)}
                   </span>
+                  {isPinned && (
+                    <span style={{ color: '#9b7e56', fontFamily: 'Montserrat, sans-serif', fontSize: 9, fontWeight: 700 }}>📌 PINNED</span>
+                  )}
                 </div>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
                   <div style={{ background: '#2a2a2a', borderRadius: '0 12px 12px 12px', padding: '8px 14px', maxWidth: 600 }}>
@@ -145,13 +202,22 @@ export default function AdminRoomPage({ params }: { params: { slug: string } }) 
                     )}
                   </div>
                   {!msg.isDeleted && (
-                    <button
-                      onClick={() => handleDelete(msg.id)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, opacity: 0.4, flexShrink: 0 }}
-                      title="Delete message"
-                    >
-                      <Trash2 size={14} color="#C0392B" />
-                    </button>
+                    <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                      <button
+                        onClick={() => isPinned ? handleUnpin() : handlePin(msg.id)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, opacity: isPinned ? 1 : 0.4, flexShrink: 0 }}
+                        title={isPinned ? 'Unpin message' : 'Pin message'}
+                      >
+                        <Pin size={14} color="#9b7e56" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(msg.id)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, opacity: 0.4, flexShrink: 0 }}
+                        title="Delete message"
+                      >
+                        <Trash2 size={14} color="#C0392B" />
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
