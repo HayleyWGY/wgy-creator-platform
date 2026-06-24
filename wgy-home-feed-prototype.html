@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>WGY Home Feed — Reskin Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900&family=Playfair+Display:ital,wght@0,700;1,400;1,500;1,600&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     WGY DESIGN TOKENS  (semantic, theme-aware)
+     The whole point of "both themes": nothing hardcodes a hex,
+     everything resolves through these vars per data-theme.
+     ============================================================ */
+  :root,
+  [data-theme="dark"] {
+    --bg:           #0f0e0d;   /* warm near-black */
+    --surface:      #1a1815;   /* cards */
+    --surface-2:    #242020;   /* elevated / received bubbles */
+    --text:         #ffffff;
+    --text-muted:   #a8a29a;   /* warm light grey body */
+    --beige:        #e4dcd1;   /* WGY beige */
+    --accent:       #e4dcd1;   /* Playfair italic colour on dark */
+    --warm-grey:    #706b6b;
+    --pill-bg:      #e4dcd1;
+    --pill-text:    #1a1815;
+    --border:       rgba(228,220,209,0.12);
+    --border-strong:rgba(228,220,209,0.28);
+    --img-a:        #2b2724;
+    --img-b:        #3a332e;
+  }
+  [data-theme="light"] {
+    --bg:           #f6f1ea;   /* warm off-white */
+    --surface:      #ffffff;
+    --surface-2:    #ece5db;
+    --text:         #1a1715;
+    --text-muted:   #6f685e;   /* darker warm grey on light */
+    --beige:        #e4dcd1;
+    --accent:       #6f685e;   /* Playfair italic colour on light/beige */
+    --warm-grey:    #6f685e;
+    --pill-bg:      #1a1715;
+    --pill-text:    #f6f1ea;
+    --border:       rgba(26,23,21,0.10);
+    --border-strong:rgba(26,23,21,0.22);
+    --img-a:        #efe7dc;
+    --img-b:        #e7d8d0;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: #6c6a68;
+    background: repeating-linear-gradient(135deg,#6c6a68,#6c6a68 2px,#656361 2px,#656361 4px);
+    font-family: "Montserrat", system-ui, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    padding: 26px 14px 48px;
+  }
+
+  /* ---- prototype chrome (sits outside the phone) ---- */
+  .stage-label {
+    color:#f4efe8; font-size:11px; font-weight:700; letter-spacing:0.18em;
+    text-transform:uppercase; text-align:center; opacity:.85;
+  }
+  .stage-label b { color:#fff; }
+  .theme-toggle {
+    display:inline-flex; align-items:center; gap:0; background:#1a1715;
+    border:1px solid rgba(255,255,255,.18); border-radius:999px; padding:4px;
+  }
+  .theme-toggle button {
+    font-family:inherit; font-size:10.5px; font-weight:800; letter-spacing:0.1em;
+    text-transform:uppercase; color:#a8a29a; background:transparent; border:0;
+    padding:8px 16px; border-radius:999px; cursor:pointer; transition:.2s;
+    display:inline-flex; align-items:center; gap:7px;
+  }
+  .theme-toggle button.active { background:#e4dcd1; color:#1a1715; }
+  .theme-toggle button:focus-visible { outline:2px solid #e4dcd1; outline-offset:2px; }
+
+  /* ---- phone frame ---- */
+  .phone {
+    width: 390px; max-width: 100%;
+    border-radius: 46px;
+    background: #000;
+    padding: 11px;
+    box-shadow: 0 30px 80px rgba(0,0,0,.5), 0 0 0 2px rgba(255,255,255,.04);
+  }
+  .screen {
+    background: var(--bg);
+    color: var(--text);
+    border-radius: 36px;
+    overflow: hidden;
+    height: 800px;
+    overflow-y: auto;
+    position: relative;
+    transition: background .35s ease, color .35s ease;
+    scrollbar-width: none;
+  }
+  .screen::-webkit-scrollbar { display:none; }
+
+  /* ---- app header ---- */
+  .appbar {
+    position: sticky; top: 0; z-index: 5;
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 22px 22px 14px;
+    background: linear-gradient(var(--bg) 72%, transparent);
+    backdrop-filter: blur(2px);
+  }
+  .wordmark {
+    font-family:"Playfair Display", serif; font-weight:700;
+    font-size:26px; letter-spacing:.02em; color:var(--text); line-height:1;
+  }
+  .appbar-right { display:flex; align-items:center; gap:14px; }
+  .bell { position:relative; color:var(--text); display:grid; place-items:center; }
+  .bell .dot {
+    position:absolute; top:-2px; right:-2px; width:8px; height:8px; border-radius:50%;
+    background:#c9806f; border:2px solid var(--bg);
+  }
+  .avatar {
+    width:34px; height:34px; border-radius:50%; background:var(--beige);
+    color:#1a1715; font-weight:800; font-size:13px; display:grid; place-items:center;
+    letter-spacing:.02em;
+  }
+
+  /* ---- welcome strip ---- */
+  .welcome { padding: 6px 22px 4px; }
+  .eyebrow {
+    font-size:10px; font-weight:700; letter-spacing:0.24em; text-transform:uppercase;
+    color:var(--accent); display:flex; align-items:center; gap:10px; margin:0 0 12px;
+  }
+  .eyebrow::after { content:""; height:1px; flex:0 0 26px; background:var(--border-strong); }
+  .welcome h1 {
+    margin:0; font-weight:900; text-transform:uppercase; line-height:.96;
+    font-size:clamp(30px,9vw,40px); letter-spacing:-0.01em; color:var(--text);
+  }
+  .welcome h1 em {
+    font-family:"Playfair Display", serif; font-style:italic; font-weight:500;
+    text-transform:none; letter-spacing:0; color:var(--accent); font-size:1.04em;
+  }
+  .welcome p {
+    margin:14px 0 0; color:var(--text-muted); font-weight:500; font-size:13.5px; line-height:1.5;
+    max-width:30ch;
+  }
+
+  /* ---- section header ---- */
+  .section { margin-top: 30px; }
+  .section-head {
+    display:flex; align-items:baseline; justify-content:space-between;
+    padding: 0 22px 14px;
+  }
+  .section-head h2 {
+    margin:0; font-weight:800; text-transform:uppercase; line-height:1;
+    font-size:clamp(20px,5.6vw,24px); letter-spacing:-0.005em; color:var(--text);
+  }
+  .section-head h2 em {
+    font-family:"Playfair Display", serif; font-style:italic; font-weight:500;
+    text-transform:none; letter-spacing:0; color:var(--accent);
+  }
+  .see-all {
+    font-size:10px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--text-muted); text-decoration:none; white-space:nowrap;
+  }
+  .section-eyebrow { padding: 0 22px; }
+
+  /* ---- horizontal scrollers ---- */
+  .scroller {
+    display:flex; gap:14px; overflow-x:auto; padding: 2px 22px 6px;
+    scroll-snap-type:x mandatory; scrollbar-width:none;
+  }
+  .scroller::-webkit-scrollbar { display:none; }
+  .card { scroll-snap-align:start; flex:0 0 auto; }
+
+  /* opportunity card */
+  .opp {
+    width: 250px; background:var(--surface); border:1px solid var(--border);
+    border-radius:20px; overflow:hidden;
+  }
+  .opp .media {
+    height:150px; position:relative;
+    background: linear-gradient(140deg, var(--img-a), var(--img-b));
+    display:grid; place-items:center;
+  }
+  .opp .media .badge {
+    width:46px; height:46px; border-radius:50%; background:rgba(15,14,13,.78);
+    color:#e4dcd1; font-family:"Playfair Display",serif; font-weight:700; font-size:15px;
+    display:grid; place-items:center; border:1px solid rgba(228,220,209,.25);
+  }
+  .tag {
+    position:absolute; top:12px; left:12px;
+    font-size:9px; font-weight:800; letter-spacing:0.12em; text-transform:uppercase;
+    background:var(--beige); color:#1a1715; padding:5px 9px; border-radius:999px;
+  }
+  .tag.paid { background:#c9b48f; }
+  .opp .body { padding:14px 15px 15px; }
+  .opp .body h3 { margin:0; font-weight:800; font-size:15px; color:var(--text); line-height:1.2; }
+  .meta { margin:6px 0 0; font-size:10.5px; font-weight:600; letter-spacing:0.04em;
+    text-transform:uppercase; color:var(--text-muted); }
+  .stats { display:flex; gap:16px; margin-top:12px; align-items:center; }
+  .stat { display:flex; align-items:center; gap:5px; color:var(--text-muted);
+    font-size:12px; font-weight:600; }
+
+  /* creator corner card — TEXT ONLY on home preview (no images, per product spec) */
+  .post {
+    width: 256px; background:var(--surface); border:1px solid var(--border);
+    border-radius:20px; padding:18px 18px 16px; display:flex; flex-direction:column;
+    min-height:172px;
+  }
+  .post .who { display:flex; align-items:center; gap:9px; margin-bottom:11px; }
+  .post .who .av {
+    width:28px; height:28px; border-radius:50%; background:var(--surface-2);
+    color:var(--text); font-weight:800; font-size:11px; display:grid; place-items:center;
+    border:1px solid var(--border);
+  }
+  .post .who span { font-size:11px; font-weight:700; color:var(--text); letter-spacing:.01em; }
+  .post .who small { font-size:10px; font-weight:600; color:var(--text-muted); }
+  .post p { margin:0; font-size:13px; font-weight:500; line-height:1.5; color:var(--text-muted); flex:1; }
+  .post .foot { display:flex; gap:16px; margin-top:13px; }
+
+  /* learning card */
+  .learn {
+    width: 230px; background:var(--surface); border:1px solid var(--border);
+    border-radius:20px; overflow:hidden;
+  }
+  .learn .media {
+    height:112px; background:linear-gradient(140deg,var(--img-b),var(--img-a));
+    position:relative;
+  }
+  .learn .kind {
+    position:absolute; bottom:12px; left:12px;
+    font-size:9px; font-weight:800; letter-spacing:0.12em; text-transform:uppercase;
+    background:rgba(15,14,13,.72); color:#e4dcd1; padding:5px 9px; border-radius:999px;
+    border:1px solid rgba(228,220,209,.2);
+  }
+  .learn .body { padding:13px 15px 16px; }
+  .learn .body h3 { margin:0; font-weight:800; font-size:13.5px; line-height:1.25; color:var(--text); }
+  .learn .body .meta { margin-top:8px; }
+
+  /* asterisk divider */
+  .divider { display:flex; align-items:center; justify-content:center; gap:14px;
+    padding:30px 22px 4px; }
+  .divider span { height:1px; flex:1; background:var(--border); }
+  .divider b { color:var(--accent); font-size:13px; }
+
+  /* bottom nav */
+  .tabbar {
+    position:sticky; bottom:0; z-index:5;
+    display:flex; justify-content:space-around; align-items:center;
+    padding:12px 14px calc(12px + env(safe-area-inset-bottom));
+    background:linear-gradient(transparent, var(--bg) 28%);
+    border-top:1px solid var(--border); margin-top:18px;
+  }
+  .tab { display:flex; flex-direction:column; align-items:center; gap:5px;
+    color:var(--text-muted); font-size:9px; font-weight:700; letter-spacing:0.08em;
+    text-transform:uppercase; }
+  .tab.active { color:var(--text); }
+  .tab.active .ic { color:var(--accent); }
+
+  .footnote { color:#cfcac2; font-size:11px; text-align:center; max-width:390px; line-height:1.55; opacity:.9; }
+  .footnote em { font-family:"Playfair Display",serif; font-style:italic; }
+
+  @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
+</style>
+</head>
+<body>
+
+  <div class="stage-label">WGY creator app &nbsp;·&nbsp; home feed &nbsp;·&nbsp; <b>reskin prototype</b></div>
+
+  <div class="theme-toggle" role="group" aria-label="Theme">
+    <button id="btn-dark" class="active" onclick="setTheme('dark')" aria-pressed="true">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      Dark
+    </button>
+    <button id="btn-light" onclick="setTheme('light')" aria-pressed="false">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg>
+      Light
+    </button>
+  </div>
+
+  <div class="phone">
+    <div class="screen" id="screen" data-theme="dark">
+
+      <!-- header -->
+      <header class="appbar">
+        <div class="wordmark">WGY</div>
+        <div class="appbar-right">
+          <div class="bell" aria-label="Notifications, 3 unread">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+            <span class="dot"></span>
+          </div>
+          <div class="avatar">H</div>
+        </div>
+      </header>
+
+      <!-- welcome -->
+      <section class="welcome">
+        <p class="eyebrow">The WGY edit</p>
+        <h1>Morning,<br><em>Hayley.</em></h1>
+        <p>Three new drops, fresh community posts and a guide to get through. Let's get you gifted.</p>
+      </section>
+
+      <!-- opportunities -->
+      <section class="section">
+        <p class="eyebrow section-eyebrow">Opportunities</p>
+        <div class="section-head">
+          <h2>This week's <em>drops</em></h2>
+          <a class="see-all" href="#">See all</a>
+        </div>
+        <div class="scroller">
+          <article class="card opp">
+            <div class="media"><span class="tag">PR / Gifted</span><div class="badge">W</div></div>
+            <div class="body">
+              <h3>The Inkey List PR</h3>
+              <p class="meta">WGY Ltd · 14 May</p>
+              <div class="stats">
+                <span class="stat"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1L12 21l7.7-7.6 1.1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>102</span>
+                <span class="stat"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-4-.9L3 21l1.9-5a8.4 8.4 0 0 1 16.1-4.5z"/></svg>38</span>
+              </div>
+            </div>
+          </article>
+          <article class="card opp">
+            <div class="media"><span class="tag">PR / Gifted</span><div class="badge">W</div></div>
+            <div class="body">
+              <h3>VIEVE Gifting</h3>
+              <p class="meta">WGY Ltd · 27 Apr</p>
+              <div class="stats">
+                <span class="stat"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1L12 21l7.7-7.6 1.1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>136</span>
+                <span class="stat"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-4-.9L3 21l1.9-5a8.4 8.4 0 0 1 16.1-4.5z"/></svg>49</span>
+              </div>
+            </div>
+          </article>
+          <article class="card opp">
+            <div class="media"><span class="tag paid">Paid UGC</span><div class="badge">W</div></div>
+            <div class="body">
+              <h3>Garnier TikTok</h3>
+              <p class="meta">WGY Ltd · 22 Apr</p>
+              <div class="stats">
+                <span class="stat"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1L12 21l7.7-7.6 1.1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>211</span>
+                <span class="stat"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-4-.9L3 21l1.9-5a8.4 8.4 0 0 1 16.1-4.5z"/></svg>74</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- creator corner (text-only previews) -->
+      <section class="section">
+        <p class="eyebrow section-eyebrow">Creator Corner</p>
+        <div class="section-head">
+          <h2>From the <em>community</em></h2>
+          <a class="see-all" href="#">See all</a>
+        </div>
+        <div class="scroller">
+          <article class="card post">
+            <div class="who"><div class="av">EM</div><div><span>Ella M.</span><br><small>2h ago</small></div></div>
+            <p>My first PR box from a gifting campaign just landed and I actually cried?? thank you for believing in the small accounts...</p>
+            <div class="foot">
+              <span class="stat"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1L12 21l7.7-7.6 1.1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>47</span>
+              <span class="stat"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-4-.9L3 21l1.9-5a8.4 8.4 0 0 1 16.1-4.5z"/></svg>12</span>
+            </div>
+          </article>
+          <article class="card post">
+            <div class="who"><div class="av">JT</div><div><span>Jas T.</span><br><small>5h ago</small></div></div>
+            <p>Quick tip for anyone doing TikTok Shop, batch your filming on a Sunday and schedule the lot. Changed my whole week honestly.</p>
+            <div class="foot">
+              <span class="stat"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1L12 21l7.7-7.6 1.1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>83</span>
+              <span class="stat"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-4-.9L3 21l1.9-5a8.4 8.4 0 0 1 16.1-4.5z"/></svg>29</span>
+            </div>
+          </article>
+          <article class="card post">
+            <div class="who"><div class="av">PR</div><div><span>Priya R.</span><br><small>1d ago</small></div></div>
+            <p>anyone else in the Manchester area fancy a content swap day? thinking coffee, filming, the usual chaos. drop me a reply x</p>
+            <div class="foot">
+              <span class="stat"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1L12 21l7.7-7.6 1.1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>31</span>
+              <span class="stat"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-4-.9L3 21l1.9-5a8.4 8.4 0 0 1 16.1-4.5z"/></svg>18</span>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <div class="divider"><span></span><b>&#10038;</b><span></span></div>
+
+      <!-- learning lounge -->
+      <section class="section">
+        <p class="eyebrow section-eyebrow">Learning Lounge</p>
+        <div class="section-head">
+          <h2>Level <em>up</em></h2>
+          <a class="see-all" href="#">See all</a>
+        </div>
+        <div class="scroller" style="padding-bottom:8px;">
+          <article class="card learn">
+            <div class="media"><span class="kind">Guide · PDF</span></div>
+            <div class="body"><h3>How to pitch for your first gifting campaign</h3><p class="meta">8 min read</p></div>
+          </article>
+          <article class="card learn">
+            <div class="media"><span class="kind">Course</span></div>
+            <div class="body"><h3>TikTok Shop affiliate, start to first sale</h3><p class="meta">6 lessons</p></div>
+          </article>
+          <article class="card learn">
+            <div class="media"><span class="kind">Workbook</span></div>
+            <div class="body"><h3>Your rate card, finally sorted</h3><p class="meta">Download</p></div>
+          </article>
+        </div>
+      </section>
+
+      <!-- bottom nav -->
+      <nav class="tabbar">
+        <a class="tab active" href="#"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg></span>Home</a>
+        <a class="tab" href="#"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg></span>Opps</a>
+        <a class="tab" href="#"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-4-.9L3 21l1.9-5a8.4 8.4 0 0 1 16.1-4.5z"/></svg></span>Community</a>
+        <a class="tab" href="#"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 5h11a3 3 0 0 1 3 3v11"/><path d="M4 5v12a2 2 0 0 0 2 2h12"/></svg></span>Learn</a>
+        <a class="tab" href="#"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>Profile</a>
+      </nav>
+
+    </div>
+  </div>
+
+  <p class="footnote">Tap <em>Dark</em> / <em>Light</em> up top to flip themes. Both run off the same semantic tokens, so every surface, text colour and accent swaps in one place. Colours are eyeballed from your screenshots and easy to fine-tune.</p>
+
+<script>
+  function setTheme(t){
+    document.getElementById('screen').setAttribute('data-theme', t);
+    var d = t === 'dark';
+    var bd = document.getElementById('btn-dark'), bl = document.getElementById('btn-light');
+    bd.classList.toggle('active', d); bl.classList.toggle('active', !d);
+    bd.setAttribute('aria-pressed', d); bl.setAttribute('aria-pressed', !d);
+  }
+</script>
+</body>
+</html>

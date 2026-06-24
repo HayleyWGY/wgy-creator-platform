@@ -1,0 +1,95 @@
+/* ============================================================
+   WGY DESIGN TOKENS — single source of truth
+   Semantic, theme-aware. Nothing in the app should hardcode a
+   hex; everything resolves through these vars per [data-theme].
+   Brand values are locked (pulled from the live Webflow project).
+   To re-skin, change values HERE only.
+   ============================================================ */
+
+:root,
+[data-theme="dark"] {
+  /* surfaces */
+  --bg:            #111111;
+  --surface:       #1a1a1a;
+  --surface-2:     #2a2a2a;
+
+  /* text */
+  --text:          #ffffff;
+  --text-muted:    #aaaaaa;
+
+  /* brand accents */
+  --beige:         #e4dcd1;
+  --accent:        #e4dcd1;   /* Playfair italic colour on dark */
+
+  /* pills */
+  --pill-bg:       #e4dcd1;
+  --pill-text:     #111111;
+
+  /* chat bubbles */
+  --bubble-sent-bg:     #e4dcd1;
+  --bubble-sent-text:   #111111;
+  --bubble-received-bg: #2a2a2a;
+  --bubble-received-text:#ffffff;
+
+  /* lines */
+  --border:        rgba(228, 220, 209, 0.12);
+  --border-strong: rgba(228, 220, 209, 0.28);
+
+  /* media placeholder gradient */
+  --img-a:         #1f1f1f;
+  --img-b:         #2e2e2e;
+}
+
+[data-theme="light"] {
+  /* surfaces */
+  --bg:            #ffffff;
+  --surface:       #f7f7f7;
+  --surface-2:     #eeeeee;
+
+  /* text */
+  --text:          #111111;
+  --text-muted:    #666666;
+
+  /* brand accents */
+  --beige:         #e4dcd1;   /* used as accent panels/fills, not a bg */
+  --accent:        #706b6b;   /* Playfair italic colour on light */
+
+  /* pills */
+  --pill-bg:       #111111;
+  --pill-text:     #ffffff;
+
+  /* chat bubbles */
+  --bubble-sent-bg:     #e4dcd1;
+  --bubble-sent-text:   #111111;
+  --bubble-received-bg: #eeeeee;
+  --bubble-received-text:#111111;
+
+  /* lines */
+  --border:        rgba(17, 17, 17, 0.10);
+  --border-strong: rgba(17, 17, 17, 0.22);
+
+  /* media placeholder gradient */
+  --img-a:         #efe7dc;
+  --img-b:         #e7d8d0;
+}
+
+/* ---- shared across themes (do not vary by theme) ---- */
+:root {
+  --warm-grey:  #706b6b;
+  --charcoal:   #222222;
+
+  /* WGY agency voice — reserved EXCLUSIVELY for WGY-authored
+     messages (DMs from WGY, admin posts shown as "WGY" in chat).
+     Must not appear in buttons, headings, or general UI. */
+  --gold-wgy:   #9b7e56;
+
+  /* system status */
+  --success:     #027A48;
+  --success-bg:  #ECFDF3;
+  --error:       #B42318;
+  --error-bg:    #FEF3F2;
+
+  /* radii */
+  --radius-pill: 999px;
+  --radius-card: 20px;
+}

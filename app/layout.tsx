@@ -3,17 +3,19 @@ import { Playfair_Display, Montserrat } from "next/font/google";
 import { Providers } from "./providers";
 import "./globals.css";
 
+// Playfair Display is used ITALIC ONLY (accent words), weights 400–600.
 const playfair = Playfair_Display({
   subsets: ["latin"],
-  weight: ["400", "700"],
-  style: ["normal", "italic"],
+  weight: ["400", "500", "600"],
+  style: ["italic"],
   variable: "--font-playfair",
   display: "swap",
 });
 
+// Montserrat is the structural workhorse, weights 400–900.
 const montserrat = Montserrat({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800", "900"],
   variable: "--font-montserrat",
   display: "swap",
 });
@@ -29,8 +31,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${playfair.variable} ${montserrat.variable}`}>
-      <body className="antialiased font-montserrat bg-background-primary text-white">
+    <html
+      lang="en"
+      className={`${playfair.variable} ${montserrat.variable}`}
+      suppressHydrationWarning
+    >
+      <body className="antialiased font-montserrat bg-bg text-text">
         <Providers>{children}</Providers>
       </body>
     </html>
