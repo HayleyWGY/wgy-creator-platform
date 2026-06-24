@@ -42,7 +42,9 @@ const config: Config = {
           error: 'var(--error)',
           'error-bg': 'var(--error-bg)',
         },
-        /* Back-compat aliases used by existing markup (now theme-aware) */
+        /* TODO(tech-debt): back-compat aliases used by existing markup
+           (now theme-aware). Remove once all screens are migrated to the
+           semantic tokens above, so we don't maintain two token systems. */
         background: {
           primary: 'var(--bg)',
           surface: 'var(--surface)',

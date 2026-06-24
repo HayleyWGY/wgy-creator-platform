@@ -51,9 +51,11 @@ export function CampaignCard({
       className={`overflow-hidden relative ${className}`}
       style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)" }}
     >
-      {/* Image area — fixed 150px height */}
+      {/* Image area — fixed 150px height. No brand-name overlay; the
+          campaign/brand title lives below the media. WGY badge sits
+          bottom-right on both real and placeholder cards. */}
       <div
-        className="relative w-full grid place-items-center"
+        className="relative w-full"
         style={{ height: "150px", background: coverImageUrl ? imageBg : "linear-gradient(140deg, var(--img-a), var(--img-b))" }}
       >
         {coverImageUrl && (
@@ -64,29 +66,11 @@ export function CampaignCard({
             style={{ objectFit: "cover" }}
           />
         )}
-        {coverImageUrl && (
-          /* Gradient overlay only when there's a cover image */
-          <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.55) 100%)" }} />
-        )}
-        {coverImageUrl ? (
-          /* Brand name centred over the cover image */
-          <span
-            className="font-playfair text-white text-xl leading-tight px-4 text-center relative"
-            style={{ fontStyle: "italic", letterSpacing: "0.01em" }}
-          >
-            {brandName}
-          </span>
-        ) : (
-          /* No cover image — WGY badge anchors the placeholder media */
-          <WgyBadge size={46} />
-        )}
 
-        {/* WGY badge on cover images sits bottom-right */}
-        {coverImageUrl && (
-          <div style={{ position: "absolute", bottom: 10, right: 10, zIndex: 10 }}>
-            <WgyBadge size={34} />
-          </div>
-        )}
+        {/* WGY badge — consistent placement on real and placeholder cards */}
+        <div style={{ position: "absolute", bottom: 10, right: 10, zIndex: 10 }}>
+          <WgyBadge size={40} />
+        </div>
 
         {/* Event date badge */}
         {isEvent && eventDay && eventMonth && (

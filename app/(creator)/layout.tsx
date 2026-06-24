@@ -17,7 +17,9 @@ export default function CreatorLayout({ children }: { children: React.ReactNode 
             height: "56px",
           }}
         >
-          {/* Logo (white asset; auto-inverts in light theme) */}
+          {/* Logo (white asset; auto-inverts in light theme via .wgy-logo filter).
+              TODO(pre-launch): replace the CSS filter-inverted logo with a proper
+              light-theme logo asset and swap by theme. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/images/wgy-logo-white.png"
