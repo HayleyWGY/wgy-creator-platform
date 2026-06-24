@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { Heart, MessageCircle, Bell } from "lucide-react";
 import { useState } from "react";
+import { WgyBadge } from "@/components/ui/wgy-badge";
 
 interface CampaignCardProps {
   brandName: string;
@@ -46,11 +47,14 @@ export function CampaignCard({
   }
 
   return (
-    <div className={`bg-[#2a2a2a] rounded-card overflow-hidden relative ${className}`}>
-      {/* Image area — fixed 140px height */}
+    <div
+      className={`overflow-hidden relative ${className}`}
+      style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)" }}
+    >
+      {/* Image area — fixed 150px height */}
       <div
-        className="relative w-full"
-        style={{ height: "140px", backgroundColor: imageBg }}
+        className="relative w-full grid place-items-center"
+        style={{ height: "150px", background: coverImageUrl ? imageBg : "linear-gradient(140deg, var(--img-a), var(--img-b))" }}
       >
         {coverImageUrl && (
           <Image
@@ -60,17 +64,29 @@ export function CampaignCard({
             style={{ objectFit: "cover" }}
           />
         )}
-        {/* Gradient overlay */}
-        <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.66) 40%, rgba(0,0,0,0.78) 100%)" }} />
-        {/* Brand name centred over image */}
-        <div className="absolute inset-0 flex items-center justify-center">
+        {coverImageUrl && (
+          /* Gradient overlay only when there's a cover image */
+          <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.55) 100%)" }} />
+        )}
+        {coverImageUrl ? (
+          /* Brand name centred over the cover image */
           <span
-            className="font-playfair font-normal text-white text-xl leading-tight px-4 text-center"
-            style={{ letterSpacing: "0.04em" }}
+            className="font-playfair text-white text-xl leading-tight px-4 text-center relative"
+            style={{ fontStyle: "italic", letterSpacing: "0.01em" }}
           >
             {brandName}
           </span>
-        </div>
+        ) : (
+          /* No cover image — WGY badge anchors the placeholder media */
+          <WgyBadge size={46} />
+        )}
+
+        {/* WGY badge on cover images sits bottom-right */}
+        {coverImageUrl && (
+          <div style={{ position: "absolute", bottom: 10, right: 10, zIndex: 10 }}>
+            <WgyBadge size={34} />
+          </div>
+        )}
 
         {/* Event date badge */}
         {isEvent && eventDay && eventMonth && (
@@ -107,14 +123,14 @@ export function CampaignCard({
               onClick={() => setTooltipVisible(!tooltipVisible)}
               className="flex items-center justify-center"
             >
-              <Bell size={16} color="#e4dcd1" strokeWidth={1.5} />
+              <Bell size={16} strokeWidth={1.5} style={{ color: "var(--accent)" }} />
             </button>
             {tooltipVisible && (
               <div
                 className="absolute right-0 top-6 w-[180px] rounded-[8px] px-3 py-2 text-[10px] font-montserrat font-normal z-10"
                 style={{
-                  background: "#333333",
-                  color: "#e4dcd1",
+                  background: "var(--surface-2)",
+                  color: "var(--text)",
                   lineHeight: 1.5,
                   boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
                 }}
@@ -129,20 +145,23 @@ export function CampaignCard({
       {/* Card body */}
       <div className="px-4 pt-3 pb-4 flex flex-col gap-2">
         <span
-          className="inline-block px-[10px] py-[3px] rounded-pill font-montserrat font-semibold uppercase self-start"
-          style={{ fontSize: "9px", letterSpacing: "0.10em", background: "#706b6b", color: "#e4dcd1" }}
+          className="inline-block font-montserrat uppercase self-start"
+          style={{ fontSize: "9px", fontWeight: 800, letterSpacing: "0.12em", padding: "5px 9px", borderRadius: "var(--radius-pill)", background: "var(--beige)", color: "#111111" }}
         >
           {campaignType}
         </span>
 
-        <p className="font-playfair font-normal text-white leading-snug" style={{ fontSize: "13px" }}>
+        <h3 className="font-montserrat leading-snug" style={{ fontSize: "15px", fontWeight: 800, color: "var(--text)", margin: 0 }}>
           {title}
+        </h3>
+
+        <p className="font-montserrat uppercase" style={{ fontSize: "10.5px", fontWeight: 600, letterSpacing: "0.04em", color: "var(--text-muted)", margin: 0 }}>
+          WGY Ltd · {timestamp}
         </p>
 
-        <div className="flex items-center gap-3 font-montserrat font-normal" style={{ color: "#706b6b", fontSize: "10px" }}>
-          <span className="flex items-center gap-1"><Heart size={11} />{likesCount}</span>
-          <span className="flex items-center gap-1"><MessageCircle size={11} />{commentsCount}</span>
-          <span>{timestamp}</span>
+        <div className="flex items-center gap-4 font-montserrat" style={{ color: "var(--text-muted)", fontSize: "12px", fontWeight: 600, marginTop: 2 }}>
+          <span className="flex items-center gap-1"><Heart size={13} strokeWidth={1.8} />{likesCount}</span>
+          <span className="flex items-center gap-1"><MessageCircle size={13} strokeWidth={1.8} />{commentsCount}</span>
         </div>
       </div>
     </div>

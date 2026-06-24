@@ -20,8 +20,8 @@ export function BottomNav() {
     <nav
       className="fixed bottom-0 z-50 flex items-center justify-around"
       style={{
-        background: "#1c1c1c",
-        borderTop: "1px solid rgba(255, 255, 255, 0.06)",
+        background: "var(--surface)",
+        borderTop: "1px solid var(--border)",
         height: "80px",
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
         left: "50%",
@@ -44,14 +44,16 @@ export function BottomNav() {
             <Icon
               size={22}
               strokeWidth={1.5}
-              color={isActive ? "#e4dcd1" : "#4a4a4a"}
+              style={{ color: isActive ? "var(--accent)" : "var(--text-muted)" }}
             />
             <span
-              className="font-montserrat font-medium"
+              className="font-montserrat"
               style={{
                 fontSize: "9px",
-                letterSpacing: "0.04em",
-                color: isActive ? "#e4dcd1" : "#4a4a4a",
+                fontWeight: 700,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                color: isActive ? "var(--text)" : "var(--text-muted)",
               }}
             >
               {label}

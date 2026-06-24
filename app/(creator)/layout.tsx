@@ -1,35 +1,38 @@
 import { BottomNav } from "@/components/creator/bottom-nav";
 import { NavHeader } from "@/components/creator/NavHeader";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Search } from "lucide-react";
 
 export default function CreatorLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-[#222222]">
+    <div className="min-h-screen" style={{ background: "var(--bg)" }}>
       <div className="max-w-[390px] mx-auto relative min-h-screen flex flex-col">
 
         {/* Global sticky header */}
         <header
           className="sticky top-0 z-50 flex items-center justify-between px-5 flex-shrink-0"
           style={{
-            background: "#1c1c1c",
-            borderBottom: "1px solid rgba(255,255,255,0.06)",
+            background: "var(--surface)",
+            borderBottom: "1px solid var(--border)",
             height: "56px",
           }}
         >
-          {/* Logo */}
+          {/* Logo (white asset; auto-inverts in light theme) */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/images/wgy-logo-white.png"
             alt="WGY"
+            className="wgy-logo"
             style={{ height: "24px", width: "auto", display: "block" }}
           />
 
-          {/* Right icons — real unread badges */}
-          <div className="flex items-center gap-4">
+          {/* Right icons — real unread badges + theme toggle */}
+          <div className="flex items-center gap-3">
             <NavHeader />
-            <button>
-              <Search size={20} color="#706b6b" strokeWidth={1.5} />
+            <button aria-label="Search">
+              <Search size={20} strokeWidth={1.5} style={{ color: "var(--text-muted)" }} />
             </button>
+            <ThemeToggle compact />
           </div>
         </header>
 

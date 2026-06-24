@@ -44,21 +44,21 @@ export function NavHeader() {
 
   return (
     <div className="flex items-center gap-4">
-      <Link href="/messages" className="relative">
-        <MessageCircle size={20} color="#706b6b" strokeWidth={1.5} />
+      <Link href="/messages" className="relative" aria-label="Messages">
+        <MessageCircle size={20} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} />
         {unreadDMs && (
           <span
             className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
-            style={{ background: '#e4dcd1' }}
+            style={{ background: 'var(--accent)' }}
           />
         )}
       </Link>
-      <Link href="/notifications" className="relative">
-        <Bell size={20} color="#706b6b" strokeWidth={1.5} />
+      <Link href="/notifications" className="relative" aria-label="Notifications">
+        <Bell size={20} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} />
         {unreadNotifs > 0 && (
           <span
             className="absolute -top-1 -right-1 min-w-[14px] h-[14px] rounded-full flex items-center justify-center px-0.5"
-            style={{ background: '#e4dcd1', fontSize: '8px', fontWeight: 700, color: '#222222', fontFamily: 'Montserrat, sans-serif' }}
+            style={{ background: 'var(--pill-bg)', fontSize: '8px', fontWeight: 700, color: 'var(--pill-text)', fontFamily: 'Montserrat, sans-serif' }}
           >
             {unreadNotifs > 9 ? '9+' : unreadNotifs}
           </span>

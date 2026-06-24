@@ -8,8 +8,12 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { CampaignCard } from "@/components/creator/campaign-card";
 import { getAge } from "@/lib/utils";
-import { CONTENT_TYPE_BG, CONTENT_TYPE_LABEL } from "@/lib/constants";
+import { CONTENT_TYPE_LABEL } from "@/lib/constants";
 import type { CreatorPost } from "@/components/creator/creator-post-card";
+import { Eyebrow } from "@/components/ui/eyebrow";
+import { SectionHeader } from "@/components/ui/section-header";
+import { AsteriskDivider } from "@/components/ui/asterisk-divider";
+import { Heart, MessageCircle } from "lucide-react";
 
 interface Campaign {
   id: string;
@@ -59,17 +63,23 @@ export default function HomePage() {
   return (
     <div>
       {/* Greeting */}
-      <div className="px-5 pt-5 pb-4">
-        <h1 className="text-display text-white leading-tight">Hey, {session?.user?.firstName || "there"}</h1>
-        <p className="font-montserrat font-normal mt-1" style={{ fontSize: "12px", color: "#706b6b" }}>
-          Your latest opportunities and community updates
+      <div className="px-5 pt-6 pb-2">
+        <Eyebrow hairline style={{ marginBottom: 12 }}>The WGY edit</Eyebrow>
+        <h1 className="text-display">
+          Hey,<br /><em className="font-accent" style={{ fontSize: "1.04em" }}>{session?.user?.firstName || "there"}.</em>
+        </h1>
+        <p className="font-montserrat" style={{ fontSize: "13.5px", fontWeight: 500, color: "var(--text-muted)", marginTop: 14, maxWidth: "30ch", lineHeight: 1.5 }}>
+          Your latest opportunities and community updates.
         </p>
       </div>
 
       {/* New Opportunities */}
-      <div className="mb-3">
-        <div className="px-5 mb-3 flex items-center justify-between">
-          <span className="text-section-label">New Opportunities</span>
+      <div className="mt-7 mb-3">
+        <div className="px-5">
+          <Eyebrow style={{ marginBottom: 10 }}>Opportunities</Eyebrow>
+        </div>
+        <div className="px-5 mb-3">
+          <SectionHeader lead="This week's" accent="drops" seeAllHref="/opportunities" />
         </div>
         <div className="flex gap-3 overflow-x-auto pl-5 pr-8 pb-1" style={{ scrollbarWidth: "none" }}>
           {campaigns.length > 0
@@ -89,26 +99,18 @@ export default function HomePage() {
                 </Link>
               ))
             : Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="flex-none w-[200px] rounded-card" style={{ height: "200px", background: "#2a2a2a", opacity: 0.5 }} />
+                <div key={i} className="flex-none w-[200px]" style={{ height: "200px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)", opacity: 0.5 }} />
               ))}
-        </div>
-        <div className="px-5 mt-2 flex justify-end">
-          <Link href="/opportunities" className="font-montserrat font-semibold" style={{ fontSize: "11px", color: "#e4dcd1", textDecoration: "none" }}>
-            View all →
-          </Link>
         </div>
       </div>
 
-      {/* Divider */}
-      <div className="mx-5 my-4" style={{ height: "1px", background: "rgba(255,255,255,0.06)" }} />
-
       {/* Creator Corner */}
-      <div>
-        <div className="px-5 mb-3 flex items-center justify-between">
-          <span className="text-section-label">Creator Corner</span>
-          <Link href="/community/creator-corner" className="font-montserrat font-semibold" style={{ fontSize: "11px", color: "#e4dcd1", textDecoration: "none" }}>
-            View all →
-          </Link>
+      <div className="mt-7">
+        <div className="px-5">
+          <Eyebrow style={{ marginBottom: 10 }}>Creator Corner</Eyebrow>
+        </div>
+        <div className="px-5 mb-3">
+          <SectionHeader lead="From the" accent="community" seeAllHref="/community/creator-corner" />
         </div>
 
         {creatorPosts.length > 0 ? (
@@ -131,112 +133,111 @@ export default function HomePage() {
                   onClick={() => router.push(`/community/creator-corner/${post.id}`)}
                   style={{
                     flexShrink: 0,
-                    width: 260,
-                    background: "#2a2a2a",
-                    borderRadius: 12,
-                    padding: 14,
-                    border: "1px solid rgba(255,255,255,0.06)",
+                    width: 256,
+                    minHeight: 172,
+                    display: "flex",
+                    flexDirection: "column",
+                    background: "var(--surface)",
+                    borderRadius: "var(--radius-card)",
+                    padding: "18px 18px 16px",
+                    border: "1px solid var(--border)",
                     cursor: "pointer",
                   }}
                 >
                   {/* Author row */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#e4dcd1", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 11 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--surface-2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
                       {post.author.profileImageUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={post.author.profileImageUrl} alt={initials} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                       ) : (
-                        <span className="font-montserrat" style={{ fontSize: 10, fontWeight: 700, color: "#222222" }}>{initials}</span>
+                        <span className="font-montserrat" style={{ fontSize: 11, fontWeight: 800, color: "var(--text)" }}>{initials}</span>
                       )}
                     </div>
-                    <span className="font-montserrat" style={{ fontSize: 12, fontWeight: 600, color: "white", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {post.author.firstName} {post.author.lastName}
-                    </span>
-                    <span className="font-montserrat" style={{ fontSize: 10, color: "#706b6b", flexShrink: 0 }}>{getAge(post.createdAt)}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <span className="font-montserrat" style={{ display: "block", fontSize: 11, fontWeight: 700, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {post.author.firstName} {post.author.lastName}
+                      </span>
+                      <span className="font-montserrat" style={{ fontSize: 10, fontWeight: 600, color: "var(--text-muted)" }}>{getAge(post.createdAt)}</span>
+                    </div>
                   </div>
 
-                  {/* Body — 3 line clamp, no images */}
+                  {/* Body — 3 line clamp, TEXT ONLY (no images on home preview) */}
                   <p className="font-montserrat" style={{
-                    fontSize: 12, color: "#c8c3bc", lineHeight: 1.5, marginTop: 8,
+                    fontSize: 13, fontWeight: 500, color: "var(--text-muted)", lineHeight: 1.5, margin: 0, flex: 1,
                     display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden",
                   }}>
                     {post.body}
                   </p>
 
                   {/* Actions */}
-                  <div style={{ display: "flex", gap: 12, marginTop: 10, paddingTop: 8, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-                    <span className="font-montserrat" style={{ fontSize: 11, color: "#706b6b" }}>♥ {post.likesCount}</span>
-                    <span className="font-montserrat" style={{ fontSize: 11, color: "#706b6b" }}>💬 {post.commentsCount}</span>
+                  <div style={{ display: "flex", gap: 16, marginTop: 13 }}>
+                    <span className="font-montserrat" style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}><Heart size={14} strokeWidth={1.8} />{post.likesCount}</span>
+                    <span className="font-montserrat" style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}><MessageCircle size={14} strokeWidth={1.8} />{post.commentsCount}</span>
                   </div>
                 </div>
               );
             })}
           </div>
         ) : (
-          <div className="mx-5 rounded-xl p-[14px]" style={{ background: "#2a2a2a", border: "1px solid rgba(228,220,209,0.08)" }}>
-            <p className="font-montserrat text-center" style={{ fontSize: "12px", color: "#706b6b" }}>
+          <div className="mx-5" style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)", padding: 14 }}>
+            <p className="font-montserrat text-center" style={{ fontSize: "12px", fontWeight: 500, color: "var(--text-muted)" }}>
               No posts yet — be the first to share something!
             </p>
           </div>
         )}
       </div>
 
-      {/* Divider */}
-      <div className="mx-5 my-4" style={{ height: "1px", background: "rgba(255,255,255,0.06)" }} />
+      {/* Asterisk divider */}
+      <AsteriskDivider className="mx-5 mt-8 mb-2" />
 
       {/* Learning Lounge */}
-      <div className="mb-6">
+      <div className="mt-6 mb-6">
+        <div className="px-5">
+          <Eyebrow style={{ marginBottom: 10 }}>Learning Lounge</Eyebrow>
+        </div>
         <div className="px-5 mb-3">
-          <span className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.14em", color: "#e4dcd1" }}>
-            From the Learning Lounge
-          </span>
+          <SectionHeader lead="Level" accent="up" seeAllHref="/learn" />
         </div>
 
         <div className="flex gap-3 overflow-x-auto pl-5 pr-8 pb-1" style={{ scrollbarWidth: "none" }}>
           {learnItems.map(item => {
             const isVideo    = item.contentType === "video";
             const isWorkbook = item.contentType === "workbook";
-            const bg         = CONTENT_TYPE_BG[item.contentType] ?? "#3a3a3a";
-            const meta       = isWorkbook ? "Workbook" : isVideo ? "Video" : item.readingTimeMinutes ? `${item.readingTimeMinutes} min read` : item.contentType.replace(/_/g, " ");
+            const meta       = isWorkbook ? "Download" : isVideo ? "Video" : item.readingTimeMinutes ? `${item.readingTimeMinutes} min read` : item.contentType.replace(/_/g, " ");
             return (
               <Link
                 key={item.id}
                 href={`/learn/${item.id}`}
-                style={{ flex: "0 0 200px", background: "#2a2a2a", borderRadius: "12px", overflow: "hidden", border: "1px solid rgba(228,220,209,0.08)", textDecoration: "none", display: "block" }}
+                style={{ flex: "0 0 200px", background: "var(--surface)", borderRadius: "var(--radius-card)", overflow: "hidden", border: "1px solid var(--border)", textDecoration: "none", display: "block" }}
               >
-                <div style={{ height: "140px", background: bg, position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ height: "112px", background: "linear-gradient(140deg, var(--img-b), var(--img-a))", position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   {item.thumbnailUrl ? (
                     <Image src={item.thumbnailUrl} alt={item.title} fill style={{ objectFit: "cover" }} />
                   ) : isVideo ? (
                     <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "rgba(228,220,209,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <Play size={12} color="#e4dcd1" fill="#e4dcd1" />
+                      <Play size={12} style={{ color: "var(--accent)" }} fill="currentColor" />
                     </div>
                   ) : isWorkbook ? (
-                    <FileText size={24} color="#e4dcd1" strokeWidth={1.5} />
+                    <FileText size={24} strokeWidth={1.5} style={{ color: "var(--accent)" }} />
                   ) : null}
                   {item.thumbnailUrl && <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.2)" }} />}
-                  <div style={{ position: "absolute", top: "8px", left: "8px" }}>
-                    <span className="font-montserrat font-semibold uppercase" style={{ fontSize: "8px", letterSpacing: "0.08em", background: "rgba(34,34,34,0.75)", color: "#e4dcd1", padding: "2px 6px", borderRadius: "20px" }}>
+                  <div style={{ position: "absolute", bottom: "12px", left: "12px" }}>
+                    <span className="font-montserrat uppercase" style={{ fontSize: "9px", fontWeight: 800, letterSpacing: "0.12em", background: "rgba(17,17,17,0.72)", color: "#e4dcd1", padding: "5px 9px", borderRadius: "var(--radius-pill)", border: "1px solid rgba(228,220,209,0.2)" }}>
                       {CONTENT_TYPE_LABEL[item.contentType] ?? item.contentType.replace(/_/g, " ")}
                     </span>
                   </div>
                 </div>
-                <div style={{ padding: "10px" }}>
-                  <p className="font-playfair font-normal text-white" style={{ fontSize: "13px", lineHeight: 1.3 }}>{item.title}</p>
-                  <p className="font-montserrat font-normal" style={{ fontSize: "10px", color: "#706b6b", marginTop: "4px" }}>{meta}</p>
+                <div style={{ padding: "13px 15px 16px" }}>
+                  <h3 className="font-montserrat" style={{ fontSize: "13.5px", fontWeight: 800, color: "var(--text)", lineHeight: 1.25, margin: 0 }}>{item.title}</h3>
+                  <p className="font-montserrat uppercase" style={{ fontSize: "10.5px", fontWeight: 600, letterSpacing: "0.04em", color: "var(--text-muted)", marginTop: "8px" }}>{meta}</p>
                 </div>
               </Link>
             );
           })}
           {learnItems.length === 0 && (
-            <p className="font-montserrat text-white/20 pl-1" style={{ fontSize: "12px", paddingTop: "16px" }}>Coming soon</p>
+            <p className="font-montserrat pl-1" style={{ fontSize: "12px", fontWeight: 500, color: "var(--text-muted)", paddingTop: "16px" }}>Coming soon</p>
           )}
-        </div>
-
-        <div className="px-5 mt-2 flex justify-end">
-          <Link href="/learn" className="font-montserrat font-semibold" style={{ fontSize: "11px", color: "#e4dcd1", textDecoration: "none" }}>
-            View all →
-          </Link>
         </div>
       </div>
     </div>
