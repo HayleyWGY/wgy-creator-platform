@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>WGY Home Feed — Reskin (final tokens, both themes)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900&family=Playfair+Display:ital,wght@1,400;1,500;1,600&display=swap" rel="stylesheet">
+<style>
+  /* FINAL locked WGY tokens (matches app/tokens.css) */
+  [data-theme="dark"]{
+    --bg:#111111; --surface:#1a1a1a; --surface-2:#2a2a2a;
+    --text:#ffffff; --text-muted:#aaaaaa;
+    --beige:#e4dcd1; --accent:#e4dcd1;
+    --pill-bg:#e4dcd1; --pill-text:#111111;
+    --border:rgba(228,220,209,0.12); --border-strong:rgba(228,220,209,0.28);
+    --img-a:#1f1f1f; --img-b:#2e2e2e;
+  }
+  [data-theme="light"]{
+    --bg:#ffffff; --surface:#f7f7f7; --surface-2:#eeeeee;
+    --text:#111111; --text-muted:#666666;
+    --beige:#e4dcd1; --accent:#706b6b;
+    --pill-bg:#111111; --pill-text:#ffffff;
+    --border:rgba(17,17,17,0.10); --border-strong:rgba(17,17,17,0.22);
+    --img-a:#efe7dc; --img-b:#e7d8d0;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:repeating-linear-gradient(135deg,#6c6a68,#6c6a68 2px,#656361 2px,#656361 4px);
+    font-family:"Montserrat",system-ui,sans-serif; min-height:100vh;
+    display:flex; justify-content:center; align-items:flex-start; gap:28px; flex-wrap:wrap;
+    padding:30px 18px 48px;
+  }
+  .col{display:flex; flex-direction:column; align-items:center; gap:12px;}
+  .lbl{color:#f4efe8; font-size:11px; font-weight:800; letter-spacing:0.18em; text-transform:uppercase; opacity:.9;}
+  .phone{width:390px; max-width:100%; border-radius:46px; background:#000; padding:11px;}
+  .screen{background:var(--bg); color:var(--text); border-radius:36px; overflow:hidden; height:812px; overflow-y:auto; scrollbar-width:none;}
+  .screen::-webkit-scrollbar{display:none;}
+
+  .appbar{position:sticky; top:0; z-index:5; display:flex; align-items:center; justify-content:space-between;
+    padding:14px 20px; background:var(--surface); border-bottom:1px solid var(--border);}
+  .wordmark{font-family:"Playfair Display",serif; font-style:italic; font-weight:600; font-size:22px; color:var(--text); line-height:1;}
+  .appbar-right{display:flex; align-items:center; gap:14px; color:var(--text-muted);}
+  .toggle{display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:999px; border:1px solid var(--border); color:var(--text);}
+
+  .welcome{padding:24px 22px 4px;}
+  .eyebrow{font-size:10px; font-weight:700; letter-spacing:0.24em; text-transform:uppercase; color:var(--accent);
+    display:flex; align-items:center; gap:10px; margin:0 0 12px;}
+  .eyebrow::after{content:""; height:1px; flex:0 0 26px; background:var(--border-strong);}
+  .welcome h1{margin:0; font-weight:900; text-transform:uppercase; line-height:.98; font-size:clamp(30px,9vw,40px); letter-spacing:-0.01em; color:var(--text);}
+  .welcome h1 em{font-family:"Playfair Display",serif; font-style:italic; font-weight:500; text-transform:none; letter-spacing:0; color:var(--accent); font-size:1.04em;}
+  .welcome p{margin:14px 0 0; color:var(--text-muted); font-weight:500; font-size:13.5px; line-height:1.5; max-width:30ch;}
+
+  .section{margin-top:28px;}
+  .sec-eyebrow{padding:0 22px; margin:0 0 10px;}
+  .section-head{display:flex; align-items:baseline; justify-content:space-between; padding:0 22px 14px;}
+  .section-head h2{margin:0; font-weight:800; text-transform:uppercase; line-height:1.05; font-size:clamp(20px,5.6vw,24px); letter-spacing:-0.005em; color:var(--text);}
+  .section-head h2 em{font-family:"Playfair Display",serif; font-style:italic; font-weight:500; text-transform:none; letter-spacing:0; color:var(--accent);}
+  .see-all{font-size:10px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:var(--text-muted); text-decoration:none;}
+
+  .scroller{display:flex; gap:14px; overflow-x:auto; padding:2px 22px 6px; scrollbar-width:none;}
+  .scroller::-webkit-scrollbar{display:none;}
+  .card{flex:0 0 auto;}
+
+  .opp{width:250px; background:var(--surface); border:1px solid var(--border); border-radius:20px; overflow:hidden;}
+  .opp .media{height:150px; position:relative; background:linear-gradient(140deg,var(--img-a),var(--img-b)); display:grid; place-items:center;}
+  .badge{width:46px; height:46px; border-radius:50%; background:rgba(17,17,17,.78); color:#e4dcd1; font-family:"Playfair Display",serif; font-style:italic; font-weight:600; font-size:15px; display:grid; place-items:center; border:1px solid rgba(228,220,209,.25);}
+  .tag{position:absolute; top:12px; left:12px; font-size:9px; font-weight:800; letter-spacing:0.12em; text-transform:uppercase; background:var(--beige); color:#111111; padding:5px 9px; border-radius:999px;}
+  .opp .body{padding:14px 15px 15px;}
+  .opp .body h3{margin:0; font-weight:800; font-size:15px; color:var(--text); line-height:1.2;}
+  .meta{margin:6px 0 0; font-size:10.5px; font-weight:600; letter-spacing:0.04em; text-transform:uppercase; color:var(--text-muted);}
+  .stats{display:flex; gap:16px; margin-top:12px;}
+  .stat{display:flex; align-items:center; gap:5px; color:var(--text-muted); font-size:12px; font-weight:600;}
+
+  .post{width:256px; min-height:172px; background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:18px 18px 16px; display:flex; flex-direction:column;}
+  .post .who{display:flex; align-items:center; gap:9px; margin-bottom:11px;}
+  .post .av{width:28px; height:28px; border-radius:50%; background:var(--surface-2); color:var(--text); font-weight:800; font-size:11px; display:grid; place-items:center; border:1px solid var(--border);}
+  .post .who span{font-size:11px; font-weight:700; color:var(--text);}
+  .post .who small{font-size:10px; font-weight:600; color:var(--text-muted);}
+  .post p{margin:0; font-size:13px; font-weight:500; line-height:1.5; color:var(--text-muted); flex:1;}
+  .post .foot{display:flex; gap:16px; margin-top:13px;}
+
+  .learn{width:230px; background:var(--surface); border:1px solid var(--border); border-radius:20px; overflow:hidden;}
+  .learn .media{height:112px; background:linear-gradient(140deg,var(--img-b),var(--img-a)); position:relative;}
+  .kind{position:absolute; bottom:12px; left:12px; font-size:9px; font-weight:800; letter-spacing:0.12em; text-transform:uppercase; background:rgba(17,17,17,.72); color:#e4dcd1; padding:5px 9px; border-radius:999px; border:1px solid rgba(228,220,209,.2);}
+  .learn .body{padding:13px 15px 16px;}
+  .learn .body h3{margin:0; font-weight:800; font-size:13.5px; line-height:1.25; color:var(--text);}
+
+  .divider{display:flex; align-items:center; justify-content:center; gap:14px; padding:30px 22px 4px;}
+  .divider span{height:1px; flex:1; background:var(--border);}
+  .divider b{color:var(--accent); font-size:13px;}
+
+  .tabbar{position:sticky; bottom:0; display:flex; justify-content:space-around; align-items:center; padding:12px 14px; background:var(--surface); border-top:1px solid var(--border); margin-top:18px;}
+  .tab{display:flex; flex-direction:column; align-items:center; gap:5px; color:var(--text-muted); font-size:9px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase;}
+  .tab.active{color:var(--text);}
+  .tab.active .ic{color:var(--accent);}
+  svg{display:block;}
+</style>
+</head>
+<body>
+<script>
+  const screenHTML = `
+    <header class="appbar">
+      <div class="wordmark">WGY</div>
+      <div class="appbar-right">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        <span class="toggle"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg></span>
+      </div>
+    </header>
+    <section class="welcome">
+      <p class="eyebrow">The WGY edit</p>
+      <h1>Hey,<br><em>Hayley.</em></h1>
+      <p>Your latest opportunities and community updates.</p>
+    </section>
+    <section class="section">
+      <p class="eyebrow sec-eyebrow">Opportunities</p>
+      <div class="section-head"><h2>This week's <em>drops</em></h2><a class="see-all">See all</a></div>
+      <div class="scroller">
+        <article class="card opp"><div class="media"><span class="tag">PR / Gifted</span><div class="badge">W</div></div><div class="body"><h3>The Inkey List PR</h3><p class="meta">WGY Ltd · 14 May</p><div class="stats"><span class="stat">&#9829; 102</span><span class="stat">&#128172; 38</span></div></div></article>
+        <article class="card opp"><div class="media"><span class="tag">PR / Gifted</span><div class="badge">W</div></div><div class="body"><h3>VIEVE Gifting</h3><p class="meta">WGY Ltd · 27 Apr</p><div class="stats"><span class="stat">&#9829; 136</span><span class="stat">&#128172; 49</span></div></div></article>
+      </div>
+    </section>
+    <section class="section">
+      <p class="eyebrow sec-eyebrow">Creator Corner</p>
+      <div class="section-head"><h2>From the <em>community</em></h2><a class="see-all">See all</a></div>
+      <div class="scroller">
+        <article class="card post"><div class="who"><div class="av">EM</div><div><span>Ella M.</span><br><small>2h ago</small></div></div><p>My first PR box from a gifting campaign just landed and I actually cried?? thank you for believing in the small accounts...</p><div class="foot"><span class="stat">&#9829; 47</span><span class="stat">&#128172; 12</span></div></article>
+        <article class="card post"><div class="who"><div class="av">JT</div><div><span>Jas T.</span><br><small>5h ago</small></div></div><p>Quick tip for anyone doing TikTok Shop, batch your filming on a Sunday and schedule the lot. Changed my whole week honestly.</p><div class="foot"><span class="stat">&#9829; 83</span><span class="stat">&#128172; 29</span></div></article>
+      </div>
+    </section>
+    <div class="divider"><span></span><b>&#10038;</b><span></span></div>
+    <section class="section">
+      <p class="eyebrow sec-eyebrow">Learning Lounge</p>
+      <div class="section-head"><h2>Level <em>up</em></h2><a class="see-all">See all</a></div>
+      <div class="scroller">
+        <article class="card learn"><div class="media"><span class="kind">Guide · PDF</span></div><div class="body"><h3>How to pitch for your first gifting campaign</h3><p class="meta">8 min read</p></div></article>
+        <article class="card learn"><div class="media"><span class="kind">Course</span></div><div class="body"><h3>TikTok Shop affiliate, start to first sale</h3><p class="meta">6 lessons</p></div></article>
+      </div>
+    </section>
+    <nav class="tabbar">
+      <a class="tab active"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg></span>Home</a>
+      <a class="tab"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg></span>Opps</a>
+      <a class="tab"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-4-.9L3 21l1.9-5a8.4 8.4 0 0 1 16.1-4.5z"/></svg></span>Community</a>
+      <a class="tab"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h11a3 3 0 0 1 3 3v11"/><path d="M4 5v12a2 2 0 0 0 2 2h12"/></svg></span>Learn</a>
+      <a class="tab"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>Profile</a>
+    </nav>`;
+  ['dark','light'].forEach(t=>{
+    const col=document.createElement('div'); col.className='col';
+    col.innerHTML='<div class="lbl">'+t+'</div><div class="phone"><div class="screen" data-theme="'+t+'">'+screenHTML+'</div></div>';
+    document.body.appendChild(col);
+  });
+</script>
+</body>
+</html>
