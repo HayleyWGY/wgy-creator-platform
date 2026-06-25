@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 import { Camera, X, Plus } from 'lucide-react'
 import { WgyButton } from '@/components/ui/wgy-button'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
 
 interface CreatorProfile {
   id: string
@@ -337,6 +338,15 @@ export default function ProfilePage() {
               </span>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Appearance */}
+      <div className="px-5 mt-6">
+        <p className="eyebrow" style={{ marginBottom: 12 }}>Appearance</p>
+        <div className="flex items-center justify-between">
+          <span className="font-montserrat" style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>Theme</span>
+          <ThemeToggle />
         </div>
       </div>
 

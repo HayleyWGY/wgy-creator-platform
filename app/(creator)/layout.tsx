@@ -1,6 +1,5 @@
 import { BottomNav } from "@/components/creator/bottom-nav";
 import { NavHeader } from "@/components/creator/NavHeader";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Search } from "lucide-react";
 
 export default function CreatorLayout({ children }: { children: React.ReactNode }) {
@@ -17,24 +16,17 @@ export default function CreatorLayout({ children }: { children: React.ReactNode 
             height: "56px",
           }}
         >
-          {/* Logo (white asset; auto-inverts in light theme via .wgy-logo filter).
-              TODO(pre-launch): replace the CSS filter-inverted logo with a proper
-              light-theme logo asset and swap by theme. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/images/wgy-logo-white.png"
-            alt="WGY"
-            className="wgy-logo"
-            style={{ height: "24px", width: "auto", display: "block" }}
-          />
+          {/* Logo — rendered via CSS mask so it fills with the theme text
+              token (dark on light, white on dark) from the single white asset,
+              with no brightness-filter hack and no second asset to maintain. */}
+          <span className="wgy-logo" role="img" aria-label="WGY" style={{ height: "24px", width: "60px", display: "block" }} />
 
-          {/* Right icons — real unread badges + theme toggle */}
+          {/* Right icons — real unread badges */}
           <div className="flex items-center gap-3">
             <NavHeader />
             <button aria-label="Search">
               <Search size={20} strokeWidth={1.5} style={{ color: "var(--text-muted)" }} />
             </button>
-            <ThemeToggle compact />
           </div>
         </header>
 

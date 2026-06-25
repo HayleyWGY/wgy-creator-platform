@@ -42,21 +42,6 @@ const config: Config = {
           error: 'var(--error)',
           'error-bg': 'var(--error-bg)',
         },
-        /* TODO(tech-debt): back-compat aliases used by existing markup
-           (now theme-aware). Remove once all screens are migrated to the
-           semantic tokens above, so we don't maintain two token systems. */
-        background: {
-          primary: 'var(--bg)',
-          surface: 'var(--surface)',
-          elevated: 'var(--surface-2)',
-        },
-        brand: {
-          charcoal: 'var(--charcoal)',
-          white: '#ffffff',
-          linen: 'var(--beige)',
-          warmgrey: 'var(--warm-grey)',
-          gold: 'var(--gold-wgy)',
-        },
       },
       borderRadius: {
         card: 'var(--radius-card)',

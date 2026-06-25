@@ -4,6 +4,10 @@ import { useEffect, useRef, useCallback } from 'react'
 /**
  * Polls a URL every `interval` ms and calls `onData` with the result.
  * Stops polling when the component unmounts.
+ *
+ * NOTE: messaging (DMs + community chat rooms) is backed by Prisma + this
+ * short-interval polling — NOT Supabase Realtime. Supabase is used only for
+ * Storage uploads elsewhere in the app. (Naming reconciled 2026-06-25.)
  */
 export function useChatPoll<T>(
   url: string,

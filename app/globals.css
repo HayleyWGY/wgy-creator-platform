@@ -60,9 +60,13 @@
     outline-offset: 2px;
   }
 
-  /* The WGY logo asset is white-only; invert it to dark in light theme. */
-  [data-theme="light"] .wgy-logo {
-    filter: brightness(0);
+  /* WGY wordmark — the single white logo asset is used as an alpha mask and
+     filled with the theme text token, so it renders correctly in both themes
+     (white on dark, dark on light) without a brightness filter. */
+  .wgy-logo {
+    background-color: var(--text);
+    -webkit-mask: url(/images/wgy-logo-white.png) no-repeat left center / contain;
+    mask: url(/images/wgy-logo-white.png) no-repeat left center / contain;
   }
 }
 
