@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { signIn } from "next-auth/react";
+import { WgyButton } from "@/components/ui/wgy-button";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -41,31 +42,38 @@ export default function SignInPage() {
     router.push("/home");
   }
 
+  const inputStyle = (invalid: boolean): React.CSSProperties => ({
+    background: "var(--surface)",
+    borderRadius: "8px",
+    border: `1px solid ${invalid ? "var(--error)" : "var(--border)"}`,
+    height: "48px",
+    padding: "0 16px",
+    color: "var(--text)",
+    fontSize: "14px",
+    fontWeight: 500,
+    caretColor: "var(--accent)",
+  });
+
   return (
     <div
       className="min-h-screen flex flex-col"
-      style={{ background: "#222222", maxWidth: "390px", margin: "0 auto" }}
+      style={{ background: "var(--bg)", maxWidth: "390px", margin: "0 auto" }}
     >
-      {/* Logo */}
+      {/* Logo (theme-aware via CSS mask) */}
       <div className="flex justify-center" style={{ marginTop: "48px" }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/images/wgy-logo-white.png"
-          alt="WGY"
-          style={{ height: "40px", width: "auto" }}
-        />
+        <span className="wgy-logo" role="img" aria-label="WGY" style={{ height: "40px", width: "96px", display: "block" }} />
       </div>
 
-      {/* Heading */}
+      {/* Heading — Montserrat 800 with Playfair-italic accent */}
       <h1
-        className="font-playfair italic font-normal text-white text-center"
-        style={{ fontSize: "28px", marginTop: "32px" }}
+        className="font-montserrat text-center"
+        style={{ fontSize: "28px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "-0.01em", color: "var(--text)", marginTop: "32px" }}
       >
-        Welcome back
+        Welcome <em className="font-accent" style={{ textTransform: "none" }}>back</em>
       </h1>
       <p
-        className="font-montserrat font-normal text-center"
-        style={{ fontSize: "13px", color: "#706b6b", marginTop: "6px" }}
+        className="font-montserrat text-center"
+        style={{ fontSize: "13px", fontWeight: 500, color: "var(--text-muted)", marginTop: "6px" }}
       >
         Sign in to your WGY account
       </p>
@@ -79,8 +87,8 @@ export default function SignInPage() {
         {/* Email */}
         <div className="flex flex-col">
           <label
-            className="font-montserrat font-medium uppercase"
-            style={{ fontSize: "11px", letterSpacing: "0.08em", color: "#e4dcd1", marginBottom: "6px" }}
+            className="font-montserrat uppercase"
+            style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em", color: "var(--accent)", marginBottom: "6px" }}
           >
             Email
           </label>
@@ -89,28 +97,19 @@ export default function SignInPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
-            className="font-montserrat font-normal outline-none transition-colors"
+            className="font-montserrat outline-none transition-colors"
             disabled={loading}
-            style={{
-              background: "#2a2a2a",
-              borderRadius: "8px",
-              border: `1px solid ${error && !email ? "#C0392B" : "rgba(255,255,255,0.08)"}`,
-              height: "48px",
-              padding: "0 16px",
-              color: "#ffffff",
-              fontSize: "14px",
-              caretColor: "#e4dcd1",
-            }}
-            onFocus={(e) => (e.target.style.borderColor = "#e4dcd1")}
-            onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.08)")}
+            style={inputStyle(!!error && !email)}
+            onFocus={(e) => (e.target.style.borderColor = "var(--accent)")}
+            onBlur={(e) => (e.target.style.borderColor = "var(--border)")}
           />
         </div>
 
         {/* Password */}
         <div className="flex flex-col">
           <label
-            className="font-montserrat font-medium uppercase"
-            style={{ fontSize: "11px", letterSpacing: "0.08em", color: "#e4dcd1", marginBottom: "6px" }}
+            className="font-montserrat uppercase"
+            style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em", color: "var(--accent)", marginBottom: "6px" }}
           >
             Password
           </label>
@@ -120,36 +119,28 @@ export default function SignInPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full font-montserrat font-normal outline-none transition-colors"
+              className="w-full font-montserrat outline-none transition-colors"
               disabled={loading}
-              style={{
-                background: "#2a2a2a",
-                borderRadius: "8px",
-                border: `1px solid ${error && !password ? "#C0392B" : "rgba(255,255,255,0.08)"}`,
-                height: "48px",
-                padding: "0 44px 0 16px",
-                color: "#ffffff",
-                fontSize: "14px",
-                caretColor: "#e4dcd1",
-              }}
-              onFocus={(e) => (e.target.style.borderColor = "#e4dcd1")}
-              onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.08)")}
+              style={{ ...inputStyle(!!error && !password), padding: "0 44px 0 16px" }}
+              onFocus={(e) => (e.target.style.borderColor = "var(--accent)")}
+              onBlur={(e) => (e.target.style.borderColor = "var(--border)")}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
               className="absolute right-3 top-1/2 -translate-y-1/2"
             >
               {showPassword
-                ? <EyeOff size={16} color="#706b6b" strokeWidth={1.5} />
-                : <Eye size={16} color="#706b6b" strokeWidth={1.5} />}
+                ? <EyeOff size={16} strokeWidth={1.5} style={{ color: "var(--text-muted)" }} />
+                : <Eye size={16} strokeWidth={1.5} style={{ color: "var(--text-muted)" }} />}
             </button>
           </div>
         </div>
 
         {/* Error message */}
         {error && (
-          <p className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#C0392B", marginTop: "-4px" }}>
+          <p className="font-montserrat" style={{ fontSize: "11px", fontWeight: 500, color: "var(--error)", marginTop: "-4px" }}>
             {error}
           </p>
         )}
@@ -158,39 +149,31 @@ export default function SignInPage() {
         <div className="flex justify-end" style={{ marginTop: "-6px" }}>
           <Link
             href="/forgot-password"
-            className="font-montserrat font-normal"
-            style={{ fontSize: "12px", color: "#e4dcd1", textDecoration: "none" }}
+            className="font-montserrat"
+            style={{ fontSize: "12px", fontWeight: 500, color: "var(--accent)", textDecoration: "none" }}
           >
             Forgot password?
           </Link>
         </div>
 
         {/* Submit */}
-        <button
+        <WgyButton
           type="submit"
+          variant="primary"
+          fullWidth
           disabled={loading}
-          className="w-full font-montserrat font-semibold transition-opacity active:opacity-80"
-          style={{
-            height: "48px",
-            borderRadius: "8px",
-            background: "#e4dcd1",
-            color: "#222222",
-            fontSize: "14px",
-            marginTop: "8px",
-            opacity: loading ? 0.7 : 1,
-            cursor: loading ? "not-allowed" : "pointer",
-          }}
+          style={{ marginTop: "8px", opacity: loading ? 0.7 : 1, cursor: loading ? "not-allowed" : "pointer" }}
         >
           {loading ? "Signing in..." : "Sign In"}
-        </button>
+        </WgyButton>
       </form>
 
       {/* Not a member */}
       <div className="flex flex-col items-center" style={{ marginTop: "24px", gap: "2px" }}>
-        <span className="font-montserrat font-normal" style={{ fontSize: "13px", color: "#706b6b" }}>
+        <span className="font-montserrat" style={{ fontSize: "13px", fontWeight: 500, color: "var(--text-muted)" }}>
           Not a member yet?
         </span>
-        <span className="font-montserrat font-semibold" style={{ fontSize: "13px", color: "#e4dcd1" }}>
+        <span className="font-montserrat" style={{ fontSize: "13px", fontWeight: 700, color: "var(--accent)" }}>
           Visit wegotyouagency.com to join
         </span>
       </div>
@@ -199,15 +182,15 @@ export default function SignInPage() {
 
       {/* Legal links */}
       <div className="flex items-center justify-center gap-4 pb-10">
-        <Link href="/privacy" className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#706b6b", textDecoration: "none" }}>
+        <Link href="/privacy" className="font-montserrat" style={{ fontSize: "11px", fontWeight: 500, color: "var(--text-muted)", textDecoration: "none" }}>
           Privacy Policy
         </Link>
-        <Link href="/terms" className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#706b6b", textDecoration: "none" }}>
+        <Link href="/terms" className="font-montserrat" style={{ fontSize: "11px", fontWeight: 500, color: "var(--text-muted)", textDecoration: "none" }}>
           Terms &amp; Conditions
         </Link>
       </div>
 
-      <style>{`input::placeholder { color: #706b6b; }`}</style>
+      <style>{`input::placeholder { color: var(--text-muted); }`}</style>
     </div>
   );
 }
