@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { ArrowLeft, Send, ImageIcon, Trash2 } from 'lucide-react'
 import { useChatPoll } from '@/lib/use-chat-poll'
+import { ChatBubble } from '@/components/ui/chat-bubble'
 
 interface MessageSender {
   id: string
@@ -42,10 +43,10 @@ function Avatar({ sender }: { sender: MessageSender }) {
   return (
     <div style={{
       width: 32, height: 32, borderRadius: '50%',
-      background: sender.isAdmin ? '#e4dcd1' : '#3a3a3a',
+      background: sender.isAdmin ? 'var(--beige)' : 'var(--surface-2)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
     }}>
-      <span style={{ fontSize: 11, fontWeight: 700, color: sender.isAdmin ? '#222' : '#fff', fontFamily: 'Montserrat, sans-serif' }}>
+      <span style={{ fontSize: 11, fontWeight: 700, color: sender.isAdmin ? '#111111' : 'var(--text)', fontFamily: 'Montserrat, sans-serif' }}>
         {initials}
       </span>
     </div>
@@ -182,31 +183,32 @@ export default function DMPage() {
   }
 
   return (
-    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: '#222222' }}>
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
       {/* Header */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: 12,
-        padding: '12px 16px', background: '#1a1a1a',
-        borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0,
+        padding: '12px 16px', background: 'var(--surface)',
+        borderBottom: '1px solid var(--border)', flexShrink: 0,
       }}>
         <button
           onClick={() => router.back()}
+          aria-label="Back"
           style={{
-            width: 32, height: 32, borderRadius: '50%', background: '#2a2a2a',
-            border: 'none', color: '#e4dcd1', display: 'flex',
+            width: 32, height: 32, borderRadius: '50%', background: 'var(--surface-2)',
+            border: 'none', color: 'var(--accent)', display: 'flex',
             alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
           }}
         >
           <ArrowLeft size={16} />
         </button>
-        <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#e4dcd1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span style={{ fontSize: 12, fontWeight: 700, color: '#222', fontFamily: 'Montserrat, sans-serif' }}>WG</span>
+        <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--beige)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: '#111111', fontFamily: 'Montserrat, sans-serif' }}>WG</span>
         </div>
         <div>
-          <p style={{ color: 'white', fontFamily: 'Montserrat, sans-serif', fontWeight: 600, fontSize: 14, margin: 0 }}>
+          <p style={{ color: 'var(--text)', fontFamily: 'Montserrat, sans-serif', fontWeight: 600, fontSize: 14, margin: 0 }}>
             WGY LTD
           </p>
-          <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 11, margin: 0 }}>
+          <p style={{ color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontSize: 11, margin: 0 }}>
             We Got You Agency
           </p>
         </div>
@@ -216,7 +218,7 @@ export default function DMPage() {
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 0' }}>
         {messages.length === 0 && (
           <div style={{ textAlign: 'center', paddingTop: 48 }}>
-            <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 14 }}>
+            <p style={{ color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontSize: 14 }}>
               No messages yet. Say hi to the WGY team!
             </p>
           </div>
@@ -226,7 +228,7 @@ export default function DMPage() {
             <div style={{ textAlign: 'center', margin: '12px 0 8px' }}>
               <span style={{
                 fontSize: 10, fontFamily: 'Montserrat, sans-serif', fontWeight: 700,
-                color: '#706b6b', textTransform: 'uppercase', letterSpacing: '0.1em',
+                color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em',
               }}>
                 {group.date}
               </span>
@@ -242,21 +244,12 @@ export default function DMPage() {
                   }}
                 >
                   {!isOwn && <Avatar sender={msg.sender} />}
-                  <div style={{ maxWidth: '75%' }}>
-                    {!isOwn && (
-                      <p style={{
-                        margin: '0 0 3px 2px', fontSize: 10,
-                        fontFamily: 'Montserrat, sans-serif', fontWeight: 700,
-                        color: '#e4dcd1', textTransform: 'uppercase', letterSpacing: '0.08em',
-                      }}>
-                        WGY
-                      </p>
-                    )}
-                    <div style={{
-                      background: isOwn ? '#e4dcd1' : '#2a2a2a',
-                      borderRadius: isOwn ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                      padding: '10px 14px',
-                    }}>
+                  <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: isOwn ? 'flex-end' : 'flex-start' }}>
+                    <ChatBubble
+                      variant={isOwn ? 'sent' : 'received'}
+                      author={isOwn ? undefined : 'WGY'}
+                      isWgy={!isOwn}
+                    >
                       {msg.imageUrl && (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -266,25 +259,19 @@ export default function DMPage() {
                         />
                       )}
                       {msg.body && (
-                        <p style={{
-                          margin: 0, fontSize: 14, lineHeight: 1.5,
-                          fontFamily: 'Montserrat, sans-serif',
-                          color: isOwn ? '#222' : '#fff',
-                          whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-                        }}>
-                          {msg.body}
-                        </p>
+                        <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{msg.body}</span>
                       )}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2, justifyContent: isOwn ? 'flex-end' : 'flex-start' }}>
-                      <span style={{ fontSize: 10, color: '#706b6b', fontFamily: 'Montserrat, sans-serif' }}>
+                    </ChatBubble>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3, justifyContent: isOwn ? 'flex-end' : 'flex-start' }}>
+                      <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif' }}>
                         {formatTime(msg.createdAt)}
                         {isOwn && msg.isRead && ' · Read'}
                       </span>
                       {isOwn && (
                         <button
                           onClick={() => deleteMessage(msg.id)}
-                          style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#706b6b', display: 'flex' }}
+                          aria-label="Delete message"
+                          style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--text-muted)', display: 'flex' }}
                         >
                           <Trash2 size={10} />
                         </button>
@@ -304,8 +291,8 @@ export default function DMPage() {
         onSubmit={sendMessage}
         style={{
           display: 'flex', alignItems: 'flex-end', gap: 8,
-          padding: '12px 16px', background: '#1a1a1a',
-          borderTop: '1px solid rgba(255,255,255,0.06)', flexShrink: 0,
+          padding: '12px 16px', background: 'var(--surface)',
+          borderTop: '1px solid var(--border)', flexShrink: 0,
         }}
       >
         <input
@@ -323,13 +310,14 @@ export default function DMPage() {
           type="button"
           onClick={() => fileRef.current?.click()}
           disabled={uploading}
+          aria-label="Attach image"
           style={{
-            width: 40, height: 40, borderRadius: '50%', background: '#2a2a2a',
+            width: 40, height: 40, borderRadius: '50%', background: 'var(--surface-2)',
             border: 'none', display: 'flex', alignItems: 'center',
             justifyContent: 'center', cursor: 'pointer', flexShrink: 0,
           }}
         >
-          <ImageIcon size={16} color={uploading ? '#e4dcd1' : '#706b6b'} />
+          <ImageIcon size={16} style={{ color: uploading ? 'var(--accent)' : 'var(--text-muted)' }} />
         </button>
         <textarea
           ref={inputRef}
@@ -339,25 +327,27 @@ export default function DMPage() {
           placeholder="Message WGY..."
           rows={1}
           style={{
-            flex: 1, background: '#2a2a2a', border: 'none', borderRadius: 20,
-            padding: '10px 16px', color: 'white', fontSize: 14, resize: 'none',
+            flex: 1, background: 'var(--surface-2)', border: 'none', borderRadius: 20,
+            padding: '10px 16px', color: 'var(--text)', fontSize: 14, resize: 'none',
             fontFamily: 'Montserrat, sans-serif', outline: 'none', maxHeight: 120, lineHeight: 1.5,
           }}
         />
         <button
           type="submit"
           disabled={!body.trim() || sending}
+          aria-label="Send"
           style={{
             width: 40, height: 40, borderRadius: '50%',
-            background: body.trim() ? '#e4dcd1' : '#2a2a2a',
+            background: body.trim() ? 'var(--pill-bg)' : 'var(--surface-2)',
             border: 'none', display: 'flex', alignItems: 'center',
             justifyContent: 'center', cursor: body.trim() ? 'pointer' : 'default',
             flexShrink: 0, transition: 'background 0.15s',
           }}
         >
-          <Send size={16} color={body.trim() ? '#222' : '#706b6b'} />
+          <Send size={16} style={{ color: body.trim() ? 'var(--pill-text)' : 'var(--text-muted)' }} />
         </button>
       </form>
+      <style>{`textarea::placeholder { color: var(--text-muted); }`}</style>
     </div>
   )
 }

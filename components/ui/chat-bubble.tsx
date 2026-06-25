@@ -41,12 +41,14 @@ export function ChatBubble({
         <span
           className="font-montserrat"
           style={{
-            fontSize: 12,
+            fontSize: 10,
             fontWeight: 700,
-            color: isWgy ? 'var(--gold-wgy)' : 'var(--text)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.08em',
+            color: isWgy ? 'var(--gold-wgy)' : 'var(--text-muted)',
           }}
         >
-          {isWgy ? 'WGY' : author}
+          {author}
         </span>
       )}
 

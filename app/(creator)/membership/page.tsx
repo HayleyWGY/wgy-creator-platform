@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react'
+import { WgyButton } from '@/components/ui/wgy-button'
 
 interface MembershipProfile {
   membershipStatus: string
@@ -114,13 +115,13 @@ export default function MembershipPage() {
         {isPaid && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <p className="eyebrow" style={{ marginBottom: 4 }}>Manage</p>
-            <button
-              className="font-montserrat uppercase"
-              style={{ width: '100%', height: 48, borderRadius: 'var(--radius-pill)', background: 'transparent', border: '1px solid var(--accent)', color: 'var(--accent)', fontSize: 12, fontWeight: 800, letterSpacing: '0.09em', cursor: 'pointer' }}
+            <WgyButton
+              variant="secondary"
+              fullWidth
               onClick={() => window.open('https://billing.stripe.com/p/login', '_blank')}
             >
               Manage Billing & Invoices
-            </button>
+            </WgyButton>
             <button
               className="font-montserrat font-normal"
               style={{ width: '100%', height: 40, borderRadius: 'var(--radius-pill)', background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer' }}

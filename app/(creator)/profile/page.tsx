@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 import { Camera, X, Plus } from 'lucide-react'
+import { WgyButton } from '@/components/ui/wgy-button'
 
 interface CreatorProfile {
   id: string
@@ -223,11 +224,6 @@ export default function ProfilePage() {
   const location = locationParts.length ? locationParts.join(', ') : null
   const joinedYear = new Date(profile.joinedAt).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
 
-  const outlineBtn: React.CSSProperties = {
-    fontSize: 12, fontWeight: 800, letterSpacing: '0.09em', textTransform: 'uppercase',
-    color: 'var(--accent)', border: '1px solid var(--accent)', background: 'transparent',
-  }
-
   return (
     <div style={{ paddingBottom: 80 }}>
       {/* Top profile section */}
@@ -346,20 +342,12 @@ export default function ProfilePage() {
 
       {/* Buttons */}
       <div className="px-5 mt-8 flex flex-col gap-3">
-        <button
-          onClick={openEdit}
-          className="w-full h-11 rounded-button font-montserrat transition-opacity active:opacity-70"
-          style={outlineBtn}
-        >
+        <WgyButton variant="secondary" fullWidth onClick={openEdit}>
           Edit Profile
-        </button>
-        <button
-          onClick={() => router.push('/membership')}
-          className="w-full h-11 rounded-button font-montserrat transition-opacity active:opacity-70"
-          style={outlineBtn}
-        >
+        </WgyButton>
+        <WgyButton variant="secondary" fullWidth onClick={() => router.push('/membership')}>
           Manage Membership
-        </button>
+        </WgyButton>
         <button
           onClick={() => signOut({ callbackUrl: '/sign-in' })}
           className="w-full text-center font-montserrat font-normal mt-1"
@@ -508,21 +496,15 @@ export default function ProfilePage() {
             </Section>
 
             {/* Save */}
-            <button
+            <WgyButton
+              variant="primary"
+              fullWidth
               onClick={handleSave}
               disabled={saving}
-              style={{
-                width: '100%', height: 48, borderRadius: 'var(--radius-pill)',
-                background: saving ? 'var(--surface-2)' : 'var(--pill-bg)',
-                color: saving ? 'var(--text-muted)' : 'var(--pill-text)',
-                border: 'none', fontSize: 12, fontFamily: 'Montserrat, sans-serif',
-                fontWeight: 800, letterSpacing: '0.09em', textTransform: 'uppercase',
-                cursor: saving ? 'default' : 'pointer',
-                marginTop: 8, marginBottom: 24,
-              }}
+              style={{ marginTop: 8, marginBottom: 24, opacity: saving ? 0.6 : 1, cursor: saving ? 'default' : 'pointer' }}
             >
               {saving ? 'Saving...' : 'Save Changes'}
-            </button>
+            </WgyButton>
           </div>
         </div>
       )}
