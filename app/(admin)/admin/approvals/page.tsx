@@ -84,13 +84,13 @@ export default function ApprovalsPage() {
     <div>
       {/* Header */}
       <div style={{ padding: "32px 32px 24px" }}>
-        <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "#706b6b" }}>
+        <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "var(--text-muted)" }}>
           Approvals
         </p>
         <h1 className="font-playfair italic font-normal text-white" style={{ fontSize: "32px", marginTop: "4px" }}>
           Client Post Approvals
         </h1>
-        <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "#706b6b", marginTop: "6px" }}>
+        <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "6px" }}>
           Review and approve posts submitted by brand clients before they go live.
         </p>
       </div>
@@ -119,9 +119,9 @@ export default function ApprovalsPage() {
                 background: "none",
                 border: "none",
                 cursor: "pointer",
-                borderBottom: active ? "2px solid #e4dcd1" : "2px solid transparent",
+                borderBottom: active ? "2px solid var(--accent)" : "2px solid transparent",
                 marginBottom: "-1px",
-                color: active ? "#e4dcd1" : "#706b6b",
+                color: active ? "var(--accent)" : "var(--text-muted)",
                 fontSize: "13px",
                 fontWeight: active ? 600 : 400,
               }}
@@ -137,11 +137,11 @@ export default function ApprovalsPage() {
         <div style={{ padding: "24px 32px 32px", display: "flex", flexDirection: "column", gap: "16px" }}>
           {pendingItems.length === 0 && (
             <div style={{ padding: "60px 0", display: "flex", flexDirection: "column", alignItems: "center" }}>
-              <CheckCircle size={40} color="#706b6b" strokeWidth={1} />
+              <CheckCircle size={40} color="var(--text-muted)" strokeWidth={1} />
               <p className="font-playfair italic font-normal text-white" style={{ fontSize: "18px", marginTop: "16px" }}>
                 All caught up
               </p>
-              <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "#706b6b", marginTop: "6px" }}>
+              <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "6px" }}>
                 No posts pending approval.
               </p>
             </div>
@@ -150,17 +150,17 @@ export default function ApprovalsPage() {
           {pendingItems.map((post) => (
             <div
               key={post.id}
-              style={{ background: "#2a2a2a", borderRadius: "12px", padding: "24px", borderLeft: "3px solid #e4dcd1" }}
+              style={{ background: "var(--surface)", borderRadius: "12px", padding: "24px", borderLeft: "3px solid var(--accent)" }}
             >
               {/* Top row */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span
                   className="font-montserrat font-semibold uppercase"
-                  style={{ fontSize: "10px", letterSpacing: "0.10em", background: "#333333", color: "#e4dcd1", padding: "4px 10px", borderRadius: "20px" }}
+                  style={{ fontSize: "10px", letterSpacing: "0.10em", background: "var(--surface-2)", color: "var(--accent)", padding: "4px 10px", borderRadius: "20px" }}
                 >
                   {post.client}
                 </span>
-                <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#706b6b" }}>
+                <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "var(--text-muted)" }}>
                   Submitted {post.submittedAgo}
                 </span>
               </div>
@@ -174,14 +174,14 @@ export default function ApprovalsPage() {
               <div style={{ marginTop: "6px" }}>
                 <span
                   className="font-montserrat font-semibold uppercase"
-                  style={{ fontSize: "9px", letterSpacing: "0.10em", background: "#706b6b", color: "#e4dcd1", padding: "3px 10px", borderRadius: "20px" }}
+                  style={{ fontSize: "9px", letterSpacing: "0.10em", background: "var(--text-muted)", color: "var(--accent)", padding: "3px 10px", borderRadius: "20px" }}
                 >
                   {post.type}
                 </span>
               </div>
 
               {/* Preview */}
-              <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "#c8c3bc", lineHeight: 1.6, marginTop: "12px" }}>
+              <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "var(--text-muted)", lineHeight: 1.6, marginTop: "12px" }}>
                 {post.preview}
               </p>
 
@@ -193,7 +193,7 @@ export default function ApprovalsPage() {
                 ) : (
                   <div
                     style={{
-                      background: "#333333",
+                      background: "var(--surface-2)",
                       borderRadius: "8px",
                       height: "80px",
                       display: "flex",
@@ -201,7 +201,7 @@ export default function ApprovalsPage() {
                       justifyContent: "center",
                     }}
                   >
-                    <p className="font-montserrat font-normal" style={{ fontSize: "12px", color: "#706b6b" }}>
+                    <p className="font-montserrat font-normal" style={{ fontSize: "12px", color: "var(--text-muted)" }}>
                       No cover image uploaded
                     </p>
                   </div>
@@ -216,10 +216,10 @@ export default function ApprovalsPage() {
                   { label: "Apply Link",    value: post.applyLink },
                 ].map(({ label, value }) => (
                   <div key={label}>
-                    <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.08em", color: "#706b6b" }}>
+                    <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.08em", color: "var(--text-muted)" }}>
                       {label}
                     </p>
-                    <p className="font-montserrat font-normal" style={{ fontSize: "12px", color: "#e4dcd1", marginTop: "2px" }}>
+                    <p className="font-montserrat font-normal" style={{ fontSize: "12px", color: "var(--accent)", marginTop: "2px" }}>
                       {value}
                     </p>
                   </div>
@@ -237,7 +237,7 @@ export default function ApprovalsPage() {
                     border: "1px solid rgba(192,57,43,0.2)",
                   }}
                 >
-                  <p className="font-montserrat font-medium" style={{ fontSize: "12px", color: "#e4dcd1", marginBottom: "8px" }}>
+                  <p className="font-montserrat font-medium" style={{ fontSize: "12px", color: "var(--accent)", marginBottom: "8px" }}>
                     Reason for rejection (sent to client)
                   </p>
                   <textarea
@@ -248,29 +248,29 @@ export default function ApprovalsPage() {
                     className="font-montserrat font-normal"
                     style={{
                       width: "100%",
-                      background: "#333333",
+                      background: "var(--surface-2)",
                       border: "1px solid rgba(255,255,255,0.08)",
                       borderRadius: "8px",
                       padding: "10px 14px",
-                      color: "#ffffff",
+                      color: "var(--text)",
                       fontSize: "13px",
                       outline: "none",
                       resize: "none",
-                      caretColor: "#e4dcd1",
+                      caretColor: "var(--accent)",
                     }}
                   />
                   <div style={{ display: "flex", gap: "8px", marginTop: "10px" }}>
                     <button
                       onClick={() => { setRejectingId(null); setRejectReason(""); }}
                       className="font-montserrat font-semibold"
-                      style={{ height: "36px", padding: "0 14px", borderRadius: "8px", background: "transparent", border: "1px solid rgba(255,255,255,0.15)", color: "#706b6b", fontSize: "12px", cursor: "pointer" }}
+                      style={{ height: "36px", padding: "0 14px", borderRadius: "8px", background: "transparent", border: "1px solid rgba(255,255,255,0.15)", color: "var(--text-muted)", fontSize: "12px", cursor: "pointer" }}
                     >
                       Cancel
                     </button>
                     <button
                       onClick={() => handleReject(post.id)}
                       className="font-montserrat font-semibold"
-                      style={{ height: "36px", padding: "0 14px", borderRadius: "8px", background: "#C0392B", border: "none", color: "#ffffff", fontSize: "12px", cursor: "pointer" }}
+                      style={{ height: "36px", padding: "0 14px", borderRadius: "8px", background: "#C0392B", border: "none", color: "var(--text)", fontSize: "12px", cursor: "pointer" }}
                     >
                       Send Rejection
                     </button>
@@ -289,21 +289,21 @@ export default function ApprovalsPage() {
                     border: "1px solid rgba(39,174,96,0.2)",
                   }}
                 >
-                  <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "#c8c3bc", lineHeight: 1.6, marginBottom: "12px" }}>
+                  <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "var(--text-muted)", lineHeight: 1.6, marginBottom: "12px" }}>
                     This will publish the post immediately and notify all creators.
                   </p>
                   <div style={{ display: "flex", gap: "8px" }}>
                     <button
                       onClick={() => setConfirmingId(null)}
                       className="font-montserrat font-semibold"
-                      style={{ height: "36px", padding: "0 14px", borderRadius: "8px", background: "transparent", border: "1px solid rgba(255,255,255,0.15)", color: "#706b6b", fontSize: "12px", cursor: "pointer" }}
+                      style={{ height: "36px", padding: "0 14px", borderRadius: "8px", background: "transparent", border: "1px solid rgba(255,255,255,0.15)", color: "var(--text-muted)", fontSize: "12px", cursor: "pointer" }}
                     >
                       Cancel
                     </button>
                     <button
                       onClick={() => handleApprove(post.id)}
                       className="font-montserrat font-semibold"
-                      style={{ height: "36px", padding: "0 14px", borderRadius: "8px", background: "#27AE60", border: "none", color: "#ffffff", fontSize: "12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+                      style={{ height: "36px", padding: "0 14px", borderRadius: "8px", background: "#27AE60", border: "none", color: "var(--text)", fontSize: "12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
                     >
                       <CheckCircle size={14} strokeWidth={1.5} />
                       Confirm Publish
@@ -334,7 +334,7 @@ export default function ApprovalsPage() {
                   </button>
                   <button
                     className="font-montserrat font-semibold"
-                    style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "#e4dcd1", background: "transparent", border: "1px solid rgba(228,220,209,0.3)", padding: "0 16px", height: "40px", borderRadius: "8px", cursor: "pointer" }}
+                    style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "var(--accent)", background: "transparent", border: "1px solid rgba(228,220,209,0.3)", padding: "0 16px", height: "40px", borderRadius: "8px", cursor: "pointer" }}
                   >
                     <PenLine size={14} strokeWidth={1.5} />
                     Edit Post
@@ -342,7 +342,7 @@ export default function ApprovalsPage() {
                   <button
                     onClick={() => setConfirmingId(post.id)}
                     className="font-montserrat font-semibold"
-                    style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "#222222", background: "#e4dcd1", border: "none", padding: "0 20px", height: "40px", borderRadius: "8px", cursor: "pointer" }}
+                    style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "var(--bg)", background: "var(--accent)", border: "none", padding: "0 20px", height: "40px", borderRadius: "8px", cursor: "pointer" }}
                   >
                     <CheckCircle size={14} strokeWidth={1.5} />
                     Approve &amp; Publish
@@ -360,13 +360,13 @@ export default function ApprovalsPage() {
           {APPROVED_EXAMPLE.map((post) => (
             <div
               key={post.id}
-              style={{ background: "#2a2a2a", borderRadius: "12px", padding: "24px", borderLeft: "3px solid #27AE60" }}
+              style={{ background: "var(--surface)", borderRadius: "12px", padding: "24px", borderLeft: "3px solid #27AE60" }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span className="font-montserrat font-semibold uppercase" style={{ fontSize: "10px", letterSpacing: "0.10em", background: "#333333", color: "#e4dcd1", padding: "4px 10px", borderRadius: "20px" }}>
+                <span className="font-montserrat font-semibold uppercase" style={{ fontSize: "10px", letterSpacing: "0.10em", background: "var(--surface-2)", color: "var(--accent)", padding: "4px 10px", borderRadius: "20px" }}>
                   {post.client}
                 </span>
-                <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#706b6b" }}>
+                <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "var(--text-muted)" }}>
                   Approved {post.approvedAgo} by {post.approvedBy}
                 </span>
               </div>
@@ -374,12 +374,12 @@ export default function ApprovalsPage() {
                 {post.title}
               </h2>
               <div style={{ marginTop: "6px" }}>
-                <span className="font-montserrat font-semibold uppercase" style={{ fontSize: "9px", letterSpacing: "0.10em", background: "#706b6b", color: "#e4dcd1", padding: "3px 10px", borderRadius: "20px" }}>
+                <span className="font-montserrat font-semibold uppercase" style={{ fontSize: "9px", letterSpacing: "0.10em", background: "var(--text-muted)", color: "var(--accent)", padding: "3px 10px", borderRadius: "20px" }}>
                   {post.type}
                 </span>
               </div>
               <div style={{ marginTop: "16px" }}>
-                <button className="font-montserrat font-semibold" style={{ fontSize: "11px", color: "#e4dcd1", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+                <button className="font-montserrat font-semibold" style={{ fontSize: "11px", color: "var(--accent)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
                   View live campaign →
                 </button>
               </div>
@@ -394,13 +394,13 @@ export default function ApprovalsPage() {
           {REJECTED_EXAMPLE.map((post) => (
             <div
               key={post.id}
-              style={{ background: "#2a2a2a", borderRadius: "12px", padding: "24px", borderLeft: "3px solid #C0392B" }}
+              style={{ background: "var(--surface)", borderRadius: "12px", padding: "24px", borderLeft: "3px solid #C0392B" }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span className="font-montserrat font-semibold uppercase" style={{ fontSize: "10px", letterSpacing: "0.10em", background: "#333333", color: "#e4dcd1", padding: "4px 10px", borderRadius: "20px" }}>
+                <span className="font-montserrat font-semibold uppercase" style={{ fontSize: "10px", letterSpacing: "0.10em", background: "var(--surface-2)", color: "var(--accent)", padding: "4px 10px", borderRadius: "20px" }}>
                   {post.client}
                 </span>
-                <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#706b6b" }}>
+                <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "var(--text-muted)" }}>
                   Rejected {post.rejectedAgo}
                 </span>
               </div>
@@ -408,7 +408,7 @@ export default function ApprovalsPage() {
                 {post.title}
               </h2>
               <div style={{ marginTop: "6px" }}>
-                <span className="font-montserrat font-semibold uppercase" style={{ fontSize: "9px", letterSpacing: "0.10em", background: "#706b6b", color: "#e4dcd1", padding: "3px 10px", borderRadius: "20px" }}>
+                <span className="font-montserrat font-semibold uppercase" style={{ fontSize: "9px", letterSpacing: "0.10em", background: "var(--text-muted)", color: "var(--accent)", padding: "3px 10px", borderRadius: "20px" }}>
                   {post.type}
                 </span>
               </div>
@@ -416,7 +416,7 @@ export default function ApprovalsPage() {
                 <p className="font-montserrat font-bold uppercase" style={{ fontSize: "9px", letterSpacing: "0.08em", color: "#C0392B", marginBottom: "4px" }}>
                   Rejection Reason
                 </p>
-                <p className="font-montserrat font-normal" style={{ fontSize: "12px", color: "#c8c3bc", lineHeight: 1.6 }}>
+                <p className="font-montserrat font-normal" style={{ fontSize: "12px", color: "var(--text-muted)", lineHeight: 1.6 }}>
                   {post.reason}
                 </p>
               </div>
@@ -425,7 +425,7 @@ export default function ApprovalsPage() {
         </div>
       )}
 
-      <style>{`textarea::placeholder { color: #706b6b; }`}</style>
+      <style>{`textarea::placeholder { color: var(--text-muted); }`}</style>
     </div>
   );
 }

@@ -34,9 +34,9 @@ function Toggle({ on, onChange }: { on: boolean; onChange: () => void }) {
   return (
     <button
       onClick={onChange}
-      style={{ width: 36, height: 20, borderRadius: 10, background: on ? "#27AE60" : "#4a4a4a", border: "none", cursor: "pointer", position: "relative", flexShrink: 0 }}
+      style={{ width: 36, height: 20, borderRadius: 10, background: on ? "#27AE60" : "var(--text-muted)", border: "none", cursor: "pointer", position: "relative", flexShrink: 0 }}
     >
-      <div style={{ position: "absolute", top: 2, left: on ? 18 : 2, width: 16, height: 16, borderRadius: "50%", background: "#ffffff", transition: "left 0.15s" }} />
+      <div style={{ position: "absolute", top: 2, left: on ? 18 : 2, width: 16, height: 16, borderRadius: "50%", background: "var(--text)", transition: "left 0.15s" }} />
     </button>
   );
 }
@@ -48,45 +48,45 @@ function EditModal({ state, onSave, onClose }: { state: EditState; onSave: (seqI
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={{ background: "#2a2a2a", borderRadius: "12px", padding: "24px", width: "480px", maxWidth: "90vw" }}>
+      <div style={{ background: "var(--surface)", borderRadius: "12px", padding: "24px", width: "480px", maxWidth: "90vw" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-          <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "#e4dcd1" }}>Edit Message</p>
-          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px" }}><X size={16} color="#706b6b" strokeWidth={1.5} /></button>
+          <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "var(--accent)" }}>Edit Message</p>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px" }}><X size={16} color="var(--text-muted)" strokeWidth={1.5} /></button>
         </div>
 
-        <label className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.10em", color: "#706b6b" }}>Day Offset</label>
+        <label className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.10em", color: "var(--text-muted)" }}>Day Offset</label>
         <input type="number" value={form.dayOffset} onChange={(e) => setForm({ ...form, dayOffset: Number(e.target.value) })}
           className="font-montserrat font-normal"
-          style={{ display: "block", width: "100px", height: "40px", background: "#333333", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "8px", padding: "0 12px", color: "#ffffff", fontSize: "13px", outline: "none", marginTop: "6px", marginBottom: "14px" }} />
+          style={{ display: "block", width: "100px", height: "40px", background: "var(--surface-2)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "8px", padding: "0 12px", color: "var(--text)", fontSize: "13px", outline: "none", marginTop: "6px", marginBottom: "14px" }} />
 
-        <label className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.10em", color: "#706b6b" }}>Subject</label>
+        <label className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.10em", color: "var(--text-muted)" }}>Subject</label>
         <input type="text" value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })}
           className="font-montserrat font-normal"
-          style={{ display: "block", width: "100%", height: "40px", background: "#333333", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "8px", padding: "0 12px", color: "#ffffff", fontSize: "13px", outline: "none", marginTop: "6px", marginBottom: "14px", boxSizing: "border-box" }} />
+          style={{ display: "block", width: "100%", height: "40px", background: "var(--surface-2)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "8px", padding: "0 12px", color: "var(--text)", fontSize: "13px", outline: "none", marginTop: "6px", marginBottom: "14px", boxSizing: "border-box" }} />
 
-        <label className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.10em", color: "#706b6b" }}>Message Body</label>
+        <label className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.10em", color: "var(--text-muted)" }}>Message Body</label>
         <textarea value={form.body} onChange={(e) => setForm({ ...form, body: e.target.value })}
           className="font-montserrat font-normal"
-          style={{ display: "block", width: "100%", minHeight: "120px", background: "#333333", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "8px", padding: "12px", color: "#ffffff", fontSize: "13px", outline: "none", resize: "none", marginTop: "6px", boxSizing: "border-box" }} />
-        <p className="font-montserrat font-normal" style={{ fontSize: "10px", color: "#706b6b", fontStyle: "italic", marginTop: "4px" }}>
+          style={{ display: "block", width: "100%", minHeight: "120px", background: "var(--surface-2)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "8px", padding: "12px", color: "var(--text)", fontSize: "13px", outline: "none", resize: "none", marginTop: "6px", boxSizing: "border-box" }} />
+        <p className="font-montserrat font-normal" style={{ fontSize: "10px", color: "var(--text-muted)", fontStyle: "italic", marginTop: "4px" }}>
           {"{firstName}"} will be replaced with the creator&apos;s first name automatically
         </p>
 
         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "14px" }}>
           <Toggle on={form.active} onChange={() => setForm({ ...form, active: !form.active })} />
-          <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#706b6b" }}>{form.active ? "Active" : "Inactive"}</span>
+          <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "var(--text-muted)" }}>{form.active ? "Active" : "Inactive"}</span>
         </div>
 
         <button onClick={() => { onSave(state.seqId, form); onClose(); }}
           className="font-montserrat font-semibold"
-          style={{ width: "100%", height: "44px", background: "#e4dcd1", color: "#222222", fontSize: "13px", border: "none", borderRadius: "8px", cursor: "pointer", marginTop: "20px" }}>
+          style={{ width: "100%", height: "44px", background: "var(--accent)", color: "var(--bg)", fontSize: "13px", border: "none", borderRadius: "8px", cursor: "pointer", marginTop: "20px" }}>
           Save Changes
         </button>
         <div style={{ textAlign: "center", marginTop: "10px" }}>
-          <button onClick={onClose} className="font-montserrat font-normal" style={{ fontSize: "12px", color: "#706b6b", background: "none", border: "none", cursor: "pointer" }}>Cancel</button>
+          <button onClick={onClose} className="font-montserrat font-normal" style={{ fontSize: "12px", color: "var(--text-muted)", background: "none", border: "none", cursor: "pointer" }}>Cancel</button>
         </div>
       </div>
-      <style>{`input::placeholder, textarea::placeholder { color: #706b6b; }`}</style>
+      <style>{`input::placeholder, textarea::placeholder { color: var(--text-muted); }`}</style>
     </div>
   );
 }
@@ -137,14 +137,14 @@ export default function SequencesPage() {
       {/* Header */}
       <div style={{ padding: "32px 32px 0", display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
         <div>
-          <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "#706b6b" }}>Sequences</p>
+          <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "var(--text-muted)" }}>Sequences</p>
           <h1 className="font-playfair italic font-normal text-white" style={{ fontSize: "32px", marginTop: "4px" }}>Message Sequences</h1>
-          <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "#706b6b", marginTop: "6px" }}>
+          <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "6px" }}>
             Automatically sent as in-app DMs to creators on a schedule after joining.<br />Email workflows are managed in Klaviyo.
           </p>
         </div>
         <button className="font-montserrat font-semibold"
-          style={{ height: "44px", padding: "0 20px", background: "transparent", border: "1px solid #e4dcd1", color: "#e4dcd1", fontSize: "12px", borderRadius: "8px", cursor: "pointer", flexShrink: 0 }}>
+          style={{ height: "44px", padding: "0 20px", background: "transparent", border: "1px solid var(--accent)", color: "var(--accent)", fontSize: "12px", borderRadius: "8px", cursor: "pointer", flexShrink: 0 }}>
           + New Sequence
         </button>
       </div>
@@ -154,20 +154,20 @@ export default function SequencesPage() {
         {sequences.map((seq) => {
           const isExpanded = expanded.has(seq.id);
           return (
-            <div key={seq.id} style={{ background: "#2a2a2a", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.06)" }}>
+            <div key={seq.id} style={{ background: "var(--surface)", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.06)" }}>
               {/* Sequence header */}
               <div onClick={() => toggleExpanded(seq.id)}
                 style={{ padding: "20px 24px", display: "flex", alignItems: "center", gap: "12px", cursor: "pointer" }}>
-                <ChevronDown size={18} color="#706b6b" strokeWidth={1.5}
+                <ChevronDown size={18} color="var(--text-muted)" strokeWidth={1.5}
                   style={{ transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s", flexShrink: 0 }} />
-                <span className="font-montserrat font-semibold" style={{ fontSize: "16px", color: "#ffffff" }}>{seq.name}</span>
-                <span className="font-montserrat font-normal" style={{ fontSize: "12px", color: "#706b6b", marginLeft: "4px" }}>
+                <span className="font-montserrat font-semibold" style={{ fontSize: "16px", color: "var(--text)" }}>{seq.name}</span>
+                <span className="font-montserrat font-normal" style={{ fontSize: "12px", color: "var(--text-muted)", marginLeft: "4px" }}>
                   {seq.messages.length} message{seq.messages.length !== 1 ? "s" : ""}
                 </span>
                 <div style={{ flex: 1 }} />
                 <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: seq.active ? "#27AE60" : "#706b6b" }} />
-                  <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: seq.active ? "#27AE60" : "#706b6b" }}>
+                  <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: seq.active ? "#27AE60" : "var(--text-muted)" }} />
+                  <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: seq.active ? "#27AE60" : "var(--text-muted)" }}>
                     {seq.active ? "Active" : "Inactive"}
                   </span>
                 </div>
@@ -177,41 +177,41 @@ export default function SequencesPage() {
               {isExpanded && (
                 <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", padding: "20px 24px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
-                    <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "#e4dcd1" }}>Messages</p>
-                    <button className="font-montserrat font-semibold" style={{ fontSize: "11px", color: "#e4dcd1", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+                    <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "var(--accent)" }}>Messages</p>
+                    <button className="font-montserrat font-semibold" style={{ fontSize: "11px", color: "var(--accent)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
                       + Add Message
                     </button>
                   </div>
 
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                     {seq.messages.map((msg) => (
-                      <div key={msg.id} style={{ background: "#333333", borderRadius: "10px", padding: "14px 16px" }}>
+                      <div key={msg.id} style={{ background: "var(--surface-2)", borderRadius: "10px", padding: "14px 16px" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <span className="font-montserrat font-bold uppercase"
-                            style={{ fontSize: "10px", letterSpacing: "0.10em", color: "#e4dcd1", background: "#222222", borderRadius: "6px", padding: "3px 10px" }}>
+                            style={{ fontSize: "10px", letterSpacing: "0.10em", color: "var(--accent)", background: "var(--bg)", borderRadius: "6px", padding: "3px 10px" }}>
                             Day {msg.dayOffset}
                           </span>
                           <div style={{ display: "flex", gap: "10px" }}>
                             <button onClick={() => setEditing({ seqId: seq.id, msg })} style={{ background: "none", border: "none", cursor: "pointer", padding: "2px" }}>
-                              <PenLine size={14} color="#706b6b" strokeWidth={1.5} />
+                              <PenLine size={14} color="var(--text-muted)" strokeWidth={1.5} />
                             </button>
                             <button onClick={() => deleteMessage(seq.id, msg.id)} style={{ background: "none", border: "none", cursor: "pointer", padding: "2px" }}>
-                              <Trash2 size={14} color="#706b6b" strokeWidth={1.5} />
+                              <Trash2 size={14} color="var(--text-muted)" strokeWidth={1.5} />
                             </button>
                           </div>
                         </div>
 
-                        <p className="font-montserrat font-semibold" style={{ fontSize: "13px", color: "#ffffff", marginTop: "8px" }}>{msg.subject}</p>
+                        <p className="font-montserrat font-semibold" style={{ fontSize: "13px", color: "var(--text)", marginTop: "8px" }}>{msg.subject}</p>
 
-                        <div style={{ marginTop: "6px", background: "#2a2a2a", borderRadius: "6px", padding: "10px 12px" }}>
-                          <p className="font-montserrat font-normal" style={{ fontSize: "12px", color: "#c8c3bc", lineHeight: 1.6, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                        <div style={{ marginTop: "6px", background: "var(--surface)", borderRadius: "6px", padding: "10px 12px" }}>
+                          <p className="font-montserrat font-normal" style={{ fontSize: "12px", color: "var(--text-muted)", lineHeight: 1.6, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
                             {msg.body}
                           </p>
                         </div>
 
                         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "10px" }}>
                           <Toggle on={msg.active} onChange={() => toggleMsgActive(seq.id, msg.id)} />
-                          <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#706b6b" }}>{msg.active ? "Active" : "Inactive"}</span>
+                          <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "var(--text-muted)" }}>{msg.active ? "Active" : "Inactive"}</span>
                         </div>
                       </div>
                     ))}

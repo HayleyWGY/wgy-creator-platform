@@ -60,14 +60,14 @@ function formatJoined(dateStr: string) {
 function StatusPill({ status }: { status: string }) {
   if (status === 'active') {
     return (
-      <span className="font-montserrat font-semibold uppercase" style={{ fontSize: 9, letterSpacing: '0.10em', background: '#e4dcd1', color: '#222222', padding: '3px 10px', borderRadius: 20 }}>
+      <span className="font-montserrat font-semibold uppercase" style={{ fontSize: 9, letterSpacing: '0.10em', background: 'var(--accent)', color: 'var(--bg)', padding: '3px 10px', borderRadius: 20 }}>
         Active
       </span>
     )
   }
   if (status === 'free') {
     return (
-      <span className="font-montserrat font-semibold uppercase" style={{ fontSize: 9, letterSpacing: '0.10em', background: 'rgba(228,220,209,0.15)', color: '#e4dcd1', padding: '3px 10px', borderRadius: 20 }}>
+      <span className="font-montserrat font-semibold uppercase" style={{ fontSize: 9, letterSpacing: '0.10em', background: 'rgba(228,220,209,0.15)', color: 'var(--accent)', padding: '3px 10px', borderRadius: 20 }}>
         Free
       </span>
     )
@@ -80,7 +80,7 @@ function StatusPill({ status }: { status: string }) {
     )
   }
   return (
-    <span className="font-montserrat font-semibold uppercase" style={{ fontSize: 9, letterSpacing: '0.10em', background: 'rgba(255,255,255,0.08)', color: '#706b6b', padding: '3px 10px', borderRadius: 20 }}>
+    <span className="font-montserrat font-semibold uppercase" style={{ fontSize: 9, letterSpacing: '0.10em', background: 'rgba(255,255,255,0.08)', color: 'var(--text-muted)', padding: '3px 10px', borderRadius: 20 }}>
       {status}
     </span>
   )
@@ -95,8 +95,8 @@ function CreatorAvatar({ creator, size = 32 }: { creator: Creator; size?: number
     )
   }
   return (
-    <div style={{ width: size, height: size, borderRadius: '50%', background: '#e4dcd1', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-      <span className="font-montserrat font-bold" style={{ fontSize: size * 0.3, color: '#222222' }}>{initials}</span>
+    <div style={{ width: size, height: size, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <span className="font-montserrat font-bold" style={{ fontSize: size * 0.3, color: 'var(--bg)' }}>{initials}</span>
     </div>
   )
 }
@@ -104,10 +104,10 @@ function CreatorAvatar({ creator, size = 32 }: { creator: Creator; size?: number
 function DetailRow({ label, value }: { label: string; value: string | null | undefined }) {
   return (
     <div style={{ padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
-      <span className="font-montserrat font-normal uppercase" style={{ fontSize: 11, letterSpacing: '0.08em', color: '#706b6b', flexShrink: 0 }}>
+      <span className="font-montserrat font-normal uppercase" style={{ fontSize: 11, letterSpacing: '0.08em', color: 'var(--text-muted)', flexShrink: 0 }}>
         {label}
       </span>
-      <span className="font-montserrat font-normal" style={{ fontSize: 13, color: value ? '#ffffff' : '#3a3a3a', textAlign: 'right' }}>
+      <span className="font-montserrat font-normal" style={{ fontSize: 13, color: value ? 'var(--text)' : 'var(--surface-2)', textAlign: 'right' }}>
         {value || 'Not provided'}
       </span>
     </div>
@@ -135,18 +135,18 @@ function CreatorPanel({ creatorId, onClose }: { creatorId: string; onClose: () =
   return (
     <>
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 49 }} />
-      <div style={{ position: 'fixed', right: 0, top: 0, width: 480, height: '100vh', background: '#1a1a1a', borderLeft: '1px solid rgba(255,255,255,0.08)', zIndex: 50, overflowY: 'auto', padding: 24 }}>
+      <div style={{ position: 'fixed', right: 0, top: 0, width: 480, height: '100vh', background: 'var(--surface)', borderLeft: '1px solid rgba(255,255,255,0.08)', zIndex: 50, overflowY: 'auto', padding: 24 }}>
         <button onClick={onClose} style={{ position: 'absolute', top: 20, right: 20, background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
-          <X size={18} color="#706b6b" strokeWidth={1.5} />
+          <X size={18} color="var(--text-muted)" strokeWidth={1.5} />
         </button>
 
         {loading ? (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200 }}>
-            <div className="w-6 h-6 border-2 border-[#e4dcd1] border-t-transparent rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : detail ? (
           <>
-            <p className="font-montserrat font-bold uppercase" style={{ fontSize: 10, letterSpacing: '0.12em', color: '#e4dcd1' }}>
+            <p className="font-montserrat font-bold uppercase" style={{ fontSize: 10, letterSpacing: '0.12em', color: 'var(--accent)' }}>
               Creator Profile
             </p>
             <h2 className="font-playfair italic font-normal text-white" style={{ fontSize: 24, marginTop: 8 }}>
@@ -156,15 +156,15 @@ function CreatorPanel({ creatorId, onClose }: { creatorId: string; onClose: () =
             <div style={{ marginTop: 20, display: 'flex', gap: 16, alignItems: 'center' }}>
               <CreatorAvatar creator={detail} size={56} />
               <div style={{ flex: 1 }}>
-                <p className="font-montserrat font-normal" style={{ fontSize: 12, color: '#706b6b' }}>{detail.email}</p>
-                <p className="font-montserrat font-normal" style={{ fontSize: 11, color: '#706b6b', marginTop: 2 }}>Joined {formatJoined(detail.joinedAt)}</p>
-                <p className="font-montserrat font-normal" style={{ fontSize: 11, color: '#706b6b', marginTop: 1 }}>Last seen: {getAge(detail.lastSeenAt)}</p>
+                <p className="font-montserrat font-normal" style={{ fontSize: 12, color: 'var(--text-muted)' }}>{detail.email}</p>
+                <p className="font-montserrat font-normal" style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Joined {formatJoined(detail.joinedAt)}</p>
+                <p className="font-montserrat font-normal" style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>Last seen: {getAge(detail.lastSeenAt)}</p>
               </div>
               <StatusPill status={detail.membershipStatus} />
             </div>
 
             {detail.bio && (
-              <p className="font-montserrat font-normal" style={{ fontSize: 12, color: '#c8c3bc', lineHeight: 1.6, marginTop: 14 }}>
+              <p className="font-montserrat font-normal" style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6, marginTop: 14 }}>
                 {detail.bio}
               </p>
             )}
@@ -175,7 +175,7 @@ function CreatorPanel({ creatorId, onClose }: { creatorId: string; onClose: () =
                 <p className="font-montserrat font-bold uppercase" style={{ fontSize: 10, letterSpacing: '0.10em', color: '#9b7e56', marginBottom: 8 }}>Content Niches</p>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {detail.contentNiches.map(n => (
-                    <span key={n} className="font-montserrat font-semibold uppercase" style={{ fontSize: 9, letterSpacing: '0.08em', background: 'rgba(228,220,209,0.12)', color: '#e4dcd1', padding: '3px 10px', borderRadius: 20 }}>
+                    <span key={n} className="font-montserrat font-semibold uppercase" style={{ fontSize: 9, letterSpacing: '0.08em', background: 'rgba(228,220,209,0.12)', color: 'var(--accent)', padding: '3px 10px', borderRadius: 20 }}>
                       {n}
                     </span>
                   ))}
@@ -212,12 +212,12 @@ function CreatorPanel({ creatorId, onClose }: { creatorId: string; onClose: () =
 
             {/* Campaign tags */}
             <div style={{ marginTop: 20 }}>
-              <p className="font-montserrat font-bold uppercase" style={{ fontSize: 10, letterSpacing: '0.12em', color: '#e4dcd1', marginBottom: 10 }}>
+              <p className="font-montserrat font-bold uppercase" style={{ fontSize: 10, letterSpacing: '0.12em', color: 'var(--accent)', marginBottom: 10 }}>
                 Campaign Tags
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {detail.tags.length === 0 && (
-                  <span className="font-montserrat font-normal" style={{ fontSize: 12, color: '#3a3a3a' }}>No tags</span>
+                  <span className="font-montserrat font-normal" style={{ fontSize: 12, color: 'var(--surface-2)' }}>No tags</span>
                 )}
                 {detail.tags.map(({ tag }) => (
                   <span
@@ -233,11 +233,11 @@ function CreatorPanel({ creatorId, onClose }: { creatorId: string; onClose: () =
 
             {/* Actions */}
             <div style={{ marginTop: 24, borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <button className="font-montserrat font-semibold" style={{ width: '100%', height: 40, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, color: '#e4dcd1', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <button className="font-montserrat font-semibold" style={{ width: '100%', height: 40, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, color: 'var(--accent)', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                 <MessageSquare size={15} strokeWidth={1.5} />
                 Send Direct Message
               </button>
-              <button className="font-montserrat font-semibold" style={{ width: '100%', height: 40, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, color: '#e4dcd1', fontSize: 12, cursor: 'pointer' }}>
+              <button className="font-montserrat font-semibold" style={{ width: '100%', height: 40, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, color: 'var(--accent)', fontSize: 12, cursor: 'pointer' }}>
                 Send to Mass DM List
               </button>
               <button className="font-montserrat font-semibold" style={{ width: '100%', height: 40, background: 'rgba(192,57,43,0.1)', border: 'none', borderRadius: 8, color: '#C0392B', fontSize: 12, cursor: 'pointer' }}>
@@ -246,7 +246,7 @@ function CreatorPanel({ creatorId, onClose }: { creatorId: string; onClose: () =
             </div>
           </>
         ) : (
-          <p className="font-montserrat font-normal" style={{ color: '#706b6b', fontSize: 13 }}>Could not load creator details.</p>
+          <p className="font-montserrat font-normal" style={{ color: 'var(--text-muted)', fontSize: 13 }}>Could not load creator details.</p>
         )}
       </div>
     </>
@@ -286,28 +286,28 @@ export default function CreatorsPage() {
     <div>
       {/* Header */}
       <div style={{ padding: '32px 32px 24px' }}>
-        <p className="font-montserrat font-bold uppercase" style={{ fontSize: 10, letterSpacing: '0.12em', color: '#706b6b' }}>Creators</p>
+        <p className="font-montserrat font-bold uppercase" style={{ fontSize: 10, letterSpacing: '0.12em', color: 'var(--text-muted)' }}>Creators</p>
         <h1 className="font-playfair italic font-normal text-white" style={{ fontSize: 32, marginTop: 4 }}>Creator Management</h1>
       </div>
 
       {/* Action row */}
       <div style={{ padding: '0 32px 20px', display: 'flex', gap: 12, alignItems: 'center' }}>
         <div style={{ position: 'relative', flex: 1, maxWidth: 360 }}>
-          <Search size={15} color="#706b6b" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+          <Search size={15} color="var(--text-muted)" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
           <input
             type="text"
             placeholder="Search creators..."
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(1) }}
             className="font-montserrat font-normal"
-            style={{ width: '100%', height: 44, background: '#2a2a2a', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, paddingLeft: 36, paddingRight: 16, color: '#ffffff', fontSize: 13, outline: 'none', caretColor: '#e4dcd1' }}
+            style={{ width: '100%', height: 44, background: 'var(--surface)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, paddingLeft: 36, paddingRight: 16, color: 'var(--text)', fontSize: 13, outline: 'none', caretColor: 'var(--accent)' }}
           />
         </div>
         <select
           value={status}
           onChange={e => { setStatus(e.target.value); setPage(1) }}
           className="font-montserrat font-normal"
-          style={{ background: '#2a2a2a', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '0 14px', height: 44, color: status ? '#e4dcd1' : '#706b6b', fontSize: 13, outline: 'none', cursor: 'pointer' }}
+          style={{ background: 'var(--surface)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '0 14px', height: 44, color: status ? 'var(--accent)' : 'var(--text-muted)', fontSize: 13, outline: 'none', cursor: 'pointer' }}
         >
           <option value="">All Statuses</option>
           <option value="active">Active</option>
@@ -319,23 +319,23 @@ export default function CreatorsPage() {
 
       {/* Table */}
       <div style={{ padding: '0 32px 32px' }}>
-        <div style={{ background: '#2a2a2a', borderRadius: 12, overflow: 'hidden' }}>
+        <div style={{ background: 'var(--surface)', borderRadius: 12, overflow: 'hidden' }}>
           {/* Header */}
-          <div style={{ background: '#1a1a1a', padding: '12px 20px', display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1.5fr 1fr', gap: 12 }}>
+          <div style={{ background: 'var(--surface)', padding: '12px 20px', display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1.5fr 1fr', gap: 12 }}>
             {['Name', 'Status', 'Joined', 'Tags', 'Actions'].map(col => (
-              <span key={col} className="font-montserrat font-bold uppercase" style={{ fontSize: 10, letterSpacing: '0.10em', color: '#706b6b' }}>{col}</span>
+              <span key={col} className="font-montserrat font-bold uppercase" style={{ fontSize: 10, letterSpacing: '0.10em', color: 'var(--text-muted)' }}>{col}</span>
             ))}
           </div>
 
           {loading && (
             <div style={{ padding: 40, display: 'flex', justifyContent: 'center' }}>
-              <div className="w-6 h-6 border-2 border-[#e4dcd1] border-t-transparent rounded-full animate-spin" />
+              <div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
             </div>
           )}
 
           {!loading && creators.length === 0 && (
             <div style={{ padding: 40, textAlign: 'center' }}>
-              <p className="font-montserrat font-normal" style={{ color: '#706b6b', fontSize: 13 }}>No creators found</p>
+              <p className="font-montserrat font-normal" style={{ color: 'var(--text-muted)', fontSize: 13 }}>No creators found</p>
             </div>
           )}
 
@@ -350,14 +350,14 @@ export default function CreatorsPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <CreatorAvatar creator={creator} size={32} />
                 <div>
-                  <p className="font-montserrat font-medium" style={{ fontSize: 13, color: '#ffffff' }}>{creator.firstName} {creator.lastName}</p>
-                  <p className="font-montserrat font-normal" style={{ fontSize: 11, color: '#706b6b' }}>{creator.email}</p>
+                  <p className="font-montserrat font-medium" style={{ fontSize: 13, color: 'var(--text)' }}>{creator.firstName} {creator.lastName}</p>
+                  <p className="font-montserrat font-normal" style={{ fontSize: 11, color: 'var(--text-muted)' }}>{creator.email}</p>
                 </div>
               </div>
 
               <StatusPill status={creator.membershipStatus} />
 
-              <p className="font-montserrat font-normal" style={{ fontSize: 12, color: '#706b6b' }}>{formatJoined(creator.joinedAt)}</p>
+              <p className="font-montserrat font-normal" style={{ fontSize: 12, color: 'var(--text-muted)' }}>{formatJoined(creator.joinedAt)}</p>
 
               {/* Tags */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
@@ -371,7 +371,7 @@ export default function CreatorsPage() {
                   </span>
                 ))}
                 {creator.tags.length > 2 && (
-                  <span className="font-montserrat font-normal" style={{ fontSize: 9, color: '#706b6b', border: '1px solid rgba(255,255,255,0.1)', padding: '3px 8px', borderRadius: 20 }}>
+                  <span className="font-montserrat font-normal" style={{ fontSize: 9, color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.1)', padding: '3px 8px', borderRadius: 20 }}>
                     +{creator.tags.length - 2}
                   </span>
                 )}
@@ -382,7 +382,7 @@ export default function CreatorsPage() {
                 <button
                   onClick={() => setPanelCreatorId(creator.id)}
                   className="font-montserrat font-semibold"
-                  style={{ fontSize: 11, color: '#e4dcd1', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                  style={{ fontSize: 11, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                 >
                   View
                 </button>
@@ -393,7 +393,7 @@ export default function CreatorsPage() {
 
         {/* Pagination */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 }}>
-          <p className="font-montserrat font-normal" style={{ fontSize: 12, color: '#706b6b' }}>
+          <p className="font-montserrat font-normal" style={{ fontSize: 12, color: 'var(--text-muted)' }}>
             {loading ? '...' : `Showing ${((page - 1) * pageSize) + 1}–${Math.min(page * pageSize, total)} of ${total} creators`}
           </p>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -401,18 +401,18 @@ export default function CreatorsPage() {
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1}
               className="font-montserrat font-normal"
-              style={{ fontSize: 12, color: page === 1 ? '#3a3a3a' : '#706b6b', background: 'none', border: 'none', cursor: page === 1 ? 'default' : 'pointer' }}
+              style={{ fontSize: 12, color: page === 1 ? 'var(--surface-2)' : 'var(--text-muted)', background: 'none', border: 'none', cursor: page === 1 ? 'default' : 'pointer' }}
             >
               ← Previous
             </button>
-            <span className="font-montserrat font-semibold" style={{ fontSize: 12, color: '#e4dcd1', background: 'rgba(228,220,209,0.1)', padding: '4px 10px', borderRadius: 6 }}>
+            <span className="font-montserrat font-semibold" style={{ fontSize: 12, color: 'var(--accent)', background: 'rgba(228,220,209,0.1)', padding: '4px 10px', borderRadius: 6 }}>
               {page}
             </span>
             <button
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
               className="font-montserrat font-normal"
-              style={{ fontSize: 12, color: page >= totalPages ? '#3a3a3a' : '#706b6b', background: 'none', border: 'none', cursor: page >= totalPages ? 'default' : 'pointer' }}
+              style={{ fontSize: 12, color: page >= totalPages ? 'var(--surface-2)' : 'var(--text-muted)', background: 'none', border: 'none', cursor: page >= totalPages ? 'default' : 'pointer' }}
             >
               Next →
             </button>
@@ -424,7 +424,7 @@ export default function CreatorsPage() {
         <CreatorPanel creatorId={panelCreatorId} onClose={() => setPanelCreatorId(null)} />
       )}
 
-      <style>{`input::placeholder { color: #706b6b; } select option { background: #1a1a1a; }`}</style>
+      <style>{`input::placeholder { color: var(--text-muted); } select option { background: var(--surface); }`}</style>
     </div>
   )
 }

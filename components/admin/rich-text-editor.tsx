@@ -161,7 +161,7 @@ function ToolbarBtn({
       title={title}
       className={`p-1.5 rounded transition-colors ${
         active
-          ? "bg-[#e4dcd1] text-[#222222]"
+          ? "bg-[var(--accent)] text-[var(--bg)]"
           : "text-white/60 hover:text-white hover:bg-white/10"
       }`}
     >

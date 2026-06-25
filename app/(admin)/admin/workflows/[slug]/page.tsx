@@ -92,14 +92,14 @@ function StepCard({
       {/* Timeline column */}
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0, paddingTop: "16px" }}>
         {/* Drag handle (visual only for now) */}
-        <GripVertical size={16} color="#4a4a4a" strokeWidth={1.5} style={{ cursor: "grab" }} />
+        <GripVertical size={16} color="var(--text-muted)" strokeWidth={1.5} style={{ cursor: "grab" }} />
         {/* Step number circle */}
         <div
           style={{
             width: "28px",
             height: "28px",
             borderRadius: "50%",
-            background: step.active ? "#e4dcd1" : "#333333",
+            background: step.active ? "var(--accent)" : "var(--surface-2)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -107,7 +107,7 @@ function StepCard({
             flexShrink: 0,
           }}
         >
-          <span className="font-montserrat font-bold" style={{ fontSize: "11px", color: step.active ? "#222222" : "#706b6b" }}>
+          <span className="font-montserrat font-bold" style={{ fontSize: "11px", color: step.active ? "var(--bg)" : "var(--text-muted)" }}>
             {index + 1}
           </span>
         </div>
@@ -121,7 +121,7 @@ function StepCard({
       <div
         style={{
           flex: 1,
-          background: "#2a2a2a",
+          background: "var(--surface)",
           borderRadius: "10px",
           padding: "16px",
           marginBottom: index < total - 1 ? "0" : "0",
@@ -134,8 +134,8 @@ function StepCard({
           {/* Day badge */}
           {editing ? (
             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <Clock size={13} color="#706b6b" strokeWidth={1.5} />
-              <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#706b6b" }}>
+              <Clock size={13} color="var(--text-muted)" strokeWidth={1.5} />
+              <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "var(--text-muted)" }}>
                 Day
               </span>
               <input
@@ -147,11 +147,11 @@ function StepCard({
                 style={{
                   width: "56px",
                   height: "28px",
-                  background: "#333333",
+                  background: "var(--surface-2)",
                   border: "1px solid rgba(228,220,209,0.3)",
                   borderRadius: "6px",
                   padding: "0 8px",
-                  color: "#e4dcd1",
+                  color: "var(--accent)",
                   fontSize: "12px",
                   outline: "none",
                   textAlign: "center",
@@ -160,8 +160,8 @@ function StepCard({
             </div>
           ) : (
             <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-              <Clock size={12} color="#706b6b" strokeWidth={1.5} />
-              <span className="font-montserrat font-semibold" style={{ fontSize: "11px", color: "#706b6b" }}>
+              <Clock size={12} color="var(--text-muted)" strokeWidth={1.5} />
+              <span className="font-montserrat font-semibold" style={{ fontSize: "11px", color: "var(--text-muted)" }}>
                 Day {step.delayDays}
               </span>
             </div>
@@ -174,8 +174,8 @@ function StepCard({
             style={{
               fontSize: "9px",
               letterSpacing: "0.08em",
-              background: step.active ? "rgba(39,174,96,0.15)" : "#333333",
-              color: step.active ? "#27AE60" : "#706b6b",
+              background: step.active ? "rgba(39,174,96,0.15)" : "var(--surface-2)",
+              color: step.active ? "#27AE60" : "var(--text-muted)",
               padding: "3px 8px",
               borderRadius: "20px",
               border: "none",
@@ -190,7 +190,7 @@ function StepCard({
             {editing ? (
               <>
                 <button onClick={cancelEdit} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px" }}>
-                  <X size={15} color="#706b6b" strokeWidth={1.5} />
+                  <X size={15} color="var(--text-muted)" strokeWidth={1.5} />
                 </button>
                 <button onClick={saveEdit} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px" }}>
                   <Check size={15} color="#27AE60" strokeWidth={1.5} />
@@ -199,7 +199,7 @@ function StepCard({
             ) : (
               <>
                 <button onClick={() => setEditing(true)} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px" }}>
-                  <Pencil size={14} color="#706b6b" strokeWidth={1.5} />
+                  <Pencil size={14} color="var(--text-muted)" strokeWidth={1.5} />
                 </button>
                 {confirmDelete ? (
                   <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
@@ -208,12 +208,12 @@ function StepCard({
                       <Check size={14} color="#C0392B" strokeWidth={1.5} />
                     </button>
                     <button onClick={() => setConfirmDelete(false)} style={{ background: "none", border: "none", cursor: "pointer", padding: "2px" }}>
-                      <X size={14} color="#706b6b" strokeWidth={1.5} />
+                      <X size={14} color="var(--text-muted)" strokeWidth={1.5} />
                     </button>
                   </div>
                 ) : (
                   <button onClick={() => setConfirmDelete(true)} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px" }}>
-                    <Trash2 size={14} color="#706b6b" strokeWidth={1.5} />
+                    <Trash2 size={14} color="var(--text-muted)" strokeWidth={1.5} />
                   </button>
                 )}
               </>
@@ -233,33 +233,33 @@ function StepCard({
                 className="font-montserrat font-normal"
                 style={{
                   width: "100%",
-                  background: "#333333",
+                  background: "var(--surface-2)",
                   border: "1px solid rgba(228,220,209,0.3)",
                   borderRadius: "8px",
                   padding: "10px 14px",
                   paddingBottom: "28px",
-                  color: "#ffffff",
+                  color: "var(--text)",
                   fontSize: "13px",
                   outline: "none",
                   resize: "none",
                   lineHeight: 1.6,
-                  caretColor: "#e4dcd1",
+                  caretColor: "var(--accent)",
                 }}
               />
               <span
                 className="font-montserrat font-normal"
-                style={{ position: "absolute", bottom: "8px", right: "12px", fontSize: "10px", color: "#706b6b", pointerEvents: "none" }}
+                style={{ position: "absolute", bottom: "8px", right: "12px", fontSize: "10px", color: "var(--text-muted)", pointerEvents: "none" }}
               >
                 {draft.length} / {CHAR_LIMIT}
               </span>
-              <p className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#706b6b", marginTop: "6px" }}>
-                Use <span style={{ color: "#e4dcd1" }}>{"{firstName}"}</span> to personalise. Click ✓ to save.
+              <p className="font-montserrat font-normal" style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "6px" }}>
+                Use <span style={{ color: "var(--accent)" }}>{"{firstName}"}</span> to personalise. Click ✓ to save.
               </p>
             </div>
           ) : (
             <p
               className="font-montserrat font-normal"
-              style={{ fontSize: "13px", color: "#c8c3bc", lineHeight: 1.6, whiteSpace: "pre-wrap" }}
+              style={{ fontSize: "13px", color: "var(--text-muted)", lineHeight: 1.6, whiteSpace: "pre-wrap" }}
             >
               {step.message}
             </p>
@@ -291,15 +291,15 @@ function AddStepForm({ onAdd, onCancel }: { onAdd: (step: Step) => void; onCance
   const valid = message.trim().length > 0 && days !== "" && !isNaN(parseInt(days, 10));
 
   return (
-    <div style={{ background: "#2a2a2a", borderRadius: "10px", padding: "16px", border: "1px solid rgba(228,220,209,0.2)" }}>
-      <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.10em", color: "#e4dcd1", marginBottom: "12px" }}>
+    <div style={{ background: "var(--surface)", borderRadius: "10px", padding: "16px", border: "1px solid rgba(228,220,209,0.2)" }}>
+      <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.10em", color: "var(--accent)", marginBottom: "12px" }}>
         New Step
       </p>
 
       {/* Day input */}
       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
-        <Clock size={13} color="#706b6b" strokeWidth={1.5} />
-        <span className="font-montserrat font-normal" style={{ fontSize: "12px", color: "#706b6b" }}>Send on day</span>
+        <Clock size={13} color="var(--text-muted)" strokeWidth={1.5} />
+        <span className="font-montserrat font-normal" style={{ fontSize: "12px", color: "var(--text-muted)" }}>Send on day</span>
         <input
           type="number"
           min="0"
@@ -307,11 +307,11 @@ function AddStepForm({ onAdd, onCancel }: { onAdd: (step: Step) => void; onCance
           onChange={(e) => setDays(e.target.value)}
           placeholder="0"
           className="font-montserrat font-semibold"
-          style={{ width: "64px", height: "32px", background: "#333333", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "6px", padding: "0 10px", color: "#ffffff", fontSize: "13px", outline: "none", textAlign: "center", caretColor: "#e4dcd1" }}
-          onFocus={(e) => (e.target.style.borderColor = "#e4dcd1")}
+          style={{ width: "64px", height: "32px", background: "var(--surface-2)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "6px", padding: "0 10px", color: "var(--text)", fontSize: "13px", outline: "none", textAlign: "center", caretColor: "var(--accent)" }}
+          onFocus={(e) => (e.target.style.borderColor = "var(--accent)")}
           onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.08)")}
         />
-        <span className="font-montserrat font-normal" style={{ fontSize: "12px", color: "#706b6b" }}>after trigger</span>
+        <span className="font-montserrat font-normal" style={{ fontSize: "12px", color: "var(--text-muted)" }}>after trigger</span>
       </div>
 
       {/* Message textarea */}
@@ -324,22 +324,22 @@ function AddStepForm({ onAdd, onCancel }: { onAdd: (step: Step) => void; onCance
           className="font-montserrat font-normal"
           style={{
             width: "100%",
-            background: "#333333",
+            background: "var(--surface-2)",
             border: "1px solid rgba(255,255,255,0.08)",
             borderRadius: "8px",
             padding: "10px 14px",
             paddingBottom: "28px",
-            color: "#ffffff",
+            color: "var(--text)",
             fontSize: "13px",
             outline: "none",
             resize: "none",
             lineHeight: 1.6,
-            caretColor: "#e4dcd1",
+            caretColor: "var(--accent)",
           }}
-          onFocus={(e) => (e.target.style.borderColor = "#e4dcd1")}
+          onFocus={(e) => (e.target.style.borderColor = "var(--accent)")}
           onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.08)")}
         />
-        <span className="font-montserrat font-normal" style={{ position: "absolute", bottom: "8px", right: "12px", fontSize: "10px", color: "#706b6b", pointerEvents: "none" }}>
+        <span className="font-montserrat font-normal" style={{ position: "absolute", bottom: "8px", right: "12px", fontSize: "10px", color: "var(--text-muted)", pointerEvents: "none" }}>
           {message.length} / {CHAR_LIMIT}
         </span>
       </div>
@@ -348,7 +348,7 @@ function AddStepForm({ onAdd, onCancel }: { onAdd: (step: Step) => void; onCance
         <button
           onClick={onCancel}
           className="font-montserrat font-semibold"
-          style={{ height: "36px", padding: "0 14px", borderRadius: "8px", background: "transparent", border: "1px solid rgba(255,255,255,0.1)", color: "#706b6b", fontSize: "12px", cursor: "pointer" }}
+          style={{ height: "36px", padding: "0 14px", borderRadius: "8px", background: "transparent", border: "1px solid rgba(255,255,255,0.1)", color: "var(--text-muted)", fontSize: "12px", cursor: "pointer" }}
         >
           Cancel
         </button>
@@ -356,7 +356,7 @@ function AddStepForm({ onAdd, onCancel }: { onAdd: (step: Step) => void; onCance
           onClick={handleAdd}
           disabled={!valid}
           className="font-montserrat font-semibold"
-          style={{ height: "36px", padding: "0 16px", borderRadius: "8px", background: valid ? "#e4dcd1" : "#333333", border: "none", color: valid ? "#222222" : "#706b6b", fontSize: "12px", cursor: valid ? "pointer" : "default", transition: "background 0.15s" }}
+          style={{ height: "36px", padding: "0 16px", borderRadius: "8px", background: valid ? "var(--accent)" : "var(--surface-2)", border: "none", color: valid ? "var(--bg)" : "var(--text-muted)", fontSize: "12px", cursor: valid ? "pointer" : "default", transition: "background 0.15s" }}
         >
           Add Step
         </button>
@@ -414,12 +414,12 @@ export default function WorkflowEditorPage({ params }: { params: { slug: string 
             href="/admin/workflows"
             style={{ display: "inline-flex", alignItems: "center", gap: "5px", textDecoration: "none", marginBottom: "14px" }}
           >
-            <ArrowLeft size={14} color="#706b6b" strokeWidth={1.5} />
-            <span className="font-montserrat font-normal" style={{ fontSize: "12px", color: "#706b6b" }}>
+            <ArrowLeft size={14} color="var(--text-muted)" strokeWidth={1.5} />
+            <span className="font-montserrat font-normal" style={{ fontSize: "12px", color: "var(--text-muted)" }}>
               All Workflows
             </span>
           </Link>
-          <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "#706b6b" }}>
+          <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "var(--text-muted)" }}>
             Workflow
           </p>
           <h1 className="font-playfair italic font-normal text-white" style={{ fontSize: "32px", marginTop: "4px" }}>
@@ -428,14 +428,14 @@ export default function WorkflowEditorPage({ params }: { params: { slug: string 
 
           {/* Trigger badge */}
           <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "8px" }}>
-            <div style={{ width: "22px", height: "22px", borderRadius: "6px", background: "#333333", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Zap size={12} color="#e4dcd1" strokeWidth={1.5} />
+            <div style={{ width: "22px", height: "22px", borderRadius: "6px", background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Zap size={12} color="var(--accent)" strokeWidth={1.5} />
             </div>
-            <span className="font-montserrat font-normal" style={{ fontSize: "12px", color: "#706b6b" }}>
-              Triggered when: <span style={{ color: "#e4dcd1" }}>{base.trigger}</span>
+            <span className="font-montserrat font-normal" style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+              Triggered when: <span style={{ color: "var(--accent)" }}>{base.trigger}</span>
             </span>
-            <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#4a4a4a" }}>·</span>
-            <span className="font-montserrat font-normal" style={{ fontSize: "12px", color: "#706b6b" }}>
+            <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "var(--text-muted)" }}>·</span>
+            <span className="font-montserrat font-normal" style={{ fontSize: "12px", color: "var(--text-muted)" }}>
               {activeCount} of {steps.length} step{steps.length !== 1 ? "s" : ""} active
             </span>
           </div>
@@ -448,10 +448,10 @@ export default function WorkflowEditorPage({ params }: { params: { slug: string 
           style={{
             height: "44px",
             padding: "0 20px",
-            background: saved ? "#27AE60" : "#e4dcd1",
+            background: saved ? "#27AE60" : "var(--accent)",
             borderRadius: "8px",
             border: "none",
-            color: saved ? "#ffffff" : "#222222",
+            color: saved ? "var(--text)" : "var(--bg)",
             fontSize: "13px",
             cursor: "pointer",
             flexShrink: 0,
@@ -470,7 +470,7 @@ export default function WorkflowEditorPage({ params }: { params: { slug: string 
         {steps.length === 0 && !showAddStep && (
           <div
             style={{
-              background: "#2a2a2a",
+              background: "var(--surface)",
               borderRadius: "10px",
               padding: "40px",
               display: "flex",
@@ -479,7 +479,7 @@ export default function WorkflowEditorPage({ params }: { params: { slug: string 
               border: "1px dashed rgba(255,255,255,0.08)",
             }}
           >
-            <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "#706b6b" }}>
+            <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "var(--text-muted)" }}>
               No steps yet. Add your first message below.
             </p>
           </div>
@@ -516,7 +516,7 @@ export default function WorkflowEditorPage({ params }: { params: { slug: string 
                 background: "transparent",
                 border: "1px dashed rgba(228,220,209,0.25)",
                 borderRadius: "8px",
-                color: "#e4dcd1",
+                color: "var(--accent)",
                 fontSize: "12px",
                 cursor: "pointer",
                 width: "100%",
@@ -532,13 +532,13 @@ export default function WorkflowEditorPage({ params }: { params: { slug: string 
 
       {/* Hint */}
       <div style={{ padding: "12px 32px 40px", maxWidth: "680px" }}>
-        <p className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#4a4a4a", lineHeight: 1.6 }}>
+        <p className="font-montserrat font-normal" style={{ fontSize: "11px", color: "var(--text-muted)", lineHeight: 1.6 }}>
           Steps are sent in order based on their day number after the trigger. Adding a step at day 25 will automatically slot it in between day 10 and day 30. Click the pencil icon on any step to edit its message or day number.
         </p>
       </div>
 
       <style>{`
-        input::placeholder, textarea::placeholder { color: #706b6b; }
+        input::placeholder, textarea::placeholder { color: var(--text-muted); }
         input[type=number]::-webkit-inner-spin-button { opacity: 0.3; }
       `}</style>
     </div>

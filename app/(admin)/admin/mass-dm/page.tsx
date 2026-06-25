@@ -83,7 +83,7 @@ export default function MassDMPage() {
         <div style={{ padding: "32px 32px 24px" }}>
           <p
             className="font-montserrat font-bold uppercase"
-            style={{ fontSize: "10px", letterSpacing: "0.12em", color: "#706b6b" }}
+            style={{ fontSize: "10px", letterSpacing: "0.12em", color: "var(--text-muted)" }}
           >
             Mass DM
           </p>
@@ -98,7 +98,7 @@ export default function MassDMPage() {
         <div style={{ padding: "0 32px 32px", display: "flex", justifyContent: "center" }}>
           <div
             style={{
-              background: "#2a2a2a",
+              background: "var(--surface)",
               borderRadius: "12px",
               padding: "48px 32px",
               textAlign: "center",
@@ -115,15 +115,15 @@ export default function MassDMPage() {
             </h2>
             <p
               className="font-montserrat font-normal"
-              style={{ fontSize: "13px", color: "#706b6b", marginTop: "8px", lineHeight: 1.6 }}
+              style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "8px", lineHeight: 1.6 }}
             >
               Your message has been sent to{" "}
-              <span style={{ color: "#e4dcd1" }}>{recipientCount.toLocaleString()}</span> creators successfully.
+              <span style={{ color: "var(--accent)" }}>{recipientCount.toLocaleString()}</span> creators successfully.
             </p>
             <button
               onClick={handleReset}
               className="font-montserrat font-semibold"
-              style={{ fontSize: "13px", color: "#e4dcd1", background: "none", border: "none", cursor: "pointer", marginTop: "24px" }}
+              style={{ fontSize: "13px", color: "var(--accent)", background: "none", border: "none", cursor: "pointer", marginTop: "24px" }}
             >
               Send Another Message
             </button>
@@ -139,7 +139,7 @@ export default function MassDMPage() {
       <div style={{ padding: "32px 32px 24px" }}>
         <p
           className="font-montserrat font-bold uppercase"
-          style={{ fontSize: "10px", letterSpacing: "0.12em", color: "#706b6b" }}
+          style={{ fontSize: "10px", letterSpacing: "0.12em", color: "var(--text-muted)" }}
         >
           Mass DM
         </p>
@@ -161,14 +161,14 @@ export default function MassDMPage() {
         }}
       >
         {/* LEFT — Compose */}
-        <div style={{ background: "#2a2a2a", borderRadius: "12px", padding: "24px" }}>
+        <div style={{ background: "var(--surface)", borderRadius: "12px", padding: "24px" }}>
           <span className="text-section-label">Select Recipients</span>
 
           {/* Tag selector */}
           <div style={{ marginTop: "12px" }}>
             <p
               className="font-montserrat font-normal uppercase"
-              style={{ fontSize: "11px", letterSpacing: "0.08em", color: "#706b6b", marginBottom: "10px" }}
+              style={{ fontSize: "11px", letterSpacing: "0.08em", color: "var(--text-muted)", marginBottom: "10px" }}
             >
               Send to creators tagged with:
             </p>
@@ -187,8 +187,8 @@ export default function MassDMPage() {
                       borderRadius: "20px",
                       border: "none",
                       cursor: "pointer",
-                      background: selected ? "#e4dcd1" : "#333333",
-                      color: selected ? "#222222" : "#706b6b",
+                      background: selected ? "var(--accent)" : "var(--surface-2)",
+                      color: selected ? "var(--bg)" : "var(--text-muted)",
                       transition: "background 0.15s, color 0.15s",
                     }}
                   >
@@ -202,7 +202,7 @@ export default function MassDMPage() {
           {/* Recipient count */}
           <p
             className="font-montserrat font-semibold"
-            style={{ fontSize: "13px", color: "#e4dcd1", marginTop: "16px" }}
+            style={{ fontSize: "13px", color: "var(--accent)", marginTop: "16px" }}
           >
             {selectedTags.length === 0
               ? "Select tags above"
@@ -214,7 +214,7 @@ export default function MassDMPage() {
           <span className="text-section-label">Compose Message</span>
           <p
             className="font-montserrat font-normal"
-            style={{ fontSize: "11px", color: "#706b6b", marginTop: "4px" }}
+            style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "4px" }}
           >
             Keep messages concise. Creators receive these as DMs in the app.
           </p>
@@ -229,19 +229,19 @@ export default function MassDMPage() {
               style={{
                 width: "100%",
                 minHeight: "120px",
-                background: "#333333",
+                background: "var(--surface-2)",
                 borderRadius: "8px",
                 border: "1px solid rgba(255,255,255,0.08)",
                 padding: "14px",
                 paddingBottom: "32px",
-                color: "#ffffff",
+                color: "var(--text)",
                 fontSize: "13px",
                 outline: "none",
                 resize: "vertical",
-                caretColor: "#e4dcd1",
+                caretColor: "var(--accent)",
                 boxSizing: "border-box",
               }}
-              onFocus={(e) => (e.target.style.borderColor = "#e4dcd1")}
+              onFocus={(e) => (e.target.style.borderColor = "var(--accent)")}
               onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.08)")}
             />
             <span
@@ -251,7 +251,7 @@ export default function MassDMPage() {
                 bottom: "10px",
                 right: "12px",
                 fontSize: "10px",
-                color: charsLeft < 50 ? "#C0392B" : "#706b6b",
+                color: charsLeft < 50 ? "#C0392B" : "var(--text-muted)",
                 pointerEvents: "none",
                 fontWeight: charsLeft < 50 ? 600 : 400,
               }}
@@ -264,7 +264,7 @@ export default function MassDMPage() {
           <div
             style={{
               marginTop: "12px",
-              background: "#333333",
+              background: "var(--surface-2)",
               borderRadius: "8px",
               padding: "12px",
               display: "flex",
@@ -277,20 +277,20 @@ export default function MassDMPage() {
                 width: "28px",
                 height: "28px",
                 borderRadius: "50%",
-                background: "#e4dcd1",
+                background: "var(--accent)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 flexShrink: 0,
               }}
             >
-              <span className="font-montserrat font-bold" style={{ fontSize: "8px", color: "#222222" }}>WG</span>
+              <span className="font-montserrat font-bold" style={{ fontSize: "8px", color: "var(--bg)" }}>WG</span>
             </div>
             <div>
-              <p className="font-montserrat font-semibold" style={{ fontSize: "11px", color: "#ffffff" }}>WGY LTD</p>
+              <p className="font-montserrat font-semibold" style={{ fontSize: "11px", color: "var(--text)" }}>WGY LTD</p>
               <p
                 className="font-montserrat font-normal"
-                style={{ fontSize: "12px", color: "#706b6b", fontStyle: "italic", marginTop: "2px" }}
+                style={{ fontSize: "12px", color: "var(--text-muted)", fontStyle: "italic", marginTop: "2px" }}
               >
                 {message
                   ? `Hey Sophie, ${message.replace(/\{firstName\}/g, "Sophie").slice(0, 60)}${message.length > 60 ? "..." : ""}`
@@ -308,8 +308,8 @@ export default function MassDMPage() {
               width: "100%",
               height: "48px",
               borderRadius: "8px",
-              background: "#e4dcd1",
-              color: "#222222",
+              background: "var(--accent)",
+              color: "var(--bg)",
               fontSize: "13px",
               border: "none",
               cursor: isDisabled ? "not-allowed" : "pointer",
@@ -330,7 +330,7 @@ export default function MassDMPage() {
         </div>
 
         {/* RIGHT — History */}
-        <div style={{ background: "#2a2a2a", borderRadius: "12px", padding: "24px" }}>
+        <div style={{ background: "var(--surface)", borderRadius: "12px", padding: "24px" }}>
           <span className="text-section-label">Sent Messages</span>
 
           <div style={{ marginTop: "8px" }}>
@@ -347,26 +347,26 @@ export default function MassDMPage() {
                     <span
                       key={tag}
                       className="font-montserrat font-semibold uppercase"
-                      style={{ fontSize: "9px", letterSpacing: "0.08em", background: "#333333", color: "#e4dcd1", padding: "3px 8px", borderRadius: "20px" }}
+                      style={{ fontSize: "9px", letterSpacing: "0.08em", background: "var(--surface-2)", color: "var(--accent)", padding: "3px 8px", borderRadius: "20px" }}
                     >
                       {tag}
                     </span>
                   ))}
                   <span
                     className="font-montserrat font-normal"
-                    style={{ fontSize: "10px", color: "#706b6b", marginLeft: "auto" }}
+                    style={{ fontSize: "10px", color: "var(--text-muted)", marginLeft: "auto" }}
                   >
                     {item.time}
                   </span>
                 </div>
                 <p
                   className="font-montserrat font-normal"
-                  style={{ fontSize: "12px", color: "#706b6b", marginTop: "6px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                  style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "6px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
                 >
                   {item.message}
                 </p>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "4px" }}>
-                  <p className="font-montserrat font-normal" style={{ fontSize: "10px", color: "#706b6b" }}>
+                  <p className="font-montserrat font-normal" style={{ fontSize: "10px", color: "var(--text-muted)" }}>
                     Sent to {item.count} creators
                   </p>
                   <CheckCircle size={14} color="#27AE60" strokeWidth={1.5} />
@@ -377,7 +377,7 @@ export default function MassDMPage() {
         </div>
       </div>
 
-      <style>{`textarea::placeholder { color: #706b6b; }`}</style>
+      <style>{`textarea::placeholder { color: var(--text-muted); }`}</style>
     </div>
   );
 }

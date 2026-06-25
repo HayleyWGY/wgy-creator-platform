@@ -23,11 +23,11 @@ const areaPath = [
 ].join(" ");
 
 const STATS = [
-  { label: "Total Members",        value: "879", trend: "+22 this month",         colour: "#706b6b" },
+  { label: "Total Members",        value: "879", trend: "+22 this month",         colour: "var(--text-muted)" },
   { label: "Monthly Active",       value: "694", trend: "83% of members · ↑3.7%", colour: "#27AE60" },
   { label: "New This Month",       value: "22",  trend: "↑120% vs last month",    colour: "#27AE60" },
-  { label: "Active Subscriptions", value: "837", trend: "96% retention rate",      colour: "#706b6b" },
-  { label: "Payment Failures",     value: "12",  trend: "1.4% of members",         colour: "#706b6b" },
+  { label: "Active Subscriptions", value: "837", trend: "96% retention rate",      colour: "var(--text-muted)" },
+  { label: "Payment Failures",     value: "12",  trend: "1.4% of members",         colour: "var(--text-muted)" },
   { label: "Cancelled This Month", value: "3",   trend: "Low churn ↓",             colour: "#27AE60" },
 ];
 
@@ -54,11 +54,11 @@ export default function AnalyticsPage() {
       {/* Header */}
       <div style={{ padding: "32px 32px 0", display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
         <div>
-          <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "#706b6b" }}>Analytics</p>
+          <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "var(--text-muted)" }}>Analytics</p>
           <h1 className="font-playfair italic font-normal text-white" style={{ fontSize: "32px", marginTop: "4px" }}>Platform Analytics</h1>
         </div>
         <select value={dateRange} onChange={(e) => setDateRange(e.target.value)} className="font-montserrat font-normal"
-          style={{ background: "#2a2a2a", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "8px", padding: "0 14px", height: "40px", color: "#e4dcd1", fontSize: "12px", outline: "none", cursor: "pointer" }}>
+          style={{ background: "var(--surface)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "8px", padding: "0 14px", height: "40px", color: "var(--accent)", fontSize: "12px", outline: "none", cursor: "pointer" }}>
           <option>Last 7 days</option>
           <option>Last 30 days</option>
           <option>Last 3 months</option>
@@ -69,8 +69,8 @@ export default function AnalyticsPage() {
       {/* Stat cards */}
       <div style={{ padding: "24px 32px 0", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
         {STATS.map((s) => (
-          <div key={s.label} style={{ background: "#2a2a2a", borderRadius: "12px", padding: "20px 24px", border: "1px solid rgba(255,255,255,0.06)" }}>
-            <p className="font-montserrat font-bold uppercase" style={{ fontSize: "9px", letterSpacing: "0.12em", color: "#706b6b" }}>{s.label}</p>
+          <div key={s.label} style={{ background: "var(--surface)", borderRadius: "12px", padding: "20px 24px", border: "1px solid rgba(255,255,255,0.06)" }}>
+            <p className="font-montserrat font-bold uppercase" style={{ fontSize: "9px", letterSpacing: "0.12em", color: "var(--text-muted)" }}>{s.label}</p>
             <p className="font-playfair italic font-normal text-white" style={{ fontSize: "40px", lineHeight: 1.1, marginTop: "6px" }}>{s.value}</p>
             <p className="font-montserrat font-normal" style={{ fontSize: "11px", color: s.colour, marginTop: "6px" }}>{s.trend}</p>
           </div>
@@ -78,21 +78,21 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Growth chart */}
-      <div style={{ margin: "24px 32px 0", background: "#2a2a2a", borderRadius: "12px", padding: "24px" }}>
+      <div style={{ margin: "24px 32px 0", background: "var(--surface)", borderRadius: "12px", padding: "24px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-          <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "#e4dcd1" }}>Member Growth</p>
-          <p className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#706b6b" }}>Last 12 months</p>
+          <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "var(--accent)" }}>Member Growth</p>
+          <p className="font-montserrat font-normal" style={{ fontSize: "11px", color: "var(--text-muted)" }}>Last 12 months</p>
         </div>
         <svg viewBox="0 0 800 180" width="100%" height="180">
           <path d={areaPath} fill="rgba(228,220,209,0.08)" />
-          <polyline points={polylinePoints} fill="none" stroke="#e4dcd1" strokeWidth="2" strokeLinejoin="round" />
-          {pts.map((p, i) => <circle key={i} cx={p.x.toFixed(1)} cy={p.y.toFixed(1)} r="3" fill="#e4dcd1" />)}
+          <polyline points={polylinePoints} fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinejoin="round" />
+          {pts.map((p, i) => <circle key={i} cx={p.x.toFixed(1)} cy={p.y.toFixed(1)} r="3" fill="var(--accent)" />)}
           {MONTHS.map((m, i) => (
             <text key={m} x={pts[i].x.toFixed(1)} y="175" textAnchor="middle"
-              style={{ fontSize: "9px", fill: "#706b6b", fontFamily: "var(--font-montserrat)" }}>{m}</text>
+              style={{ fontSize: "9px", fill: "var(--text-muted)", fontFamily: "var(--font-montserrat)" }}>{m}</text>
           ))}
         </svg>
-        <p className="font-montserrat font-normal" style={{ fontSize: "12px", color: "#706b6b", textAlign: "center", marginTop: "12px" }}>
+        <p className="font-montserrat font-normal" style={{ fontSize: "12px", color: "var(--text-muted)", textAlign: "center", marginTop: "12px" }}>
           879 total members · 83% monthly active · +22 new this month
         </p>
       </div>
@@ -100,18 +100,18 @@ export default function AnalyticsPage() {
       {/* Two column */}
       <div style={{ padding: "24px 32px 32px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
         {/* Most popular campaigns */}
-        <div style={{ background: "#2a2a2a", borderRadius: "12px", padding: "20px" }}>
-          <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "#e4dcd1", marginBottom: "12px" }}>Most Popular Campaigns</p>
+        <div style={{ background: "var(--surface)", borderRadius: "12px", padding: "20px" }}>
+          <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "var(--accent)", marginBottom: "12px" }}>Most Popular Campaigns</p>
           {TOP_CAMPAIGNS.map((c, i) => {
             const total = c.likes + c.comments;
             return (
               <div key={c.name} style={{ padding: "10px 0", borderBottom: i < 4 ? "1px solid rgba(255,255,255,0.04)" : "none", display: "flex", alignItems: "center", gap: "10px" }}>
-                <span className="font-montserrat font-semibold" style={{ fontSize: "12px", color: "#706b6b", width: "16px", textAlign: "right", flexShrink: 0 }}>{i + 1}</span>
-                <span className="font-montserrat font-medium" style={{ fontSize: "13px", color: "#ffffff", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</span>
-                <div style={{ width: "80px", height: "4px", background: "#333333", borderRadius: "2px", flexShrink: 0 }}>
-                  <div style={{ width: `${Math.round((total / 203) * 80)}px`, height: "100%", background: "#e4dcd1", borderRadius: "2px" }} />
+                <span className="font-montserrat font-semibold" style={{ fontSize: "12px", color: "var(--text-muted)", width: "16px", textAlign: "right", flexShrink: 0 }}>{i + 1}</span>
+                <span className="font-montserrat font-medium" style={{ fontSize: "13px", color: "var(--text)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</span>
+                <div style={{ width: "80px", height: "4px", background: "var(--surface-2)", borderRadius: "2px", flexShrink: 0 }}>
+                  <div style={{ width: `${Math.round((total / 203) * 80)}px`, height: "100%", background: "var(--accent)", borderRadius: "2px" }} />
                 </div>
-                <span className="font-montserrat font-normal" style={{ fontSize: "10px", color: "#706b6b", flexShrink: 0, display: "flex", alignItems: "center", gap: "4px" }}>
+                <span className="font-montserrat font-normal" style={{ fontSize: "10px", color: "var(--text-muted)", flexShrink: 0, display: "flex", alignItems: "center", gap: "4px" }}>
                   <Heart size={9} /> {c.likes} <MessageCircle size={9} /> {c.comments}
                 </span>
               </div>
@@ -120,16 +120,16 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Content engagement */}
-        <div style={{ background: "#2a2a2a", borderRadius: "12px", padding: "20px" }}>
-          <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "#e4dcd1", marginBottom: "12px" }}>Content Engagement</p>
+        <div style={{ background: "var(--surface)", borderRadius: "12px", padding: "20px" }}>
+          <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "var(--accent)", marginBottom: "12px" }}>Content Engagement</p>
           {TOP_CONTENT.map((c, i) => (
             <div key={c.name} style={{ padding: "10px 0", borderBottom: i < 3 ? "1px solid rgba(255,255,255,0.04)" : "none", display: "flex", alignItems: "center", gap: "10px" }}>
-              <span className="font-montserrat font-semibold" style={{ fontSize: "12px", color: "#706b6b", width: "16px", textAlign: "right", flexShrink: 0 }}>{i + 1}</span>
-              <span className="font-montserrat font-medium" style={{ fontSize: "13px", color: "#ffffff", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</span>
-              <div style={{ width: "80px", height: "4px", background: "#333333", borderRadius: "2px", flexShrink: 0 }}>
-                <div style={{ width: `${Math.round((c.likes / 41) * 80)}px`, height: "100%", background: "#e4dcd1", borderRadius: "2px" }} />
+              <span className="font-montserrat font-semibold" style={{ fontSize: "12px", color: "var(--text-muted)", width: "16px", textAlign: "right", flexShrink: 0 }}>{i + 1}</span>
+              <span className="font-montserrat font-medium" style={{ fontSize: "13px", color: "var(--text)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</span>
+              <div style={{ width: "80px", height: "4px", background: "var(--surface-2)", borderRadius: "2px", flexShrink: 0 }}>
+                <div style={{ width: `${Math.round((c.likes / 41) * 80)}px`, height: "100%", background: "var(--accent)", borderRadius: "2px" }} />
               </div>
-              <span className="font-montserrat font-normal" style={{ fontSize: "10px", color: "#706b6b", flexShrink: 0, display: "flex", alignItems: "center", gap: "4px" }}>
+              <span className="font-montserrat font-normal" style={{ fontSize: "10px", color: "var(--text-muted)", flexShrink: 0, display: "flex", alignItems: "center", gap: "4px" }}>
                 <Heart size={9} /> {c.likes}
               </span>
             </div>

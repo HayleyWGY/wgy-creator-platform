@@ -51,7 +51,7 @@ export function AdminSidebar() {
       style={{
         width: "240px",
         flexShrink: 0,
-        background: "#1a1a1a",
+        background: "var(--surface)",
         borderRight: "1px solid rgba(255,255,255,0.06)",
         display: "flex",
         flexDirection: "column",
@@ -73,7 +73,7 @@ export function AdminSidebar() {
         />
         <p
           className="font-montserrat font-bold uppercase"
-          style={{ fontSize: "9px", letterSpacing: "0.12em", color: "#706b6b", marginTop: "4px" }}
+          style={{ fontSize: "9px", letterSpacing: "0.12em", color: "var(--text-muted)", marginTop: "4px" }}
         >
           Internal Portal
         </p>
@@ -96,16 +96,16 @@ export function AdminSidebar() {
                 borderRadius: "8px",
                 textDecoration: "none",
                 background: active ? "rgba(228,220,209,0.1)" : "transparent",
-                color: active ? "#e4dcd1" : "#706b6b",
+                color: active ? "var(--accent)" : "var(--text-muted)",
                 transition: "color 0.15s, background 0.15s",
               }}
               onMouseEnter={(e) => {
                 if (!active)
-                  (e.currentTarget as HTMLAnchorElement).style.color = "#ffffff";
+                  (e.currentTarget as HTMLAnchorElement).style.color = "var(--text)";
               }}
               onMouseLeave={(e) => {
                 if (!active)
-                  (e.currentTarget as HTMLAnchorElement).style.color = "#706b6b";
+                  (e.currentTarget as HTMLAnchorElement).style.color = "var(--text-muted)";
               }}
             >
               <Icon size={16} strokeWidth={1.5} />
@@ -133,22 +133,22 @@ export function AdminSidebar() {
             width: "28px",
             height: "28px",
             borderRadius: "50%",
-            background: "#e4dcd1",
+            background: "var(--accent)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             flexShrink: 0,
           }}
         >
-          <span className="font-montserrat font-bold" style={{ fontSize: "9px", color: "#222222" }}>
+          <span className="font-montserrat font-bold" style={{ fontSize: "9px", color: "var(--bg)" }}>
             HW
           </span>
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p className="font-montserrat font-medium" style={{ fontSize: "12px", color: "#ffffff" }}>
+          <p className="font-montserrat font-medium" style={{ fontSize: "12px", color: "var(--text)" }}>
             Hayley W
           </p>
-          <p className="font-montserrat font-normal" style={{ fontSize: "10px", color: "#706b6b" }}>
+          <p className="font-montserrat font-normal" style={{ fontSize: "10px", color: "var(--text-muted)" }}>
             Admin
           </p>
         </div>
@@ -157,7 +157,7 @@ export function AdminSidebar() {
           style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
           title="Sign out"
         >
-          <LogOut size={16} color="#706b6b" strokeWidth={1.5} />
+          <LogOut size={16} color="var(--text-muted)" strokeWidth={1.5} />
         </button>
       </div>
     </aside>

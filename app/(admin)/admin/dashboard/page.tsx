@@ -78,7 +78,7 @@ function StatusPill({ status }: { status: string }) {
     return (
       <span
         className="font-montserrat font-semibold uppercase"
-        style={{ fontSize: "9px", letterSpacing: "0.10em", background: "#e4dcd1", color: "#222222", padding: "3px 8px", borderRadius: "20px" }}
+        style={{ fontSize: "9px", letterSpacing: "0.10em", background: "var(--accent)", color: "var(--bg)", padding: "3px 8px", borderRadius: "20px" }}
       >
         Live
       </span>
@@ -88,7 +88,7 @@ function StatusPill({ status }: { status: string }) {
     return (
       <span
         className="font-montserrat font-semibold uppercase"
-        style={{ fontSize: "9px", letterSpacing: "0.10em", background: "transparent", color: "#706b6b", border: "1px solid rgba(255,255,255,0.15)", padding: "3px 8px", borderRadius: "20px" }}
+        style={{ fontSize: "9px", letterSpacing: "0.10em", background: "transparent", color: "var(--text-muted)", border: "1px solid rgba(255,255,255,0.15)", padding: "3px 8px", borderRadius: "20px" }}
       >
         Draft
       </span>
@@ -97,7 +97,7 @@ function StatusPill({ status }: { status: string }) {
   return (
     <span
       className="font-montserrat font-semibold uppercase"
-      style={{ fontSize: "9px", letterSpacing: "0.10em", background: "#333333", color: "#706b6b", padding: "3px 8px", borderRadius: "20px" }}
+      style={{ fontSize: "9px", letterSpacing: "0.10em", background: "var(--surface-2)", color: "var(--text-muted)", padding: "3px 8px", borderRadius: "20px" }}
     >
       Closed
     </span>
@@ -173,7 +173,7 @@ export default function DashboardPage() {
       {/* Header */}
       <p
         className="font-montserrat font-bold uppercase"
-        style={{ fontSize: "10px", letterSpacing: "0.12em", color: "#706b6b" }}
+        style={{ fontSize: "10px", letterSpacing: "0.12em", color: "var(--text-muted)" }}
       >
         Overview
       </p>
@@ -185,7 +185,7 @@ export default function DashboardPage() {
       </h1>
       <p
         className="font-montserrat font-normal"
-        style={{ fontSize: "13px", color: "#706b6b", marginTop: "6px" }}
+        style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "6px" }}
       >
         Here&apos;s what&apos;s happening today.
       </p>
@@ -203,28 +203,28 @@ export default function DashboardPage() {
           <div
             key={card.label}
             style={{
-              background: "#2a2a2a",
+              background: "var(--surface)",
               borderRadius: "12px",
               padding: "20px",
               border: "1px solid rgba(255,255,255,0.06)",
-              borderLeft: card.accentBorder ? "3px solid #e4dcd1" : "1px solid rgba(255,255,255,0.06)",
+              borderLeft: card.accentBorder ? "3px solid var(--accent)" : "1px solid rgba(255,255,255,0.06)",
             }}
           >
             <p
               className="font-montserrat font-bold uppercase"
-              style={{ fontSize: "9px", letterSpacing: "0.12em", color: "#706b6b" }}
+              style={{ fontSize: "9px", letterSpacing: "0.12em", color: "var(--text-muted)" }}
             >
               {card.label}
             </p>
             <p
               className="font-playfair italic font-normal"
-              style={{ fontSize: "40px", color: card.accentNumber ? "#e4dcd1" : "#ffffff", marginTop: "8px", lineHeight: 1 }}
+              style={{ fontSize: "40px", color: card.accentNumber ? "var(--accent)" : "var(--text)", marginTop: "8px", lineHeight: 1 }}
             >
               {card.value}
             </p>
             <p
               className="font-montserrat font-normal"
-              style={{ fontSize: "11px", color: "#706b6b", marginTop: "6px" }}
+              style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "6px" }}
             >
               {card.trend}
             </p>
@@ -236,14 +236,14 @@ export default function DashboardPage() {
       <div
         style={{
           marginTop: "24px",
-          background: "#2a2a2a",
+          background: "var(--surface)",
           borderRadius: "12px",
           padding: "24px",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <span className="text-section-label">Member Growth</span>
-          <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#706b6b" }}>
+          <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "var(--text-muted)" }}>
             Last 12 months
           </span>
         </div>
@@ -264,13 +264,13 @@ export default function DashboardPage() {
             <polyline
               points={CHART_POINTS}
               fill="none"
-              stroke="#e4dcd1"
+              stroke="var(--accent)"
               strokeWidth="2"
               strokeLinejoin="round"
               strokeLinecap="round"
             />
             {/* End dot */}
-            <circle cx="759" cy="10" r="3" fill="#e4dcd1" />
+            <circle cx="759" cy="10" r="3" fill="var(--accent)" />
           </svg>
 
           {/* X axis labels */}
@@ -287,7 +287,7 @@ export default function DashboardPage() {
               <span
                 key={label}
                 className="font-montserrat font-normal"
-                style={{ fontSize: "9px", color: "#706b6b" }}
+                style={{ fontSize: "9px", color: "var(--text-muted)" }}
               >
                 {label}
               </span>
@@ -297,7 +297,7 @@ export default function DashboardPage() {
 
         <p
           className="font-montserrat font-normal text-center"
-          style={{ fontSize: "12px", color: "#706b6b", marginTop: "12px" }}
+          style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "12px" }}
         >
           879 total members · 83% monthly active · +22 new this month
         </p>
@@ -313,13 +313,13 @@ export default function DashboardPage() {
         }}
       >
         {/* Recent Campaigns */}
-        <div style={{ background: "#2a2a2a", borderRadius: "12px", padding: "20px" }}>
+        <div style={{ background: "var(--surface)", borderRadius: "12px", padding: "20px" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <span className="text-section-label">Recent Campaigns</span>
             <Link
               href="/admin/campaigns"
               className="font-montserrat font-semibold"
-              style={{ fontSize: "11px", color: "#e4dcd1", textDecoration: "none" }}
+              style={{ fontSize: "11px", color: "var(--accent)", textDecoration: "none" }}
             >
               View all →
             </Link>
@@ -347,13 +347,13 @@ export default function DashboardPage() {
                   />
                   <p
                     className="font-montserrat font-medium"
-                    style={{ fontSize: "13px", color: "#ffffff", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                    style={{ fontSize: "13px", color: "var(--text)", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
                   >
                     {c.name}
                   </p>
                   <p
                     className="font-montserrat font-normal"
-                    style={{ fontSize: "11px", color: "#706b6b", flexShrink: 0 }}
+                    style={{ fontSize: "11px", color: "var(--text-muted)", flexShrink: 0 }}
                   >
                     {c.section}
                   </p>
@@ -376,7 +376,7 @@ export default function DashboardPage() {
               height: "40px",
               borderRadius: "8px",
               border: "1px solid rgba(228,220,209,0.2)",
-              color: "#e4dcd1",
+              color: "var(--accent)",
               textDecoration: "none",
             }}
           >
@@ -387,18 +387,18 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent Activity */}
-        <div style={{ background: "#2a2a2a", borderRadius: "12px", padding: "20px" }}>
+        <div style={{ background: "var(--surface)", borderRadius: "12px", padding: "20px" }}>
           <span className="text-section-label">Recent Activity</span>
 
           <div style={{ marginTop: "8px" }}>
             {activity.length === 0 && (
-              <p className="font-montserrat" style={{ fontSize: "12px", color: "#706b6b", padding: "16px 0" }}>
+              <p className="font-montserrat" style={{ fontSize: "12px", color: "var(--text-muted)", padding: "16px 0" }}>
                 No recent activity
               </p>
             )}
             {activity.map((item, i) => {
               const Icon = item.icon;
-              const colour = item.iconColour ?? "#e4dcd1";
+              const colour = item.iconColour ?? "var(--accent)";
               return (
                 <div
                   key={i}
@@ -414,7 +414,7 @@ export default function DashboardPage() {
                       width: "32px",
                       height: "32px",
                       borderRadius: "50%",
-                      background: "#333333",
+                      background: "var(--surface-2)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
@@ -424,14 +424,14 @@ export default function DashboardPage() {
                     <Icon size={14} color={colour} strokeWidth={1.5} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p className="font-montserrat font-medium" style={{ fontSize: "12px", color: "#ffffff" }}>
+                    <p className="font-montserrat font-medium" style={{ fontSize: "12px", color: "var(--text)" }}>
                       {item.title}
                     </p>
-                    <p className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#706b6b", marginTop: "2px" }}>
+                    <p className="font-montserrat font-normal" style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "2px" }}>
                       {item.sub}
                     </p>
                   </div>
-                  <span className="font-montserrat font-normal" style={{ fontSize: "10px", color: "#706b6b", flexShrink: 0 }}>
+                  <span className="font-montserrat font-normal" style={{ fontSize: "10px", color: "var(--text-muted)", flexShrink: 0 }}>
                     {item.time}
                   </span>
                 </div>

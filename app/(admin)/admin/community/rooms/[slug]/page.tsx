@@ -114,19 +114,19 @@ export default function AdminRoomPage({ params }: { params: { slug: string } }) 
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', background: '#222222' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', background: 'var(--bg)' }}>
       {/* Header */}
-      <div style={{ padding: '16px 24px', background: '#1a1a1a', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+      <div style={{ padding: '16px 24px', background: 'var(--surface)', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
         <button
           onClick={() => router.push('/admin/community')}
           style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex' }}
         >
-          <ArrowLeft size={18} color="#706b6b" />
+          <ArrowLeft size={18} color="var(--text-muted)" />
         </button>
         <span style={{ fontSize: 20 }}>{meta.emoji}</span>
         <div>
           <p style={{ margin: 0, color: 'white', fontFamily: 'Montserrat, sans-serif', fontWeight: 600, fontSize: 15 }}>{meta.name}</p>
-          <p style={{ margin: 0, color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 11 }}>{messages.length} messages</p>
+          <p style={{ margin: 0, color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontSize: 11 }}>{messages.length} messages</p>
         </div>
       </div>
 
@@ -148,7 +148,7 @@ export default function AdminRoomPage({ params }: { params: { slug: string } }) 
             <p style={{ margin: '0 0 3px', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.10em', color: '#9b7e56' }}>
               PINNED MESSAGE
             </p>
-            <p style={{ margin: 0, fontFamily: 'Montserrat, sans-serif', fontSize: 12, color: '#c8c3bc', lineHeight: 1.5 }}>
+            <p style={{ margin: 0, fontFamily: 'Montserrat, sans-serif', fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>
               {pinnedMessage.body}
             </p>
           </div>
@@ -165,7 +165,7 @@ export default function AdminRoomPage({ params }: { params: { slug: string } }) 
       <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
         {messages.length === 0 && (
           <div style={{ textAlign: 'center', padding: 40 }}>
-            <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 13 }}>No messages yet</p>
+            <p style={{ color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontSize: 13 }}>No messages yet</p>
           </div>
         )}
         {messages.map(msg => {
@@ -174,8 +174,8 @@ export default function AdminRoomPage({ params }: { params: { slug: string } }) 
           const isPinned = pinnedMessage?.id === msg.id
           return (
             <div key={msg.id} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-              <div style={{ width: 32, height: 32, borderRadius: '50%', background: isAdmin ? '#9b7e56' : '#e4dcd1', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <span style={{ color: '#222', fontWeight: 700, fontSize: 10, fontFamily: 'Montserrat, sans-serif' }}>
+              <div style={{ width: 32, height: 32, borderRadius: '50%', background: isAdmin ? '#9b7e56' : 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <span style={{ color: 'var(--bg)', fontWeight: 700, fontSize: 10, fontFamily: 'Montserrat, sans-serif' }}>
                   {isAdmin ? 'WG' : initials}
                 </span>
               </div>
@@ -184,7 +184,7 @@ export default function AdminRoomPage({ params }: { params: { slug: string } }) 
                   <span style={{ color: isAdmin ? '#9b7e56' : 'white', fontFamily: 'Montserrat, sans-serif', fontWeight: 600, fontSize: 12 }}>
                     {isAdmin ? 'WGY' : `${msg.author?.firstName} ${msg.author?.lastName}`}
                   </span>
-                  <span style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 10 }}>
+                  <span style={{ color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontSize: 10 }}>
                     {getAge(msg.createdAt)}
                   </span>
                   {isPinned && (
@@ -192,8 +192,8 @@ export default function AdminRoomPage({ params }: { params: { slug: string } }) 
                   )}
                 </div>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                  <div style={{ background: '#2a2a2a', borderRadius: '0 12px 12px 12px', padding: '8px 14px', maxWidth: 600 }}>
-                    <p style={{ color: msg.isDeleted ? '#706b6b' : 'white', fontFamily: 'Montserrat, sans-serif', fontSize: 13, lineHeight: 1.5, margin: 0, fontStyle: msg.isDeleted ? 'italic' : 'normal' }}>
+                  <div style={{ background: 'var(--surface)', borderRadius: '0 12px 12px 12px', padding: '8px 14px', maxWidth: 600 }}>
+                    <p style={{ color: msg.isDeleted ? 'var(--text-muted)' : 'white', fontFamily: 'Montserrat, sans-serif', fontSize: 13, lineHeight: 1.5, margin: 0, fontStyle: msg.isDeleted ? 'italic' : 'normal' }}>
                       {msg.body}
                     </p>
                     {msg.imageUrl && !msg.isDeleted && (
@@ -228,10 +228,10 @@ export default function AdminRoomPage({ params }: { params: { slug: string } }) 
       </div>
 
       {/* Send as WGY */}
-      <div style={{ padding: '16px 24px', borderTop: '1px solid rgba(255,255,255,0.06)', background: '#1a1a1a', display: 'flex', gap: 12, alignItems: 'flex-end', flexShrink: 0 }}>
+      <div style={{ padding: '16px 24px', borderTop: '1px solid rgba(255,255,255,0.06)', background: 'var(--surface)', display: 'flex', gap: 12, alignItems: 'flex-end', flexShrink: 0 }}>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
           <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#9b7e56', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ color: '#222', fontWeight: 700, fontSize: 9, fontFamily: 'Montserrat, sans-serif' }}>WG</span>
+            <span style={{ color: 'var(--bg)', fontWeight: 700, fontSize: 9, fontFamily: 'Montserrat, sans-serif' }}>WG</span>
           </div>
           <span style={{ color: '#9b7e56', fontFamily: 'Montserrat, sans-serif', fontSize: 11, fontWeight: 600 }}>Sending as WGY</span>
         </div>
@@ -241,14 +241,14 @@ export default function AdminRoomPage({ params }: { params: { slug: string } }) 
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
           placeholder="Send a message to this room..."
           rows={2}
-          style={{ flex: 1, background: '#2a2a2a', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '10px 14px', color: 'white', fontFamily: 'Montserrat, sans-serif', fontSize: 13, resize: 'none', outline: 'none' }}
+          style={{ flex: 1, background: 'var(--surface)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '10px 14px', color: 'white', fontFamily: 'Montserrat, sans-serif', fontSize: 13, resize: 'none', outline: 'none' }}
         />
         <button
           onClick={handleSend}
           disabled={!input.trim() || sending}
-          style={{ width: 44, height: 44, borderRadius: '50%', background: input.trim() ? '#e4dcd1' : '#333', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: input.trim() ? 'pointer' : 'not-allowed', flexShrink: 0, transition: 'background 0.2s' }}
+          style={{ width: 44, height: 44, borderRadius: '50%', background: input.trim() ? 'var(--accent)' : '#333', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: input.trim() ? 'pointer' : 'not-allowed', flexShrink: 0, transition: 'background 0.2s' }}
         >
-          <Send size={18} color={input.trim() ? '#222' : '#706b6b'} />
+          <Send size={18} color={input.trim() ? 'var(--bg)' : 'var(--text-muted)'} />
         </button>
       </div>
     </div>

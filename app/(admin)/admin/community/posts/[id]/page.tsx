@@ -67,8 +67,8 @@ export default function AdminPostDetailPage({ params }: { params: { id: string }
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#222222' }}>
-        <div style={{ width: 24, height: 24, border: '2px solid #e4dcd1', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--bg)' }}>
+        <div style={{ width: 24, height: 24, border: '2px solid var(--accent)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
       </div>
     )
   }
@@ -78,7 +78,7 @@ export default function AdminPostDetailPage({ params }: { params: { id: string }
   const initials = `${post.author.firstName[0]}${post.author.lastName[0]}`
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', minHeight: '100vh', background: '#222222' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', minHeight: '100vh', background: 'var(--bg)' }}>
       {/* Main content */}
       <div style={{ padding: 32, overflowY: 'auto' }}>
         {/* Back */}
@@ -86,30 +86,30 @@ export default function AdminPostDetailPage({ params }: { params: { id: string }
           onClick={() => router.push('/admin/community')}
           style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', marginBottom: 24 }}
         >
-          <ArrowLeft size={16} color="#706b6b" />
-          <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 12, color: '#706b6b' }}>Back to Community</span>
+          <ArrowLeft size={16} color="var(--text-muted)" />
+          <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 12, color: 'var(--text-muted)' }}>Back to Community</span>
         </button>
 
         {/* Post */}
-        <div style={{ background: '#2a2a2a', borderRadius: 12, padding: 24, marginBottom: 24, border: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ background: 'var(--surface)', borderRadius: 12, padding: 24, marginBottom: 24, border: '1px solid rgba(255,255,255,0.05)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-            <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#e4dcd1', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+            <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
               {post.author.profileImageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={post.author.profileImageUrl} alt={initials} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
-                <span style={{ fontSize: 13, fontWeight: 700, color: '#222', fontFamily: 'Montserrat, sans-serif' }}>{initials}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--bg)', fontFamily: 'Montserrat, sans-serif' }}>{initials}</span>
               )}
             </div>
             <div>
               <p style={{ margin: 0, color: 'white', fontFamily: 'Montserrat, sans-serif', fontWeight: 600, fontSize: 14 }}>
                 {post.author.firstName} {post.author.lastName}
               </p>
-              <p style={{ margin: 0, color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 11 }}>{getAge(post.createdAt)}</p>
+              <p style={{ margin: 0, color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontSize: 11 }}>{getAge(post.createdAt)}</p>
             </div>
           </div>
 
-          <p style={{ color: '#c8c3bc', fontFamily: 'Montserrat, sans-serif', fontSize: 14, lineHeight: 1.6, margin: '0 0 16px' }}>
+          <p style={{ color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontSize: 14, lineHeight: 1.6, margin: '0 0 16px' }}>
             {post.body}
           </p>
 
@@ -121,35 +121,35 @@ export default function AdminPostDetailPage({ params }: { params: { id: string }
           )}
 
           <div style={{ display: 'flex', gap: 16, padding: '12px 0 0', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-            <span style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 12 }}>♥ {post.likesCount}</span>
-            <span style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 12 }}>💬 {post.comments?.length || 0}</span>
+            <span style={{ color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontSize: 12 }}>♥ {post.likesCount}</span>
+            <span style={{ color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontSize: 12 }}>💬 {post.comments?.length || 0}</span>
           </div>
         </div>
 
         {/* Comments */}
-        <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', margin: '0 0 16px' }}>
+        <p style={{ color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', margin: '0 0 16px' }}>
           COMMENTS ({post.comments?.length || 0})
         </p>
 
         {post.comments?.length === 0 && (
-          <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 13, textAlign: 'center', padding: '24px 0' }}>No comments yet</p>
+          <p style={{ color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontSize: 13, textAlign: 'center', padding: '24px 0' }}>No comments yet</p>
         )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {post.comments?.map(c => (
             <div key={c.id} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-              <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#e4dcd1', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <span style={{ fontSize: 10, fontWeight: 700, color: '#222', fontFamily: 'Montserrat, sans-serif' }}>
+              <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--bg)', fontFamily: 'Montserrat, sans-serif' }}>
                   {c.author.firstName[0]}{c.author.lastName[0]}
                 </span>
               </div>
-              <div style={{ flex: 1, background: '#2a2a2a', borderRadius: '0 10px 10px 10px', padding: '10px 14px' }}>
+              <div style={{ flex: 1, background: 'var(--surface)', borderRadius: '0 10px 10px 10px', padding: '10px 14px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
                   <div>
                     <span style={{ color: 'white', fontFamily: 'Montserrat, sans-serif', fontWeight: 600, fontSize: 12 }}>
                       {c.author.firstName} {c.author.lastName}
                     </span>
-                    <span style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 10, marginLeft: 8 }}>
+                    <span style={{ color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontSize: 10, marginLeft: 8 }}>
                       {getAge(c.createdAt)}
                     </span>
                   </div>
@@ -161,7 +161,7 @@ export default function AdminPostDetailPage({ params }: { params: { id: string }
                     <Trash2 size={13} color="#C0392B" />
                   </button>
                 </div>
-                <p style={{ color: '#c8c3bc', fontFamily: 'Montserrat, sans-serif', fontSize: 12, lineHeight: 1.5, margin: 0 }}>
+                <p style={{ color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontSize: 12, lineHeight: 1.5, margin: 0 }}>
                   {c.body}
                 </p>
               </div>
@@ -171,8 +171,8 @@ export default function AdminPostDetailPage({ params }: { params: { id: string }
       </div>
 
       {/* Sidebar */}
-      <div style={{ background: '#1a1a1a', borderLeft: '1px solid rgba(255,255,255,0.06)', padding: 24 }}>
-        <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', margin: '0 0 16px' }}>
+      <div style={{ background: 'var(--surface)', borderLeft: '1px solid rgba(255,255,255,0.06)', padding: 24 }}>
+        <p style={{ color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', margin: '0 0 16px' }}>
           MODERATION
         </p>
 
@@ -184,32 +184,32 @@ export default function AdminPostDetailPage({ params }: { params: { id: string }
         </button>
 
         <div style={{ marginTop: 24 }}>
-          <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', margin: '0 0 12px' }}>
+          <p style={{ color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', margin: '0 0 12px' }}>
             POST INFO
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <div>
-              <p style={{ margin: 0, color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 10 }}>Author</p>
+              <p style={{ margin: 0, color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontSize: 10 }}>Author</p>
               <p style={{ margin: '2px 0 0', color: 'white', fontFamily: 'Montserrat, sans-serif', fontSize: 13 }}>
                 {post.author.firstName} {post.author.lastName}
               </p>
             </div>
             <div>
-              <p style={{ margin: 0, color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 10 }}>Posted</p>
+              <p style={{ margin: 0, color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontSize: 10 }}>Posted</p>
               <p style={{ margin: '2px 0 0', color: 'white', fontFamily: 'Montserrat, sans-serif', fontSize: 13 }}>
                 {new Date(post.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
               </p>
             </div>
             <div>
-              <p style={{ margin: 0, color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 10 }}>Likes</p>
+              <p style={{ margin: 0, color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontSize: 10 }}>Likes</p>
               <p style={{ margin: '2px 0 0', color: 'white', fontFamily: 'Montserrat, sans-serif', fontSize: 13 }}>{post.likesCount}</p>
             </div>
             <div>
-              <p style={{ margin: 0, color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 10 }}>Comments</p>
+              <p style={{ margin: 0, color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontSize: 10 }}>Comments</p>
               <p style={{ margin: '2px 0 0', color: 'white', fontFamily: 'Montserrat, sans-serif', fontSize: 13 }}>{post.comments?.length || 0}</p>
             </div>
             <div>
-              <p style={{ margin: 0, color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 10 }}>Has image</p>
+              <p style={{ margin: 0, color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontSize: 10 }}>Has image</p>
               <p style={{ margin: '2px 0 0', color: 'white', fontFamily: 'Montserrat, sans-serif', fontSize: 13 }}>{post.imageUrl ? 'Yes' : 'No'}</p>
             </div>
           </div>

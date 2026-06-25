@@ -62,10 +62,10 @@ const INITIAL_WORKFLOWS: Workflow[] = [
 ];
 
 const TRIGGER_ICONS: Record<Trigger, React.ReactNode> = {
-  on_join:       <Zap size={13} color="#e4dcd1" strokeWidth={1.5} />,
-  manual:        <Play size={13} color="#e4dcd1" strokeWidth={1.5} />,
-  tag_added:     <Users size={13} color="#e4dcd1" strokeWidth={1.5} />,
-  payment_failed:<Clock size={13} color="#e4dcd1" strokeWidth={1.5} />,
+  on_join:       <Zap size={13} color="var(--accent)" strokeWidth={1.5} />,
+  manual:        <Play size={13} color="var(--accent)" strokeWidth={1.5} />,
+  tag_added:     <Users size={13} color="var(--accent)" strokeWidth={1.5} />,
+  payment_failed:<Clock size={13} color="var(--accent)" strokeWidth={1.5} />,
 };
 
 // New workflow modal
@@ -113,10 +113,10 @@ function NewWorkflowModal({ onClose, onCreate }: {
       onClick={onClose}
     >
       <div
-        style={{ background: "#2a2a2a", borderRadius: "12px", padding: "28px", maxWidth: "460px", width: "100%", margin: "0 20px" }}
+        style={{ background: "var(--surface)", borderRadius: "12px", padding: "28px", maxWidth: "460px", width: "100%", margin: "0 20px" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "#e4dcd1" }}>
+        <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "var(--accent)" }}>
           New Workflow
         </p>
         <h2 className="font-playfair italic font-normal text-white" style={{ fontSize: "22px", marginTop: "6px" }}>
@@ -125,7 +125,7 @@ function NewWorkflowModal({ onClose, onCreate }: {
 
         <div style={{ marginTop: "20px", display: "flex", flexDirection: "column", gap: "14px" }}>
           <div>
-            <label className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.08em", color: "#706b6b", display: "block", marginBottom: "6px" }}>
+            <label className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.08em", color: "var(--text-muted)", display: "block", marginBottom: "6px" }}>
               Workflow Name
             </label>
             <input
@@ -135,14 +135,14 @@ function NewWorkflowModal({ onClose, onCreate }: {
               placeholder="e.g. Onboarding, Win-back..."
               autoFocus
               className="font-montserrat font-normal"
-              style={{ width: "100%", height: "44px", background: "#333333", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "8px", padding: "0 14px", color: "#ffffff", fontSize: "14px", outline: "none", caretColor: "#e4dcd1" }}
-              onFocus={(e) => (e.target.style.borderColor = "#e4dcd1")}
+              style={{ width: "100%", height: "44px", background: "var(--surface-2)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "8px", padding: "0 14px", color: "var(--text)", fontSize: "14px", outline: "none", caretColor: "var(--accent)" }}
+              onFocus={(e) => (e.target.style.borderColor = "var(--accent)")}
               onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.08)")}
             />
           </div>
 
           <div>
-            <label className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.08em", color: "#706b6b", display: "block", marginBottom: "6px" }}>
+            <label className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.08em", color: "var(--text-muted)", display: "block", marginBottom: "6px" }}>
               Description
             </label>
             <textarea
@@ -151,22 +151,22 @@ function NewWorkflowModal({ onClose, onCreate }: {
               placeholder="What does this workflow do?"
               rows={2}
               className="font-montserrat font-normal"
-              style={{ width: "100%", background: "#333333", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "8px", padding: "10px 14px", color: "#ffffff", fontSize: "14px", outline: "none", resize: "none", caretColor: "#e4dcd1" }}
-              onFocus={(e) => (e.target.style.borderColor = "#e4dcd1")}
+              style={{ width: "100%", background: "var(--surface-2)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "8px", padding: "10px 14px", color: "var(--text)", fontSize: "14px", outline: "none", resize: "none", caretColor: "var(--accent)" }}
+              onFocus={(e) => (e.target.style.borderColor = "var(--accent)")}
               onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.08)")}
             />
           </div>
 
           <div>
-            <label className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.08em", color: "#706b6b", display: "block", marginBottom: "6px" }}>
+            <label className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.08em", color: "var(--text-muted)", display: "block", marginBottom: "6px" }}>
               Trigger
             </label>
             <select
               value={trigger}
               onChange={(e) => setTrigger(e.target.value as Trigger)}
               className="font-montserrat font-normal"
-              style={{ width: "100%", height: "44px", background: "#333333", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "8px", padding: "0 14px", color: "#ffffff", fontSize: "13px", outline: "none", appearance: "none", cursor: "pointer" }}
-              onFocus={(e) => (e.target.style.borderColor = "#e4dcd1")}
+              style={{ width: "100%", height: "44px", background: "var(--surface-2)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "8px", padding: "0 14px", color: "var(--text)", fontSize: "13px", outline: "none", appearance: "none", cursor: "pointer" }}
+              onFocus={(e) => (e.target.style.borderColor = "var(--accent)")}
               onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.08)")}
             >
               {TRIGGER_OPTIONS.map((opt) => (
@@ -180,7 +180,7 @@ function NewWorkflowModal({ onClose, onCreate }: {
           <button
             onClick={onClose}
             className="font-montserrat font-semibold"
-            style={{ flex: 1, height: "44px", borderRadius: "8px", background: "transparent", border: "1px solid rgba(228,220,209,0.2)", color: "#706b6b", fontSize: "13px", cursor: "pointer" }}
+            style={{ flex: 1, height: "44px", borderRadius: "8px", background: "transparent", border: "1px solid rgba(228,220,209,0.2)", color: "var(--text-muted)", fontSize: "13px", cursor: "pointer" }}
           >
             Cancel
           </button>
@@ -188,13 +188,13 @@ function NewWorkflowModal({ onClose, onCreate }: {
             onClick={handleCreate}
             disabled={!name.trim()}
             className="font-montserrat font-semibold"
-            style={{ flex: 2, height: "44px", borderRadius: "8px", background: name.trim() ? "#e4dcd1" : "#333333", border: "none", color: name.trim() ? "#222222" : "#706b6b", fontSize: "13px", cursor: name.trim() ? "pointer" : "default", transition: "background 0.15s" }}
+            style={{ flex: 2, height: "44px", borderRadius: "8px", background: name.trim() ? "var(--accent)" : "var(--surface-2)", border: "none", color: name.trim() ? "var(--bg)" : "var(--text-muted)", fontSize: "13px", cursor: name.trim() ? "pointer" : "default", transition: "background 0.15s" }}
           >
             Create Workflow
           </button>
         </div>
       </div>
-      <style>{`input::placeholder, textarea::placeholder { color: #706b6b; } select option { background: #333333; }`}</style>
+      <style>{`input::placeholder, textarea::placeholder { color: var(--text-muted); } select option { background: var(--surface-2); }`}</style>
     </div>
   );
 }
@@ -207,20 +207,20 @@ function DeleteModal({ name, onConfirm, onCancel }: { name: string; onConfirm: (
       onClick={onCancel}
     >
       <div
-        style={{ background: "#2a2a2a", borderRadius: "12px", padding: "28px", maxWidth: "400px", width: "100%", margin: "0 20px" }}
+        style={{ background: "var(--surface)", borderRadius: "12px", padding: "28px", maxWidth: "400px", width: "100%", margin: "0 20px" }}
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="font-playfair italic font-normal text-white" style={{ fontSize: "20px" }}>
           Delete &ldquo;{name}&rdquo;?
         </h2>
-        <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "#c8c3bc", lineHeight: 1.6, marginTop: "10px" }}>
+        <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "var(--text-muted)", lineHeight: 1.6, marginTop: "10px" }}>
           This will permanently delete the workflow and all its steps. Creators already enrolled will not receive further messages.
         </p>
         <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
-          <button onClick={onCancel} className="font-montserrat font-semibold" style={{ flex: 1, height: "40px", borderRadius: "8px", background: "transparent", border: "1px solid rgba(255,255,255,0.15)", color: "#706b6b", fontSize: "13px", cursor: "pointer" }}>
+          <button onClick={onCancel} className="font-montserrat font-semibold" style={{ flex: 1, height: "40px", borderRadius: "8px", background: "transparent", border: "1px solid rgba(255,255,255,0.15)", color: "var(--text-muted)", fontSize: "13px", cursor: "pointer" }}>
             Cancel
           </button>
-          <button onClick={onConfirm} className="font-montserrat font-semibold" style={{ flex: 1, height: "40px", borderRadius: "8px", background: "#C0392B", border: "none", color: "#ffffff", fontSize: "13px", cursor: "pointer" }}>
+          <button onClick={onConfirm} className="font-montserrat font-semibold" style={{ flex: 1, height: "40px", borderRadius: "8px", background: "#C0392B", border: "none", color: "var(--text)", fontSize: "13px", cursor: "pointer" }}>
             Delete
           </button>
         </div>
@@ -259,20 +259,20 @@ export default function WorkflowsPage() {
         style={{ padding: "32px 32px 24px", display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}
       >
         <div>
-          <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "#706b6b" }}>
+          <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "var(--text-muted)" }}>
             Workflows
           </p>
           <h1 className="font-playfair italic font-normal text-white" style={{ fontSize: "32px", marginTop: "4px" }}>
             Message Workflows
           </h1>
-          <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "#706b6b", marginTop: "6px" }}>
+          <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "6px" }}>
             Automated message sequences triggered by creator actions or time.
           </p>
         </div>
         <button
           onClick={() => setShowNew(true)}
           className="font-montserrat font-semibold"
-          style={{ display: "flex", alignItems: "center", gap: "6px", height: "44px", padding: "0 20px", background: "#e4dcd1", borderRadius: "8px", border: "none", color: "#222222", fontSize: "13px", cursor: "pointer", flexShrink: 0 }}
+          style={{ display: "flex", alignItems: "center", gap: "6px", height: "44px", padding: "0 20px", background: "var(--accent)", borderRadius: "8px", border: "none", color: "var(--bg)", fontSize: "13px", cursor: "pointer", flexShrink: 0 }}
         >
           <Plus size={15} strokeWidth={2} />
           New Workflow
@@ -285,7 +285,7 @@ export default function WorkflowsPage() {
           <div
             key={wf.slug}
             style={{
-              background: "#2a2a2a",
+              background: "var(--surface)",
               borderRadius: "12px",
               padding: "20px 24px",
               border: "1px solid rgba(255,255,255,0.06)",
@@ -300,7 +300,7 @@ export default function WorkflowsPage() {
                 width: "10px",
                 height: "10px",
                 borderRadius: "50%",
-                background: wf.status === "active" ? "#27AE60" : "#4a4a4a",
+                background: wf.status === "active" ? "#27AE60" : "var(--text-muted)",
                 flexShrink: 0,
               }}
             />
@@ -308,7 +308,7 @@ export default function WorkflowsPage() {
             {/* Main info */}
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-                <p className="font-montserrat font-semibold" style={{ fontSize: "15px", color: "#ffffff" }}>
+                <p className="font-montserrat font-semibold" style={{ fontSize: "15px", color: "var(--text)" }}>
                   {wf.name}
                 </p>
                 <span
@@ -316,8 +316,8 @@ export default function WorkflowsPage() {
                   style={{
                     fontSize: "9px",
                     letterSpacing: "0.08em",
-                    background: wf.status === "active" ? "rgba(39,174,96,0.15)" : "#333333",
-                    color: wf.status === "active" ? "#27AE60" : "#706b6b",
+                    background: wf.status === "active" ? "rgba(39,174,96,0.15)" : "var(--surface-2)",
+                    color: wf.status === "active" ? "#27AE60" : "var(--text-muted)",
                     padding: "3px 8px",
                     borderRadius: "20px",
                   }}
@@ -325,7 +325,7 @@ export default function WorkflowsPage() {
                   {wf.status === "active" ? "Active" : "Paused"}
                 </span>
               </div>
-              <p className="font-montserrat font-normal" style={{ fontSize: "12px", color: "#706b6b", marginTop: "3px" }}>
+              <p className="font-montserrat font-normal" style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "3px" }}>
                 {wf.description}
               </p>
 
@@ -333,31 +333,31 @@ export default function WorkflowsPage() {
               <div style={{ display: "flex", alignItems: "center", gap: "16px", marginTop: "10px", flexWrap: "wrap" }}>
                 {/* Trigger */}
                 <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                  <div style={{ width: "22px", height: "22px", borderRadius: "6px", background: "#333333", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div style={{ width: "22px", height: "22px", borderRadius: "6px", background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     {TRIGGER_ICONS[wf.trigger]}
                   </div>
-                  <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#706b6b" }}>
+                  <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "var(--text-muted)" }}>
                     {wf.triggerLabel}
                   </span>
                 </div>
-                <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#4a4a4a" }}>·</span>
-                <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#706b6b" }}>
+                <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "var(--text-muted)" }}>·</span>
+                <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "var(--text-muted)" }}>
                   {wf.stepCount} step{wf.stepCount !== 1 ? "s" : ""}
                 </span>
-                <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#4a4a4a" }}>·</span>
-                <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#706b6b" }}>
+                <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "var(--text-muted)" }}>·</span>
+                <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "var(--text-muted)" }}>
                   {wf.enrolledCount.toLocaleString()} enrolled
                 </span>
                 {wf.completedCount > 0 && (
                   <>
-                    <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#4a4a4a" }}>·</span>
-                    <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#706b6b" }}>
+                    <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "var(--text-muted)" }}>·</span>
+                    <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "var(--text-muted)" }}>
                       {wf.completedCount.toLocaleString()} completed
                     </span>
                   </>
                 )}
-                <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#4a4a4a" }}>·</span>
-                <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#4a4a4a" }}>
+                <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "var(--text-muted)" }}>·</span>
+                <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "var(--text-muted)" }}>
                   Last edited {wf.lastEdited}
                 </span>
               </div>
@@ -373,7 +373,7 @@ export default function WorkflowsPage() {
                   width: "36px",
                   height: "36px",
                   borderRadius: "8px",
-                  background: "#333333",
+                  background: "var(--surface-2)",
                   border: "none",
                   cursor: "pointer",
                   display: "flex",
@@ -382,7 +382,7 @@ export default function WorkflowsPage() {
                 }}
               >
                 {wf.status === "active"
-                  ? <Pause size={15} color="#706b6b" strokeWidth={1.5} />
+                  ? <Pause size={15} color="var(--text-muted)" strokeWidth={1.5} />
                   : <Play size={15} color="#27AE60" strokeWidth={1.5} />
                 }
               </button>
@@ -394,7 +394,7 @@ export default function WorkflowsPage() {
                   width: "36px",
                   height: "36px",
                   borderRadius: "8px",
-                  background: "#333333",
+                  background: "var(--surface-2)",
                   border: "none",
                   cursor: "pointer",
                   display: "flex",
@@ -404,7 +404,7 @@ export default function WorkflowsPage() {
                 }}
                 title="Edit workflow"
               >
-                <Pencil size={15} color="#e4dcd1" strokeWidth={1.5} />
+                <Pencil size={15} color="var(--accent)" strokeWidth={1.5} />
               </Link>
 
               {/* Delete */}
@@ -415,7 +415,7 @@ export default function WorkflowsPage() {
                   width: "36px",
                   height: "36px",
                   borderRadius: "8px",
-                  background: "#333333",
+                  background: "var(--surface-2)",
                   border: "none",
                   cursor: "pointer",
                   display: "flex",
@@ -423,7 +423,7 @@ export default function WorkflowsPage() {
                   justifyContent: "center",
                 }}
               >
-                <Trash2 size={15} color="#706b6b" strokeWidth={1.5} />
+                <Trash2 size={15} color="var(--text-muted)" strokeWidth={1.5} />
               </button>
             </div>
           </div>
@@ -432,7 +432,7 @@ export default function WorkflowsPage() {
         {workflows.length === 0 && (
           <div
             style={{
-              background: "#2a2a2a",
+              background: "var(--surface)",
               borderRadius: "12px",
               padding: "60px 24px",
               display: "flex",
@@ -441,17 +441,17 @@ export default function WorkflowsPage() {
               border: "1px dashed rgba(255,255,255,0.1)",
             }}
           >
-            <Zap size={32} color="#4a4a4a" strokeWidth={1} />
+            <Zap size={32} color="var(--text-muted)" strokeWidth={1} />
             <p className="font-playfair italic font-normal text-white" style={{ fontSize: "18px", marginTop: "16px" }}>
               No workflows yet
             </p>
-            <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "#706b6b", marginTop: "6px" }}>
+            <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "6px" }}>
               Create your first workflow to automate creator messaging.
             </p>
             <button
               onClick={() => setShowNew(true)}
               className="font-montserrat font-semibold"
-              style={{ marginTop: "20px", height: "44px", padding: "0 20px", background: "#e4dcd1", borderRadius: "8px", border: "none", color: "#222222", fontSize: "13px", cursor: "pointer" }}
+              style={{ marginTop: "20px", height: "44px", padding: "0 20px", background: "var(--accent)", borderRadius: "8px", border: "none", color: "var(--bg)", fontSize: "13px", cursor: "pointer" }}
             >
               + New Workflow
             </button>

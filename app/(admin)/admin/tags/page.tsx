@@ -7,18 +7,18 @@ import Link from "next/link";
 // TODO Phase 3: Replace with DB query — tags with creator count
 const TAGS = [
   { name: "Boots May 2026", slug: "boots-may-2026", colour: "#9b7e56", count: 47 },
-  { name: "PERL",           slug: "perl",           colour: "#e4dcd1", count: 89 },
+  { name: "PERL",           slug: "perl",           colour: "var(--accent)", count: 89 },
   { name: "Nature Spell",   slug: "nature-spell",   colour: "#4a5e4a", count: 23 },
   { name: "Kaleidos",       slug: "kaleidos",       colour: "#3d3550", count: 34 },
-  { name: "VitD",           slug: "vitd",           colour: "#706b6b", count: 156 },
+  { name: "VitD",           slug: "vitd",           colour: "var(--text-muted)", count: 156 },
   { name: "Boots Apr 2026", slug: "boots-apr-2026", colour: "#8b6f5e", count: 41 },
 ];
 
-const COLOUR_SWATCHES = ["#e4dcd1", "#9b7e56", "#706b6b", "#4a5e4a", "#3d3550", "#8b6f5e"];
+const COLOUR_SWATCHES = ["var(--accent)", "#9b7e56", "var(--text-muted)", "#4a5e4a", "#3d3550", "#8b6f5e"];
 
 function CreateTagModal({ onClose }: { onClose: () => void }) {
   const [tagName, setTagName]       = useState("");
-  const [selectedColour, setColour] = useState("#e4dcd1");
+  const [selectedColour, setColour] = useState("var(--accent)");
 
   return (
     <div
@@ -35,7 +35,7 @@ function CreateTagModal({ onClose }: { onClose: () => void }) {
     >
       <div
         style={{
-          background: "#2a2a2a",
+          background: "var(--surface)",
           borderRadius: "12px",
           padding: "24px",
           width: "400px",
@@ -45,12 +45,12 @@ function CreateTagModal({ onClose }: { onClose: () => void }) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <p
             className="font-montserrat font-bold uppercase"
-            style={{ fontSize: "10px", letterSpacing: "0.12em", color: "#e4dcd1" }}
+            style={{ fontSize: "10px", letterSpacing: "0.12em", color: "var(--accent)" }}
           >
             Create New Tag
           </p>
           <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px" }}>
-            <X size={16} color="#706b6b" strokeWidth={1.5} />
+            <X size={16} color="var(--text-muted)" strokeWidth={1.5} />
           </button>
         </div>
 
@@ -64,24 +64,24 @@ function CreateTagModal({ onClose }: { onClose: () => void }) {
           style={{
             width: "100%",
             height: "44px",
-            background: "#333333",
+            background: "var(--surface-2)",
             border: "1px solid rgba(255,255,255,0.08)",
             borderRadius: "8px",
             padding: "0 14px",
-            color: "#ffffff",
+            color: "var(--text)",
             fontSize: "13px",
             outline: "none",
             marginTop: "12px",
             boxSizing: "border-box",
           }}
-          onFocus={(e) => (e.target.style.borderColor = "#e4dcd1")}
+          onFocus={(e) => (e.target.style.borderColor = "var(--accent)")}
           onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.08)")}
         />
 
         {/* Colour */}
         <p
           className="font-montserrat font-bold uppercase"
-          style={{ fontSize: "10px", letterSpacing: "0.10em", color: "#706b6b", marginTop: "16px" }}
+          style={{ fontSize: "10px", letterSpacing: "0.10em", color: "var(--text-muted)", marginTop: "16px" }}
         >
           Tag Colour
         </p>
@@ -97,7 +97,7 @@ function CreateTagModal({ onClose }: { onClose: () => void }) {
                 background: colour,
                 border: "none",
                 cursor: "pointer",
-                outline: selectedColour === colour ? "2px solid #ffffff" : "2px solid transparent",
+                outline: selectedColour === colour ? "2px solid var(--text)" : "2px solid transparent",
                 outlineOffset: "2px",
               }}
             />
@@ -111,8 +111,8 @@ function CreateTagModal({ onClose }: { onClose: () => void }) {
           style={{
             width: "100%",
             height: "44px",
-            background: "#e4dcd1",
-            color: "#222222",
+            background: "var(--accent)",
+            color: "var(--bg)",
             fontSize: "13px",
             border: "none",
             borderRadius: "8px",
@@ -128,14 +128,14 @@ function CreateTagModal({ onClose }: { onClose: () => void }) {
           <button
             onClick={onClose}
             className="font-montserrat font-normal"
-            style={{ fontSize: "12px", color: "#706b6b", background: "none", border: "none", cursor: "pointer" }}
+            style={{ fontSize: "12px", color: "var(--text-muted)", background: "none", border: "none", cursor: "pointer" }}
           >
             Cancel
           </button>
         </div>
       </div>
 
-      <style>{`input::placeholder { color: #706b6b; }`}</style>
+      <style>{`input::placeholder { color: var(--text-muted); }`}</style>
     </div>
   );
 }
@@ -157,7 +157,7 @@ export default function TagsPage() {
         <div>
           <p
             className="font-montserrat font-bold uppercase"
-            style={{ fontSize: "10px", letterSpacing: "0.12em", color: "#706b6b" }}
+            style={{ fontSize: "10px", letterSpacing: "0.12em", color: "var(--text-muted)" }}
           >
             Tags
           </p>
@@ -172,8 +172,8 @@ export default function TagsPage() {
           onClick={() => setShowModal(true)}
           className="font-montserrat font-semibold"
           style={{
-            background: "#e4dcd1",
-            color: "#222222",
+            background: "var(--accent)",
+            color: "var(--bg)",
             fontSize: "12px",
             padding: "0 16px",
             height: "44px",
@@ -199,7 +199,7 @@ export default function TagsPage() {
           <div
             key={tag.name}
             style={{
-              background: "#2a2a2a",
+              background: "var(--surface)",
               borderRadius: "12px",
               padding: "20px",
               border: "1px solid rgba(255,255,255,0.06)",
@@ -208,22 +208,22 @@ export default function TagsPage() {
             {/* Top row */}
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: tag.colour, flexShrink: 0 }} />
-              <p className="font-montserrat font-semibold" style={{ fontSize: "14px", color: "#ffffff", flex: 1 }}>
+              <p className="font-montserrat font-semibold" style={{ fontSize: "14px", color: "var(--text)", flex: 1 }}>
                 {tag.name}
               </p>
               <button style={{ background: "none", border: "none", cursor: "pointer", padding: "2px" }}>
-                <Pencil size={16} color="#706b6b" strokeWidth={1.5} />
+                <Pencil size={16} color="var(--text-muted)" strokeWidth={1.5} />
               </button>
             </div>
 
             {/* Creator count */}
             <p
               className="font-montserrat font-bold uppercase"
-              style={{ fontSize: "9px", letterSpacing: "0.10em", color: "#706b6b", marginTop: "12px" }}
+              style={{ fontSize: "9px", letterSpacing: "0.10em", color: "var(--text-muted)", marginTop: "12px" }}
             >
               Creators
             </p>
-            <p className="font-montserrat font-semibold" style={{ fontSize: "20px", color: "#ffffff" }}>
+            <p className="font-montserrat font-semibold" style={{ fontSize: "20px", color: "var(--text)" }}>
               {tag.count}
             </p>
 
@@ -231,7 +231,7 @@ export default function TagsPage() {
             <Link
               href={`/admin/tags/${tag.slug}`}
               className="font-montserrat font-semibold"
-              style={{ fontSize: "11px", color: "#e4dcd1", textDecoration: "none", display: "inline-block", marginTop: "8px" }}
+              style={{ fontSize: "11px", color: "var(--accent)", textDecoration: "none", display: "inline-block", marginTop: "8px" }}
             >
               View creators →
             </Link>

@@ -45,11 +45,11 @@ const CATEGORY_OPTIONS = [
 ];
 
 const TYPE_PILL: Record<string, { bg: string; text: string; border?: string; label: string }> = {
-  blog_post:       { bg: "#8b6f5e", text: "#e4dcd1", label: "BLOG" },
-  workbook:        { bg: "#4a5e4a", text: "#e4dcd1", label: "WORKBOOK" },
-  video:           { bg: "#3d3550", text: "#e4dcd1", label: "VIDEO" },
-  course:          { bg: "#222222", text: "#e4dcd1", border: "1px solid rgba(228,220,209,0.2)", label: "COURSE" },
-  industry_update: { bg: "#706b6b", text: "#e4dcd1", label: "INDUSTRY UPDATE" },
+  blog_post:       { bg: "#8b6f5e", text: "var(--accent)", label: "BLOG" },
+  workbook:        { bg: "#4a5e4a", text: "var(--accent)", label: "WORKBOOK" },
+  video:           { bg: "#3d3550", text: "var(--accent)", label: "VIDEO" },
+  course:          { bg: "var(--bg)", text: "var(--accent)", border: "1px solid rgba(228,220,209,0.2)", label: "COURSE" },
+  industry_update: { bg: "var(--text-muted)", text: "var(--accent)", label: "INDUSTRY UPDATE" },
 };
 
 const EMPTY_FORM = {
@@ -72,7 +72,7 @@ const EMPTY_FORM = {
 function StatusPill({ status }: { status: string }) {
   if (status === "published") {
     return (
-      <span className="font-montserrat font-semibold uppercase" style={{ fontSize: "9px", letterSpacing: "0.10em", background: "#e4dcd1", color: "#222222", padding: "3px 8px", borderRadius: "20px" }}>
+      <span className="font-montserrat font-semibold uppercase" style={{ fontSize: "9px", letterSpacing: "0.10em", background: "var(--accent)", color: "var(--bg)", padding: "3px 8px", borderRadius: "20px" }}>
         Live
       </span>
     );
@@ -85,7 +85,7 @@ function StatusPill({ status }: { status: string }) {
     );
   }
   return (
-    <span className="font-montserrat font-semibold uppercase" style={{ fontSize: "9px", letterSpacing: "0.10em", border: "1px solid rgba(255,255,255,0.15)", color: "#706b6b", padding: "3px 8px", borderRadius: "20px" }}>
+    <span className="font-montserrat font-semibold uppercase" style={{ fontSize: "9px", letterSpacing: "0.10em", border: "1px solid rgba(255,255,255,0.15)", color: "var(--text-muted)", padding: "3px 8px", borderRadius: "20px" }}>
       Draft
     </span>
   );
@@ -219,7 +219,7 @@ export default function ContentPage() {
       {/* Header */}
       <div className="flex items-end justify-between mb-6">
         <div>
-          <p className="font-montserrat font-bold uppercase text-[#e4dcd1]" style={{ fontSize: "10px", letterSpacing: "0.12em" }}>
+          <p className="font-montserrat font-bold uppercase text-[var(--accent)]" style={{ fontSize: "10px", letterSpacing: "0.12em" }}>
             Learning Lounge
           </p>
           <h1 className="font-playfair italic font-normal text-white" style={{ fontSize: "32px", marginTop: "4px" }}>
@@ -228,7 +228,7 @@ export default function ContentPage() {
         </div>
         <button
           onClick={openNew}
-          className="flex items-center gap-2 font-montserrat font-semibold uppercase text-[#222222] bg-[#e4dcd1] hover:bg-white transition-colors rounded"
+          className="flex items-center gap-2 font-montserrat font-semibold uppercase text-[var(--bg)] bg-[var(--accent)] hover:bg-white transition-colors rounded"
           style={{ fontSize: "11px", letterSpacing: "0.10em", padding: "10px 16px" }}
         >
           <Plus size={14} />
@@ -277,10 +277,10 @@ export default function ContentPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/8" style={{ background: "rgba(255,255,255,0.04)" }}>
-                <th className="text-left font-montserrat font-bold uppercase text-[#706b6b] px-4 py-3" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Title</th>
-                <th className="text-left font-montserrat font-bold uppercase text-[#706b6b] px-4 py-3" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Type</th>
-                <th className="text-left font-montserrat font-bold uppercase text-[#706b6b] px-4 py-3" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Status</th>
-                <th className="text-left font-montserrat font-bold uppercase text-[#706b6b] px-4 py-3" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Published</th>
+                <th className="text-left font-montserrat font-bold uppercase text-[var(--text-muted)] px-4 py-3" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Title</th>
+                <th className="text-left font-montserrat font-bold uppercase text-[var(--text-muted)] px-4 py-3" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Type</th>
+                <th className="text-left font-montserrat font-bold uppercase text-[var(--text-muted)] px-4 py-3" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Status</th>
+                <th className="text-left font-montserrat font-bold uppercase text-[var(--text-muted)] px-4 py-3" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Published</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -351,7 +351,7 @@ export default function ContentPage() {
         >
           <div
             className="relative w-full max-w-2xl rounded-lg"
-            style={{ background: "#2a2a2a", border: "1px solid rgba(255,255,255,0.10)", margin: "0 16px" }}
+            style={{ background: "var(--surface)", border: "1px solid rgba(255,255,255,0.10)", margin: "0 16px" }}
           >
             {/* Modal header */}
             <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
@@ -366,7 +366,7 @@ export default function ContentPage() {
             <div className="px-6 py-5 space-y-5">
               {/* Title */}
               <div>
-                <label className="block font-montserrat font-bold uppercase text-[#706b6b] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Title *</label>
+                <label className="block font-montserrat font-bold uppercase text-[var(--text-muted)] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Title *</label>
                 <input
                   value={form.title}
                   onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
@@ -377,7 +377,7 @@ export default function ContentPage() {
 
               {/* Content Type */}
               <div>
-                <label className="block font-montserrat font-bold uppercase text-[#706b6b] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Content Type</label>
+                <label className="block font-montserrat font-bold uppercase text-[var(--text-muted)] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Content Type</label>
                 <select
                   value={form.contentType}
                   onChange={(e) => setForm((f) => ({ ...f, contentType: e.target.value }))}
@@ -389,7 +389,7 @@ export default function ContentPage() {
 
               {/* Categories */}
               <div>
-                <label className="block font-montserrat font-bold uppercase text-[#706b6b] mb-2" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Categories</label>
+                <label className="block font-montserrat font-bold uppercase text-[var(--text-muted)] mb-2" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Categories</label>
                 <div className="flex flex-wrap gap-2">
                   {CATEGORY_OPTIONS.map((cat) => (
                     <button
@@ -398,7 +398,7 @@ export default function ContentPage() {
                       onClick={() => toggleCategory(cat.value)}
                       className={`font-montserrat font-semibold uppercase transition-colors rounded-full px-3 py-1 ${
                         form.categories.includes(cat.value)
-                          ? "bg-[#e4dcd1] text-[#222222]"
+                          ? "bg-[var(--accent)] text-[var(--bg)]"
                           : "border border-white/15 text-white/50 hover:border-white/30 hover:text-white/70"
                       }`}
                       style={{ fontSize: "9px", letterSpacing: "0.08em" }}
@@ -412,7 +412,7 @@ export default function ContentPage() {
               {/* Thumbnail + Banner uploads */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-montserrat font-bold uppercase text-[#706b6b] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Thumbnail</label>
+                  <label className="block font-montserrat font-bold uppercase text-[var(--text-muted)] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Thumbnail</label>
                   <input ref={thumbnailRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && uploadFile(e.target.files[0], "thumbnailUrl")} />
                   {form.thumbnailUrl ? (
                     <div className="relative w-full h-20 rounded overflow-hidden group" style={{ border: "1px solid rgba(255,255,255,0.10)" }}>
@@ -439,7 +439,7 @@ export default function ContentPage() {
                   )}
                 </div>
                 <div>
-                  <label className="block font-montserrat font-bold uppercase text-[#706b6b] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Banner Image</label>
+                  <label className="block font-montserrat font-bold uppercase text-[var(--text-muted)] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Banner Image</label>
                   <input ref={bannerRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && uploadFile(e.target.files[0], "bannerImageUrl")} />
                   {form.bannerImageUrl ? (
                     <div className="relative w-full h-20 rounded overflow-hidden group" style={{ border: "1px solid rgba(255,255,255,0.10)" }}>
@@ -471,7 +471,7 @@ export default function ContentPage() {
               {form.contentType === "workbook" && (
                 <>
                   <div>
-                    <label className="block font-montserrat font-bold uppercase text-[#706b6b] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>PDF File</label>
+                    <label className="block font-montserrat font-bold uppercase text-[var(--text-muted)] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>PDF File</label>
                     <input ref={pdfRef} type="file" accept=".pdf" className="hidden" onChange={(e) => e.target.files?.[0] && uploadFile(e.target.files[0], "pdfUrl")} />
                     {form.pdfUrl ? (
                       <div className="flex items-center gap-3 p-3 rounded" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)" }}>
@@ -494,14 +494,14 @@ export default function ContentPage() {
                     )}
                   </div>
                   <div>
-                    <label className="block font-montserrat font-bold uppercase text-[#706b6b] mb-1.5" style={{ fontSize: "10px", letterSpacing: "0.10em" }}>Editable Template Link</label>
+                    <label className="block font-montserrat font-bold uppercase text-[var(--text-muted)] mb-1.5" style={{ fontSize: "10px", letterSpacing: "0.10em" }}>Editable Template Link</label>
                     <input
                       value={form.editableTemplateUrl}
                       onChange={(e) => setForm((f) => ({ ...f, editableTemplateUrl: e.target.value }))}
                       placeholder="Paste Canva or Google Docs link"
                       className="w-full bg-white/5 border border-white/10 rounded px-3 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:border-white/30"
                     />
-                    <p className="font-montserrat mt-1.5" style={{ fontSize: "10px", color: "#706b6b" }}>
+                    <p className="font-montserrat mt-1.5" style={{ fontSize: "10px", color: "var(--text-muted)" }}>
                       Canva: canva.com/design/... · Google: docs.google.com or sheets.google.com
                     </p>
                   </div>
@@ -512,7 +512,7 @@ export default function ContentPage() {
               {form.contentType === "video" && (
                 <>
                   <div>
-                    <label className="block font-montserrat font-bold uppercase text-[#706b6b] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Video URL</label>
+                    <label className="block font-montserrat font-bold uppercase text-[var(--text-muted)] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Video URL</label>
                     <input
                       value={form.videoEmbedUrl}
                       onChange={(e) => setForm((f) => ({ ...f, videoEmbedUrl: e.target.value }))}
@@ -535,7 +535,7 @@ export default function ContentPage() {
                     )}
                   </div>
                   <div>
-                    <label className="block font-montserrat font-bold uppercase text-[#706b6b] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Transcript / Notes (optional)</label>
+                    <label className="block font-montserrat font-bold uppercase text-[var(--text-muted)] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Transcript / Notes (optional)</label>
                     <textarea
                       value={form.videoTranscript}
                       onChange={(e) => setForm((f) => ({ ...f, videoTranscript: e.target.value }))}
@@ -550,7 +550,7 @@ export default function ContentPage() {
               {/* Body — RichTextEditor for ALL content types */}
               {bodyConfig[form.contentType] && (
                 <div>
-                  <label className="block font-montserrat font-bold uppercase text-[#706b6b] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>
+                  <label className="block font-montserrat font-bold uppercase text-[var(--text-muted)] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>
                     {bodyConfig[form.contentType].label}
                   </label>
                   <RichTextEditor
@@ -564,7 +564,7 @@ export default function ContentPage() {
               {/* Status + Sort */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-montserrat font-bold uppercase text-[#706b6b] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Status</label>
+                  <label className="block font-montserrat font-bold uppercase text-[var(--text-muted)] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Status</label>
                   <select
                     value={form.status}
                     onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
@@ -576,7 +576,7 @@ export default function ContentPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block font-montserrat font-bold uppercase text-[#706b6b] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Sort Order</label>
+                  <label className="block font-montserrat font-bold uppercase text-[var(--text-muted)] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Sort Order</label>
                   <input
                     type="number"
                     value={form.sortOrder}
@@ -589,7 +589,7 @@ export default function ContentPage() {
 
               {form.status === "scheduled" && (
                 <div>
-                  <label className="block font-montserrat font-bold uppercase text-[#706b6b] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Scheduled Date & Time</label>
+                  <label className="block font-montserrat font-bold uppercase text-[var(--text-muted)] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Scheduled Date & Time</label>
                   <input
                     type="datetime-local"
                     value={form.scheduledAt}
@@ -612,7 +612,7 @@ export default function ContentPage() {
               <button
                 onClick={handleSave}
                 disabled={saving || !form.title.trim()}
-                className="font-montserrat font-semibold uppercase bg-[#e4dcd1] text-[#222222] hover:bg-white disabled:opacity-40 transition-colors rounded"
+                className="font-montserrat font-semibold uppercase bg-[var(--accent)] text-[var(--bg)] hover:bg-white disabled:opacity-40 transition-colors rounded"
                 style={{ fontSize: "11px", letterSpacing: "0.10em", padding: "10px 20px" }}
               >
                 {saving ? "Saving..." : editingId ? "Save Changes" : "Create"}

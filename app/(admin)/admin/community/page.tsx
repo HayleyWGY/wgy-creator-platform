@@ -59,8 +59,8 @@ function Avatar({ author }: { author: Author }) {
     )
   }
   return (
-    <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#e4dcd1', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-      <span style={{ fontSize: 11, fontWeight: 700, color: '#222', fontFamily: 'Montserrat, sans-serif' }}>{initials}</span>
+    <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--bg)', fontFamily: 'Montserrat, sans-serif' }}>{initials}</span>
     </div>
   )
 }
@@ -93,7 +93,7 @@ export default function AdminCommunityPage() {
   return (
     <div style={{ padding: '32px', maxWidth: 1100 }}>
       {/* Header */}
-      <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', margin: '0 0 4px' }}>
+      <p style={{ color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', margin: '0 0 4px' }}>
         COMMUNITY
       </p>
       <p style={{ color: 'white', fontFamily: 'Playfair Display, serif', fontStyle: 'italic', fontSize: 32, margin: '0 0 24px' }}>
@@ -101,7 +101,7 @@ export default function AdminCommunityPage() {
       </p>
 
       {/* Chat Rooms */}
-      <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', margin: '0 0 12px' }}>
+      <p style={{ color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', margin: '0 0 12px' }}>
         CHAT ROOMS
       </p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 40 }}>
@@ -111,7 +111,7 @@ export default function AdminCommunityPage() {
           return (
             <div
               key={room.slug}
-              style={{ background: '#2a2a2a', borderRadius: 12, padding: '16px 18px', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer' }}
+              style={{ background: 'var(--surface)', borderRadius: 12, padding: '16px 18px', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer' }}
               onClick={() => router.push(`/admin/community/rooms/${room.slug}`)}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
@@ -119,11 +119,11 @@ export default function AdminCommunityPage() {
                 <span style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 600, fontSize: 14, color: 'white' }}>{room.name}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 11, color: '#706b6b' }}>
+                <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 11, color: 'var(--text-muted)' }}>
                   {liveRoom ? `${liveRoom._count?.messages ?? 0} messages` : loadingRooms ? '…' : '0 messages'}
                 </span>
                 {lastMsg && (
-                  <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 10, color: '#706b6b' }}>
+                  <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 10, color: 'var(--text-muted)' }}>
                     {getAge(lastMsg.createdAt)}
                   </span>
                 )}
@@ -137,14 +137,14 @@ export default function AdminCommunityPage() {
       </div>
 
       {/* Creator Corner Posts */}
-      <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', margin: '0 0 12px' }}>
+      <p style={{ color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', margin: '0 0 12px' }}>
         CREATOR CORNER POSTS
       </p>
-      <div style={{ background: '#2a2a2a', borderRadius: 12, overflow: 'hidden' }}>
+      <div style={{ background: 'var(--surface)', borderRadius: 12, overflow: 'hidden' }}>
         {/* Table header */}
-        <div style={{ background: '#1a1a1a', padding: '12px 20px', display: 'grid', gridTemplateColumns: '180px 1fr 60px 120px 160px', gap: 12, alignItems: 'center' }}>
+        <div style={{ background: 'var(--surface)', padding: '12px 20px', display: 'grid', gridTemplateColumns: '180px 1fr 60px 120px 160px', gap: 12, alignItems: 'center' }}>
           {['CREATOR', 'POST', 'IMG', 'DATE', 'ACTIONS'].map(label => (
-            <span key={label} style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#706b6b' }}>
+            <span key={label} style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)' }}>
               {label}
             </span>
           ))}
@@ -152,13 +152,13 @@ export default function AdminCommunityPage() {
 
         {loadingPosts && (
           <div style={{ padding: '32px', textAlign: 'center' }}>
-            <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 13 }}>Loading...</p>
+            <p style={{ color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontSize: 13 }}>Loading...</p>
           </div>
         )}
 
         {!loadingPosts && posts.length === 0 && (
           <div style={{ padding: '32px', textAlign: 'center' }}>
-            <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 13 }}>No posts yet</p>
+            <p style={{ color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontSize: 13 }}>No posts yet</p>
           </div>
         )}
 
@@ -183,7 +183,7 @@ export default function AdminCommunityPage() {
             </div>
 
             {/* Post body */}
-            <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 12, color: '#c8c3bc', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 12, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {post.body.length > 80 ? post.body.slice(0, 80) + '…' : post.body}
             </span>
 
@@ -192,11 +192,11 @@ export default function AdminCommunityPage() {
               // eslint-disable-next-line @next/next/no-img-element
               <img src={post.imageUrl} alt="" style={{ width: 40, height: 40, borderRadius: 6, objectFit: 'cover', display: 'block' }} />
             ) : (
-              <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 11, color: '#706b6b' }}>—</span>
+              <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 11, color: 'var(--text-muted)' }}>—</span>
             )}
 
             {/* Date */}
-            <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 12, color: '#706b6b' }}>
+            <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 12, color: 'var(--text-muted)' }}>
               {formatDate(post.createdAt)}
             </span>
 
@@ -204,7 +204,7 @@ export default function AdminCommunityPage() {
             <div style={{ display: 'flex', gap: 10 }}>
               <button
                 onClick={() => router.push(`/admin/community/posts/${post.id}`)}
-                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'Montserrat, sans-serif', fontWeight: 600, fontSize: 11, color: '#e4dcd1' }}
+                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'Montserrat, sans-serif', fontWeight: 600, fontSize: 11, color: 'var(--accent)' }}
               >
                 View
               </button>

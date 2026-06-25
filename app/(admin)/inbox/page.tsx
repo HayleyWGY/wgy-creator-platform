@@ -51,10 +51,10 @@ function Avatar({ name, imageUrl, isWgy }: { name: string; imageUrl?: string | n
   return (
     <div style={{
       width: 36, height: 36, borderRadius: '50%',
-      background: isWgy ? '#9b7e56' : '#e4dcd1',
+      background: isWgy ? '#9b7e56' : 'var(--accent)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
     }}>
-      <span style={{ fontSize: 12, fontWeight: 700, color: '#222', fontFamily: 'Montserrat, sans-serif' }}>
+      <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--bg)', fontFamily: 'Montserrat, sans-serif' }}>
         {initials}
       </span>
     </div>
@@ -218,13 +218,13 @@ export default function AdminInboxPage() {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#222222' }}>
+    <div style={{ display: 'flex', height: '100vh', background: 'var(--bg)' }}>
 
       {/* ── Left panel ── */}
       <div style={{ width: 300, borderRight: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
         {/* Header */}
         <div style={{ padding: '20px 16px 12px' }}>
-          <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', margin: '0 0 4px' }}>
+          <p style={{ color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', margin: '0 0 4px' }}>
             INBOX
           </p>
           <p style={{ color: 'white', fontFamily: 'Playfair Display, serif', fontStyle: 'italic', fontSize: 22, margin: 0 }}>
@@ -234,25 +234,25 @@ export default function AdminInboxPage() {
 
         {/* Search */}
         <div style={{ position: 'relative', margin: '0 12px 8px' }}>
-          <Search size={13} color="#706b6b" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+          <Search size={13} color="var(--text-muted)" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
           <input
             type="text"
             placeholder="Search creators..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            style={{ width: '100%', background: '#2a2a2a', border: 'none', borderRadius: 8, padding: '8px 12px 8px 30px', color: 'white', fontSize: 12, fontFamily: 'Montserrat, sans-serif', outline: 'none', boxSizing: 'border-box' }}
+            style={{ width: '100%', background: 'var(--surface)', border: 'none', borderRadius: 8, padding: '8px 12px 8px 30px', color: 'white', fontSize: 12, fontFamily: 'Montserrat, sans-serif', outline: 'none', boxSizing: 'border-box' }}
           />
         </div>
 
         {/* Thread list */}
         <div style={{ flex: 1, overflowY: 'auto' }}>
           {loading && (
-            <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 12, padding: '16px', textAlign: 'center' }}>
+            <p style={{ color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontSize: 12, padding: '16px', textAlign: 'center' }}>
               Loading...
             </p>
           )}
           {!loading && filtered.length === 0 && (
-            <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 12, padding: '16px', textAlign: 'center' }}>
+            <p style={{ color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontSize: 12, padding: '16px', textAlign: 'center' }}>
               No conversations yet
             </p>
           )}
@@ -265,10 +265,10 @@ export default function AdminInboxPage() {
                 onClick={() => loadThread(t)}
                 style={{
                   width: '100%', display: 'flex', gap: 10, padding: '12px 16px', textAlign: 'left',
-                  background: isActive ? '#2a2a2a' : 'transparent',
+                  background: isActive ? 'var(--surface)' : 'transparent',
                   borderBottom: '1px solid rgba(255,255,255,0.04)',
                   border: 'none', cursor: 'pointer',
-                  borderLeft: isActive ? '2px solid #e4dcd1' : '2px solid transparent',
+                  borderLeft: isActive ? '2px solid var(--accent)' : '2px solid transparent',
                   boxSizing: 'border-box',
                 }}
               >
@@ -282,18 +282,18 @@ export default function AdminInboxPage() {
                       {t.creator.firstName} {t.creator.lastName}
                     </p>
                     {last && (
-                      <span style={{ fontSize: 10, color: '#706b6b', fontFamily: 'Montserrat, sans-serif', flexShrink: 0, marginLeft: 4 }}>
+                      <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', flexShrink: 0, marginLeft: 4 }}>
                         {formatTime(last.createdAt)}
                       </span>
                     )}
                   </div>
-                  <p style={{ margin: '2px 0 0', fontSize: 12, color: '#706b6b', fontFamily: 'Montserrat, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {last ? `${last.sender.isAdmin ? 'You' : last.sender.firstName}: ${last.body || '[image]'}` : t.creator.email}
                   </p>
                 </div>
                 {t._count.messages > 0 && (
-                  <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#e4dcd1', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, alignSelf: 'center' }}>
-                    <span style={{ fontSize: 9, fontWeight: 700, color: '#222', fontFamily: 'Montserrat, sans-serif' }}>
+                  <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, alignSelf: 'center' }}>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--bg)', fontFamily: 'Montserrat, sans-serif' }}>
                       {t._count.messages > 9 ? '9+' : t._count.messages}
                     </span>
                   </div>
@@ -308,7 +308,7 @@ export default function AdminInboxPage() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         {!activeThread ? (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 14 }}>
+            <p style={{ color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontSize: 14 }}>
               Select a conversation
             </p>
           </div>
@@ -324,7 +324,7 @@ export default function AdminInboxPage() {
                 <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: 'white', fontFamily: 'Montserrat, sans-serif' }}>
                   {activeThread.creator.firstName} {activeThread.creator.lastName}
                 </p>
-                <p style={{ margin: 0, fontSize: 11, color: '#706b6b', fontFamily: 'Montserrat, sans-serif' }}>
+                <p style={{ margin: 0, fontSize: 11, color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif' }}>
                   {activeThread.creator.email}
                 </p>
               </div>
@@ -334,7 +334,7 @@ export default function AdminInboxPage() {
             <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px 0' }}>
               {messages.length === 0 && (
                 <div style={{ textAlign: 'center', paddingTop: 48 }}>
-                  <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 14 }}>
+                  <p style={{ color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontSize: 14 }}>
                     No messages yet
                   </p>
                 </div>
@@ -342,7 +342,7 @@ export default function AdminInboxPage() {
               {grouped.map(group => (
                 <div key={group.date}>
                   <div style={{ textAlign: 'center', margin: '12px 0 8px' }}>
-                    <span style={{ fontSize: 10, fontFamily: 'Montserrat, sans-serif', fontWeight: 700, color: '#706b6b', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                    <span style={{ fontSize: 10, fontFamily: 'Montserrat, sans-serif', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                       {group.date}
                     </span>
                   </div>
@@ -358,27 +358,27 @@ export default function AdminInboxPage() {
                         )}
                         {isOwn && <Avatar name="WG" isWgy />}
                         <div style={{ maxWidth: '65%' }}>
-                          <p style={{ margin: '0 0 3px', fontSize: 10, fontFamily: 'Montserrat, sans-serif', fontWeight: 700, color: isOwn ? '#9b7e56' : '#706b6b', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: isOwn ? 'right' : 'left' }}>
+                          <p style={{ margin: '0 0 3px', fontSize: 10, fontFamily: 'Montserrat, sans-serif', fontWeight: 700, color: isOwn ? '#9b7e56' : 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: isOwn ? 'right' : 'left' }}>
                             {isOwn ? 'WGY' : msg.sender.firstName}
                           </p>
-                          <div style={{ background: isOwn ? '#e4dcd1' : '#2a2a2a', borderRadius: isOwn ? '16px 16px 4px 16px' : '16px 16px 16px 4px', padding: '10px 14px' }}>
+                          <div style={{ background: isOwn ? 'var(--accent)' : 'var(--surface)', borderRadius: isOwn ? '16px 16px 4px 16px' : '16px 16px 16px 4px', padding: '10px 14px' }}>
                             {msg.imageUrl && (
                               // eslint-disable-next-line @next/next/no-img-element
                               <img src={msg.imageUrl} alt="" style={{ width: '100%', borderRadius: 8, marginBottom: msg.body ? 8 : 0, display: 'block' }} />
                             )}
                             {msg.body && (
-                              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5, fontFamily: 'Montserrat, sans-serif', color: isOwn ? '#222' : '#fff', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5, fontFamily: 'Montserrat, sans-serif', color: isOwn ? 'var(--bg)' : 'var(--text)', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                                 {msg.body}
                               </p>
                             )}
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2, justifyContent: isOwn ? 'flex-end' : 'flex-start' }}>
-                            <span style={{ fontSize: 10, color: '#706b6b', fontFamily: 'Montserrat, sans-serif' }}>
+                            <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif' }}>
                               {formatTime(msg.createdAt)}{isOwn && msg.isRead && ' · Read'}
                             </span>
                             <button
                               onClick={() => deleteMessage(msg.id)}
-                              style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#706b6b', display: 'flex' }}
+                              style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--text-muted)', display: 'flex' }}
                             >
                               <Trash2 size={10} />
                             </button>
@@ -412,9 +412,9 @@ export default function AdminInboxPage() {
                 type="button"
                 onClick={() => fileRef.current?.click()}
                 disabled={uploading}
-                style={{ width: 36, height: 36, borderRadius: '50%', background: '#2a2a2a', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
+                style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--surface)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
               >
-                <ImageIcon size={14} color={uploading ? '#e4dcd1' : '#706b6b'} />
+                <ImageIcon size={14} color={uploading ? 'var(--accent)' : 'var(--text-muted)'} />
               </button>
               <textarea
                 ref={inputRef}
@@ -423,14 +423,14 @@ export default function AdminInboxPage() {
                 onKeyDown={handleKeyDown}
                 placeholder={`Message ${activeThread.creator.firstName}...`}
                 rows={1}
-                style={{ flex: 1, background: '#2a2a2a', border: 'none', borderRadius: 20, padding: '10px 16px', color: 'white', fontSize: 14, resize: 'none', fontFamily: 'Montserrat, sans-serif', outline: 'none', maxHeight: 120, lineHeight: 1.5 }}
+                style={{ flex: 1, background: 'var(--surface)', border: 'none', borderRadius: 20, padding: '10px 16px', color: 'white', fontSize: 14, resize: 'none', fontFamily: 'Montserrat, sans-serif', outline: 'none', maxHeight: 120, lineHeight: 1.5 }}
               />
               <button
                 type="submit"
                 disabled={!input.trim() || sending}
-                style={{ width: 36, height: 36, borderRadius: '50%', background: input.trim() ? '#e4dcd1' : '#2a2a2a', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: input.trim() ? 'pointer' : 'default', flexShrink: 0, transition: 'background 0.15s' }}
+                style={{ width: 36, height: 36, borderRadius: '50%', background: input.trim() ? 'var(--accent)' : 'var(--surface)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: input.trim() ? 'pointer' : 'default', flexShrink: 0, transition: 'background 0.15s' }}
               >
-                <Send size={14} color={input.trim() ? '#222' : '#706b6b'} />
+                <Send size={14} color={input.trim() ? 'var(--bg)' : 'var(--text-muted)'} />
               </button>
             </form>
           </>

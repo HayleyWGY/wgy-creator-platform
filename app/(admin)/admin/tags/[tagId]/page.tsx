@@ -5,10 +5,10 @@ import Link from "next/link";
 // TODO Phase 3: Replace with DB query — fetch tag + creators by tagId
 const TAG_DATA: Record<string, { name: string; colour: string; count: number }> = {
   "boots-may-2026": { name: "Boots May 2026", colour: "#9b7e56", count: 47 },
-  "perl":           { name: "PERL",           colour: "#e4dcd1", count: 89 },
+  "perl":           { name: "PERL",           colour: "var(--accent)", count: 89 },
   "nature-spell":   { name: "Nature Spell",   colour: "#4a5e4a", count: 23 },
   "kaleidos":       { name: "Kaleidos",       colour: "#3d3550", count: 34 },
-  "vitd":           { name: "VitD",           colour: "#706b6b", count: 156 },
+  "vitd":           { name: "VitD",           colour: "var(--text-muted)", count: 156 },
   "boots-apr-2026": { name: "Boots Apr 2026", colour: "#8b6f5e", count: 41 },
 };
 
@@ -27,7 +27,7 @@ function StatusPill({ status }: { status: string }) {
     return (
       <span
         className="font-montserrat font-semibold uppercase"
-        style={{ fontSize: "9px", letterSpacing: "0.10em", background: "#e4dcd1", color: "#222222", padding: "3px 10px", borderRadius: "20px" }}
+        style={{ fontSize: "9px", letterSpacing: "0.10em", background: "var(--accent)", color: "var(--bg)", padding: "3px 10px", borderRadius: "20px" }}
       >
         Active
       </span>
@@ -50,10 +50,10 @@ export default function TagDetailPage({ params }: { params: { tagId: string } })
   if (!tag) {
     return (
       <div style={{ padding: "32px" }}>
-        <Link href="/admin/tags" className="font-montserrat font-semibold" style={{ fontSize: "12px", color: "#e4dcd1", textDecoration: "none" }}>
+        <Link href="/admin/tags" className="font-montserrat font-semibold" style={{ fontSize: "12px", color: "var(--accent)", textDecoration: "none" }}>
           ← Back to Tags
         </Link>
-        <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "#706b6b", marginTop: "24px" }}>
+        <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "24px" }}>
           Tag not found.
         </p>
       </div>
@@ -67,14 +67,14 @@ export default function TagDetailPage({ params }: { params: { tagId: string } })
         <Link
           href="/admin/tags"
           className="font-montserrat font-semibold"
-          style={{ fontSize: "12px", color: "#e4dcd1", textDecoration: "none", display: "inline-block", marginBottom: "16px" }}
+          style={{ fontSize: "12px", color: "var(--accent)", textDecoration: "none", display: "inline-block", marginBottom: "16px" }}
         >
           ← Back to Tags
         </Link>
 
         <p
           className="font-montserrat font-bold uppercase"
-          style={{ fontSize: "10px", letterSpacing: "0.12em", color: "#706b6b" }}
+          style={{ fontSize: "10px", letterSpacing: "0.12em", color: "var(--text-muted)" }}
         >
           Tags
         </p>
@@ -95,18 +95,18 @@ export default function TagDetailPage({ params }: { params: { tagId: string } })
           </h1>
         </div>
 
-        <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "#706b6b", marginTop: "4px" }}>
+        <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "4px" }}>
           {tag.count} creators with this tag
         </p>
       </div>
 
       {/* Table */}
       <div style={{ padding: "0 32px 32px" }}>
-        <div style={{ background: "#2a2a2a", borderRadius: "12px", overflow: "hidden" }}>
+        <div style={{ background: "var(--surface)", borderRadius: "12px", overflow: "hidden" }}>
           {/* Header */}
           <div
             style={{
-              background: "#1a1a1a",
+              background: "var(--surface)",
               padding: "12px 20px",
               display: "grid",
               gridTemplateColumns: "2fr 1fr 1fr 1fr",
@@ -117,7 +117,7 @@ export default function TagDetailPage({ params }: { params: { tagId: string } })
               <span
                 key={col}
                 className="font-montserrat font-bold uppercase"
-                style={{ fontSize: "10px", letterSpacing: "0.10em", color: "#706b6b" }}
+                style={{ fontSize: "10px", letterSpacing: "0.10em", color: "var(--text-muted)" }}
               >
                 {col}
               </span>
@@ -141,24 +141,24 @@ export default function TagDetailPage({ params }: { params: { tagId: string } })
             >
               {/* Name */}
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#e4dcd1", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <span className="font-montserrat font-bold" style={{ fontSize: "10px", color: "#222222" }}>{creator.initials}</span>
+                <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <span className="font-montserrat font-bold" style={{ fontSize: "10px", color: "var(--bg)" }}>{creator.initials}</span>
                 </div>
                 <div>
-                  <p className="font-montserrat font-medium" style={{ fontSize: "13px", color: "#ffffff" }}>{creator.name}</p>
-                  <p className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#706b6b" }}>{creator.email}</p>
+                  <p className="font-montserrat font-medium" style={{ fontSize: "13px", color: "var(--text)" }}>{creator.name}</p>
+                  <p className="font-montserrat font-normal" style={{ fontSize: "11px", color: "var(--text-muted)" }}>{creator.email}</p>
                 </div>
               </div>
 
               <StatusPill status={creator.status} />
 
-              <p className="font-montserrat font-normal" style={{ fontSize: "12px", color: "#706b6b" }}>{creator.joined}</p>
+              <p className="font-montserrat font-normal" style={{ fontSize: "12px", color: "var(--text-muted)" }}>{creator.joined}</p>
 
               <div style={{ display: "flex", gap: "12px" }}>
-                <button className="font-montserrat font-semibold" style={{ fontSize: "11px", color: "#e4dcd1", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+                <button className="font-montserrat font-semibold" style={{ fontSize: "11px", color: "var(--accent)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
                   View
                 </button>
-                <button className="font-montserrat font-semibold" style={{ fontSize: "11px", color: "#706b6b", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+                <button className="font-montserrat font-semibold" style={{ fontSize: "11px", color: "var(--text-muted)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
                   Remove Tag
                 </button>
               </div>

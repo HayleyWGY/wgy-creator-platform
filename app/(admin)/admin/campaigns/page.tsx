@@ -28,7 +28,7 @@ function StatusPill({ status }: { status: string }) {
     return (
       <span
         className="font-montserrat font-semibold uppercase"
-        style={{ fontSize: "9px", letterSpacing: "0.10em", background: "#e4dcd1", color: "#222222", padding: "3px 8px", borderRadius: "20px" }}
+        style={{ fontSize: "9px", letterSpacing: "0.10em", background: "var(--accent)", color: "var(--bg)", padding: "3px 8px", borderRadius: "20px" }}
       >
         Live
       </span>
@@ -38,7 +38,7 @@ function StatusPill({ status }: { status: string }) {
     return (
       <span
         className="font-montserrat font-semibold uppercase"
-        style={{ fontSize: "9px", letterSpacing: "0.10em", border: "1px solid rgba(255,255,255,0.15)", color: "#706b6b", padding: "3px 8px", borderRadius: "20px" }}
+        style={{ fontSize: "9px", letterSpacing: "0.10em", border: "1px solid rgba(255,255,255,0.15)", color: "var(--text-muted)", padding: "3px 8px", borderRadius: "20px" }}
       >
         Draft
       </span>
@@ -47,7 +47,7 @@ function StatusPill({ status }: { status: string }) {
   return (
     <span
       className="font-montserrat font-semibold uppercase"
-      style={{ fontSize: "9px", letterSpacing: "0.10em", background: "#333333", color: "#706b6b", padding: "3px 8px", borderRadius: "20px" }}
+      style={{ fontSize: "9px", letterSpacing: "0.10em", background: "var(--surface-2)", color: "var(--text-muted)", padding: "3px 8px", borderRadius: "20px" }}
     >
       Closed
     </span>
@@ -58,7 +58,7 @@ function SectionPill({ section }: { section: string }) {
   return (
     <span
       className="font-montserrat font-semibold uppercase"
-      style={{ fontSize: "9px", letterSpacing: "0.08em", background: "#333333", color: "#e4dcd1", padding: "3px 8px", borderRadius: "20px" }}
+      style={{ fontSize: "9px", letterSpacing: "0.08em", background: "var(--surface-2)", color: "var(--accent)", padding: "3px 8px", borderRadius: "20px" }}
     >
       {section}
     </span>
@@ -74,7 +74,7 @@ function TypePill({ type }: { type: string }) {
     return <span className="font-montserrat font-bold uppercase" style={{ fontSize: "8px", letterSpacing: "0.08em", background: "rgba(155,126,86,0.2)", color: "#9b7e56", padding: "2px 7px", borderRadius: "20px" }}>Event</span>;
   }
   if (t === "app-partners" || t === "app partners") {
-    return <span className="font-montserrat font-bold uppercase" style={{ fontSize: "8px", letterSpacing: "0.08em", background: "rgba(61,53,80,0.5)", color: "#e4dcd1", padding: "2px 7px", borderRadius: "20px" }}>Affiliate</span>;
+    return <span className="font-montserrat font-bold uppercase" style={{ fontSize: "8px", letterSpacing: "0.08em", background: "rgba(61,53,80,0.5)", color: "var(--accent)", padding: "2px 7px", borderRadius: "20px" }}>Affiliate</span>;
   }
   return null;
 }
@@ -94,7 +94,7 @@ function CloseModal({
       onClick={onCancel}
     >
       <div
-        style={{ background: "#2a2a2a", borderRadius: "12px", padding: "28px", maxWidth: "420px", width: "100%", margin: "0 20px" }}
+        style={{ background: "var(--surface)", borderRadius: "12px", padding: "28px", maxWidth: "420px", width: "100%", margin: "0 20px" }}
         onClick={(e) => e.stopPropagation()}
       >
         <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "#C0392B" }}>
@@ -103,21 +103,21 @@ function CloseModal({
         <h2 className="font-playfair italic font-normal text-white" style={{ fontSize: "20px", marginTop: "8px" }}>
           Close &ldquo;{campaignName}&rdquo;?
         </h2>
-        <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "#c8c3bc", marginTop: "12px", lineHeight: 1.6 }}>
+        <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "12px", lineHeight: 1.6 }}>
           Creators will still see it but the apply button will be hidden. This cannot be automatically undone.
         </p>
         <div style={{ display: "flex", gap: "10px", marginTop: "24px" }}>
           <button
             onClick={onCancel}
             className="font-montserrat font-semibold"
-            style={{ flex: 1, height: "40px", borderRadius: "8px", background: "transparent", border: "1px solid rgba(228,220,209,0.25)", color: "#e4dcd1", fontSize: "13px", cursor: "pointer" }}
+            style={{ flex: 1, height: "40px", borderRadius: "8px", background: "transparent", border: "1px solid rgba(228,220,209,0.25)", color: "var(--accent)", fontSize: "13px", cursor: "pointer" }}
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
             className="font-montserrat font-semibold"
-            style={{ flex: 1, height: "40px", borderRadius: "8px", background: "#C0392B", border: "none", color: "#ffffff", fontSize: "13px", cursor: "pointer" }}
+            style={{ flex: 1, height: "40px", borderRadius: "8px", background: "#C0392B", border: "none", color: "var(--text)", fontSize: "13px", cursor: "pointer" }}
           >
             Close Campaign
           </button>
@@ -191,14 +191,14 @@ export default function CampaignsPage() {
       {/* Header */}
       <div style={{ padding: "32px 32px 0", display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
         <div>
-          <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "#706b6b" }}>Campaigns</p>
+          <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "var(--text-muted)" }}>Campaigns</p>
           <h1 className="font-playfair italic font-normal text-white" style={{ fontSize: "32px", marginTop: "4px" }}>Campaign Management</h1>
         </div>
         <Link
           href="/admin/campaigns/new"
-          style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", height: "44px", padding: "0 20px", background: "#e4dcd1", borderRadius: "8px", textDecoration: "none" }}
+          style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", height: "44px", padding: "0 20px", background: "var(--accent)", borderRadius: "8px", textDecoration: "none" }}
         >
-          <span className="font-montserrat font-semibold" style={{ fontSize: "13px", color: "#222222" }}>+ New Campaign</span>
+          <span className="font-montserrat font-semibold" style={{ fontSize: "13px", color: "var(--bg)" }}>+ New Campaign</span>
         </Link>
       </div>
 
@@ -216,9 +216,9 @@ export default function CampaignsPage() {
                 background: "none",
                 border: "none",
                 cursor: "pointer",
-                borderBottom: active ? "2px solid #e4dcd1" : "2px solid transparent",
+                borderBottom: active ? "2px solid var(--accent)" : "2px solid transparent",
                 marginBottom: "-1px",
-                color: active ? "#e4dcd1" : "#706b6b",
+                color: active ? "var(--accent)" : "var(--text-muted)",
                 fontSize: "13px",
                 fontWeight: active ? 600 : 400,
                 transition: "color 0.15s",
@@ -233,35 +233,35 @@ export default function CampaignsPage() {
       {/* Filter row */}
       <div style={{ padding: "16px 32px", display: "flex", gap: "12px", alignItems: "center" }}>
         <div style={{ position: "relative", flex: 1, maxWidth: "320px" }}>
-          <Search size={15} color="#706b6b" style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
+          <Search size={15} color="var(--text-muted)" style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search campaigns..."
             className="font-montserrat font-normal"
-            style={{ width: "100%", height: "44px", background: "#2a2a2a", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "8px", paddingLeft: "36px", paddingRight: "16px", color: "#ffffff", fontSize: "13px", outline: "none", caretColor: "#e4dcd1" }}
+            style={{ width: "100%", height: "44px", background: "var(--surface)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "8px", paddingLeft: "36px", paddingRight: "16px", color: "var(--text)", fontSize: "13px", outline: "none", caretColor: "var(--accent)" }}
           />
         </div>
       </div>
 
       {/* Table */}
       <div style={{ padding: "0 32px 32px" }}>
-        <div style={{ background: "#2a2a2a", borderRadius: "12px", overflow: "hidden" }}>
+        <div style={{ background: "var(--surface)", borderRadius: "12px", overflow: "hidden" }}>
           {/* Header */}
-          <div style={{ background: "#1a1a1a", padding: "12px 20px", display: "grid", gridTemplateColumns: "2.5fr 1fr 0.6fr 0.8fr 1fr 0.8fr 1fr", gap: "12px", alignItems: "center" }}>
+          <div style={{ background: "var(--surface)", padding: "12px 20px", display: "grid", gridTemplateColumns: "2.5fr 1fr 0.6fr 0.8fr 1fr 0.8fr 1fr", gap: "12px", alignItems: "center" }}>
             {["Campaign", "Section", "Type", "Status", "Engagement", "Created", "Actions"].map((col) => (
-              <span key={col} className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.10em", color: "#706b6b" }}>{col}</span>
+              <span key={col} className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.10em", color: "var(--text-muted)" }}>{col}</span>
             ))}
           </div>
 
           {loading ? (
             <div style={{ padding: "32px 20px", textAlign: "center" }}>
-              <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "#706b6b" }}>Loading campaigns...</p>
+              <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "var(--text-muted)" }}>Loading campaigns...</p>
             </div>
           ) : filtered.length === 0 ? (
             <div style={{ padding: "32px 20px", textAlign: "center" }}>
-              <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "#706b6b" }}>No campaigns found.</p>
+              <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "var(--text-muted)" }}>No campaigns found.</p>
             </div>
           ) : (
             filtered.map((c, i) => (
@@ -281,17 +281,17 @@ export default function CampaignsPage() {
               >
                 {/* Campaign cell */}
                 <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                  <div style={{ width: "40px", height: "40px", borderRadius: "6px", background: "#333333", flexShrink: 0 }} />
+                  <div style={{ width: "40px", height: "40px", borderRadius: "6px", background: "var(--surface-2)", flexShrink: 0 }} />
                   <div style={{ minWidth: 0 }}>
-                    <p className="font-montserrat font-semibold" style={{ fontSize: "13px", color: "#ffffff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <p className="font-montserrat font-semibold" style={{ fontSize: "13px", color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {c.title}
                     </p>
                     <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
-                      <p className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#706b6b" }}>{c.brandName}</p>
+                      <p className="font-montserrat font-normal" style={{ fontSize: "11px", color: "var(--text-muted)" }}>{c.brandName}</p>
                       {(c.campaignType?.toLowerCase() === "event") && c.eventDate && (
                         <span style={{ display: "flex", alignItems: "center", gap: "3px" }}>
-                          <CalendarDays size={12} color="#706b6b" strokeWidth={1.5} />
-                          <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#706b6b" }}>
+                          <CalendarDays size={12} color="var(--text-muted)" strokeWidth={1.5} />
+                          <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "var(--text-muted)" }}>
                             {new Date(c.eventDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
                           </span>
                         </span>
@@ -305,15 +305,15 @@ export default function CampaignsPage() {
                 <div><StatusPill status={c.status} /></div>
 
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <span className="font-montserrat font-normal" style={{ fontSize: "12px", color: "#706b6b", display: "flex", alignItems: "center", gap: "4px" }}>
+                  <span className="font-montserrat font-normal" style={{ fontSize: "12px", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px" }}>
                     <Heart size={11} /> {c.likesCount}
                   </span>
-                  <span className="font-montserrat font-normal" style={{ fontSize: "12px", color: "#706b6b", display: "flex", alignItems: "center", gap: "4px" }}>
+                  <span className="font-montserrat font-normal" style={{ fontSize: "12px", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px" }}>
                     <MessageCircle size={11} /> {c.commentsCount}
                   </span>
                 </div>
 
-                <p className="font-montserrat font-normal" style={{ fontSize: "12px", color: "#706b6b" }}>
+                <p className="font-montserrat font-normal" style={{ fontSize: "12px", color: "var(--text-muted)" }}>
                   {formatDate(c.createdAt)}
                 </p>
 
@@ -321,7 +321,7 @@ export default function CampaignsPage() {
                   <Link
                     href={`/admin/campaigns/${c.id}/edit`}
                     className="font-montserrat font-semibold"
-                    style={{ fontSize: "11px", color: "#e4dcd1", textDecoration: "none" }}
+                    style={{ fontSize: "11px", color: "var(--accent)", textDecoration: "none" }}
                   >
                     Edit
                   </Link>
@@ -329,7 +329,7 @@ export default function CampaignsPage() {
                     href={`/opportunities/${c.slug}`}
                     target="_blank"
                     className="font-montserrat font-semibold"
-                    style={{ fontSize: "11px", color: "#706b6b", textDecoration: "none" }}
+                    style={{ fontSize: "11px", color: "var(--text-muted)", textDecoration: "none" }}
                   >
                     View
                   </Link>
@@ -359,7 +359,7 @@ export default function CampaignsPage() {
 
         {/* Count */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "16px" }}>
-          <p className="font-montserrat font-normal" style={{ fontSize: "12px", color: "#706b6b" }}>
+          <p className="font-montserrat font-normal" style={{ fontSize: "12px", color: "var(--text-muted)" }}>
             Showing {filtered.length} of {campaigns.length} campaign{campaigns.length !== 1 ? "s" : ""}
           </p>
         </div>
@@ -374,7 +374,7 @@ export default function CampaignsPage() {
         />
       )}
 
-      <style>{`input::placeholder { color: #706b6b; }`}</style>
+      <style>{`input::placeholder { color: var(--text-muted); }`}</style>
     </div>
   );
 }
