@@ -1,36 +1,32 @@
 "use client";
 
 import { AlertCircle } from "lucide-react";
+import { WgyButton } from "@/components/ui/wgy-button";
 
 export default function PaymentFailedPage() {
   return (
     <div
       className="min-h-screen flex flex-col items-center"
-      style={{ background: "#222222", maxWidth: "390px", margin: "0 auto", padding: "0 24px" }}
+      style={{ background: "var(--bg)", maxWidth: "390px", margin: "0 auto", padding: "0 24px" }}
     >
-      {/* Logo */}
+      {/* Logo (theme-aware via CSS mask) */}
       <div className="flex justify-center" style={{ marginTop: "48px" }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/images/wgy-logo-white.png"
-          alt="WGY"
-          style={{ height: "40px", width: "auto" }}
-        />
+        <span className="wgy-logo" role="img" aria-label="WGY" style={{ height: "40px", width: "96px", display: "block" }} />
       </div>
 
       <div className="flex flex-col items-center text-center" style={{ marginTop: "64px" }}>
-        <AlertCircle size={48} color="#C0392B" strokeWidth={1.5} />
+        <AlertCircle size={48} strokeWidth={1.5} style={{ color: "var(--error)" }} />
 
         <h1
-          className="font-playfair italic font-normal text-white"
-          style={{ fontSize: "28px", marginTop: "20px" }}
+          className="font-montserrat"
+          style={{ fontSize: "28px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "-0.01em", color: "var(--text)", marginTop: "20px" }}
         >
-          Payment Failed
+          Payment <em className="font-accent" style={{ textTransform: "none" }}>failed</em>
         </h1>
 
         <p
-          className="font-montserrat font-normal"
-          style={{ fontSize: "13px", color: "#706b6b", marginTop: "10px", lineHeight: 1.6 }}
+          className="font-montserrat"
+          style={{ fontSize: "13px", fontWeight: 500, color: "var(--text-muted)", marginTop: "10px", lineHeight: 1.6 }}
         >
           Your membership payment was unsuccessful.
           <br />
@@ -38,31 +34,23 @@ export default function PaymentFailedPage() {
         </p>
 
         {/* Update payment button */}
-        <button
-          className="w-full font-montserrat font-semibold"
-          style={{
-            height: "48px",
-            borderRadius: "8px",
-            background: "#e4dcd1",
-            color: "#222222",
-            fontSize: "14px",
-            border: "none",
-            cursor: "pointer",
-            marginTop: "32px",
-          }}
+        <WgyButton
+          variant="primary"
+          fullWidth
+          style={{ marginTop: "32px" }}
           onClick={() => {
             // TODO Phase 3: Add Stripe portal URL
             window.location.href = "#";
           }}
         >
           Update Payment Details
-        </button>
+        </WgyButton>
 
         {/* Contact link */}
         <a
           href="mailto:support@wegotyouagency.com"
-          className="font-montserrat font-normal"
-          style={{ fontSize: "13px", color: "#706b6b", marginTop: "16px", textDecoration: "none" }}
+          className="font-montserrat"
+          style={{ fontSize: "13px", fontWeight: 500, color: "var(--text-muted)", marginTop: "16px", textDecoration: "none" }}
         >
           Contact Us
         </a>

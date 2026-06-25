@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import Image from "next/image";
 import { Camera } from "lucide-react";
+import { WgyButton } from "@/components/ui/wgy-button";
 
 const MAX_BIO = 160;
 
@@ -35,60 +36,49 @@ export default function ProfileSetupPage() {
     // TODO Phase 2: Save to database, navigate to address setup (step 2)
   }
 
-  const inputStyle = (hasError: boolean) => ({
-    background: "#2a2a2a",
+  const inputStyle = (hasError: boolean): React.CSSProperties => ({
+    background: "var(--surface)",
     borderRadius: "8px",
-    border: `1px solid ${hasError ? "#C0392B" : "rgba(255,255,255,0.08)"}`,
+    border: `1px solid ${hasError ? "var(--error)" : "var(--border)"}`,
     height: "48px",
     padding: "0 16px",
-    color: "#ffffff",
+    color: "var(--text)",
     fontSize: "14px",
-    caretColor: "#e4dcd1",
+    fontWeight: 500,
+    caretColor: "var(--accent)",
     width: "100%",
     outline: "none",
   });
 
+  const labelStyle: React.CSSProperties = { fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em", color: "var(--accent)" };
+
   return (
     <div
       className="min-h-screen flex flex-col"
-      style={{ background: "#222222", maxWidth: "390px", margin: "0 auto" }}
+      style={{ background: "var(--bg)", maxWidth: "390px", margin: "0 auto" }}
     >
       {/* Progress dots */}
       <div className="flex items-center justify-center gap-2 pt-5">
-        <span
-          className="rounded-full"
-          style={{ width: "8px", height: "8px", background: "#e4dcd1" }}
-        />
-        <span
-          className="rounded-full"
-          style={{ width: "8px", height: "8px", background: "#2a2a2a" }}
-        />
-        <span
-          className="rounded-full"
-          style={{ width: "8px", height: "8px", background: "#2a2a2a" }}
-        />
+        <span className="rounded-full" style={{ width: "8px", height: "8px", background: "var(--accent)" }} />
+        <span className="rounded-full" style={{ width: "8px", height: "8px", background: "var(--surface-2)" }} />
+        <span className="rounded-full" style={{ width: "8px", height: "8px", background: "var(--surface-2)" }} />
       </div>
 
-      {/* Logo */}
+      {/* Logo (theme-aware via CSS mask) */}
       <div className="flex justify-center" style={{ marginTop: "16px" }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/images/wgy-logo-white.png"
-          alt="WGY"
-          style={{ height: "40px", width: "auto" }}
-        />
+        <span className="wgy-logo" role="img" aria-label="WGY" style={{ height: "40px", width: "96px", display: "block" }} />
       </div>
 
       {/* Heading */}
       <h1
-        className="font-playfair italic font-normal text-white text-center"
-        style={{ fontSize: "24px", marginTop: "24px" }}
+        className="font-montserrat text-center"
+        style={{ fontSize: "24px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "-0.01em", color: "var(--text)", marginTop: "24px" }}
       >
-        Set up your profile
+        Set up your <em className="font-accent" style={{ textTransform: "none" }}>profile</em>
       </h1>
       <p
-        className="font-montserrat font-normal text-center"
-        style={{ fontSize: "13px", color: "#706b6b", marginTop: "6px", padding: "0 24px" }}
+        className="font-montserrat text-center"
+        style={{ fontSize: "13px", fontWeight: 500, color: "var(--text-muted)", marginTop: "6px", padding: "0 24px" }}
       >
         This helps brands find the right creators for their campaigns
       </p>
@@ -98,13 +88,14 @@ export default function ProfileSetupPage() {
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
-          className="flex items-center justify-center overflow-hidden"
+          aria-label="Add photo"
+          className="flex items-center justify-center overflow-hidden relative"
           style={{
             width: "80px",
             height: "80px",
             borderRadius: "50%",
-            background: "#2a2a2a",
-            border: "2px dashed rgba(228,220,209,0.3)",
+            background: "var(--surface)",
+            border: "2px dashed var(--border-strong)",
           }}
         >
           {avatarPreview ? (
@@ -115,7 +106,7 @@ export default function ProfileSetupPage() {
               style={{ objectFit: "cover" }}
             />
           ) : (
-            <Camera size={24} color="#706b6b" strokeWidth={1.5} />
+            <Camera size={24} strokeWidth={1.5} style={{ color: "var(--text-muted)" }} />
           )}
         </button>
         <input
@@ -125,10 +116,10 @@ export default function ProfileSetupPage() {
           className="hidden"
           onChange={handleAvatarChange}
         />
-        <p className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#706b6b", marginTop: "6px" }}>
+        <p className="font-montserrat" style={{ fontSize: "11px", fontWeight: 500, color: "var(--text-muted)", marginTop: "6px" }}>
           Add photo
         </p>
-        <p className="font-montserrat font-normal" style={{ fontSize: "10px", color: "#4a4a4a" }}>
+        <p className="font-montserrat" style={{ fontSize: "10px", color: "var(--text-muted)" }}>
           Optional
         </p>
       </div>
@@ -140,41 +131,41 @@ export default function ProfileSetupPage() {
       >
         {/* First Name */}
         <div className="flex flex-col gap-[6px]">
-          <label className="font-montserrat font-medium uppercase" style={{ fontSize: "11px", letterSpacing: "0.08em", color: "#e4dcd1" }}>
-            First Name <span style={{ color: "#C0392B" }}>*</span>
+          <label className="font-montserrat uppercase" style={labelStyle}>
+            First Name <span style={{ color: "var(--error)" }}>*</span>
           </label>
           <input
             type="text"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
             placeholder="Hayley"
-            className="font-montserrat font-normal"
+            className="font-montserrat"
             style={inputStyle(errors.firstName)}
-            onFocus={(e) => (e.target.style.borderColor = "#e4dcd1")}
-            onBlur={(e) => (e.target.style.borderColor = errors.firstName ? "#C0392B" : "rgba(255,255,255,0.08)")}
+            onFocus={(e) => (e.target.style.borderColor = "var(--accent)")}
+            onBlur={(e) => (e.target.style.borderColor = errors.firstName ? "var(--error)" : "var(--border)")}
           />
         </div>
 
         {/* Last Name */}
         <div className="flex flex-col gap-[6px]">
-          <label className="font-montserrat font-medium uppercase" style={{ fontSize: "11px", letterSpacing: "0.08em", color: "#e4dcd1" }}>
-            Last Name <span style={{ color: "#C0392B" }}>*</span>
+          <label className="font-montserrat uppercase" style={labelStyle}>
+            Last Name <span style={{ color: "var(--error)" }}>*</span>
           </label>
           <input
             type="text"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
             placeholder="Williams"
-            className="font-montserrat font-normal"
+            className="font-montserrat"
             style={inputStyle(errors.lastName)}
-            onFocus={(e) => (e.target.style.borderColor = "#e4dcd1")}
-            onBlur={(e) => (e.target.style.borderColor = errors.lastName ? "#C0392B" : "rgba(255,255,255,0.08)")}
+            onFocus={(e) => (e.target.style.borderColor = "var(--accent)")}
+            onBlur={(e) => (e.target.style.borderColor = errors.lastName ? "var(--error)" : "var(--border)")}
           />
         </div>
 
         {/* Bio */}
         <div className="flex flex-col gap-[6px]">
-          <label className="font-montserrat font-medium uppercase" style={{ fontSize: "11px", letterSpacing: "0.08em", color: "#e4dcd1" }}>
+          <label className="font-montserrat uppercase" style={labelStyle}>
             Bio
           </label>
           <div className="relative">
@@ -183,22 +174,23 @@ export default function ProfileSetupPage() {
               onChange={(e) => setBio(e.target.value.slice(0, MAX_BIO))}
               placeholder="Tell brands a little about yourself..."
               rows={4}
-              className="w-full font-montserrat font-normal resize-none outline-none"
+              className="w-full font-montserrat resize-none outline-none"
               style={{
-                background: "#2a2a2a",
+                background: "var(--surface)",
                 borderRadius: "8px",
-                border: "1px solid rgba(255,255,255,0.08)",
+                border: "1px solid var(--border)",
                 padding: "12px 16px",
-                color: "#ffffff",
+                color: "var(--text)",
                 fontSize: "14px",
-                caretColor: "#e4dcd1",
+                fontWeight: 500,
+                caretColor: "var(--accent)",
               }}
-              onFocus={(e) => (e.target.style.borderColor = "#e4dcd1")}
-              onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.08)")}
+              onFocus={(e) => (e.target.style.borderColor = "var(--accent)")}
+              onBlur={(e) => (e.target.style.borderColor = "var(--border)")}
             />
             <span
-              className="absolute bottom-2 right-3 font-montserrat font-normal"
-              style={{ fontSize: "10px", color: "#706b6b" }}
+              className="absolute bottom-2 right-3 font-montserrat"
+              style={{ fontSize: "10px", color: "var(--text-muted)" }}
             >
               {bio.length}/{MAX_BIO}
             </span>
@@ -207,7 +199,7 @@ export default function ProfileSetupPage() {
 
         {/* Instagram */}
         <div className="flex flex-col gap-[6px]">
-          <label className="font-montserrat font-medium uppercase" style={{ fontSize: "11px", letterSpacing: "0.08em", color: "#e4dcd1" }}>
+          <label className="font-montserrat uppercase" style={labelStyle}>
             Instagram Handle
           </label>
           <input
@@ -215,16 +207,16 @@ export default function ProfileSetupPage() {
             value={instagram}
             onChange={(e) => setInstagram(e.target.value)}
             placeholder="@yourhandle"
-            className="font-montserrat font-normal"
+            className="font-montserrat"
             style={inputStyle(false)}
-            onFocus={(e) => (e.target.style.borderColor = "#e4dcd1")}
-            onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.08)")}
+            onFocus={(e) => (e.target.style.borderColor = "var(--accent)")}
+            onBlur={(e) => (e.target.style.borderColor = "var(--border)")}
           />
         </div>
 
         {/* TikTok */}
         <div className="flex flex-col gap-[6px]">
-          <label className="font-montserrat font-medium uppercase" style={{ fontSize: "11px", letterSpacing: "0.08em", color: "#e4dcd1" }}>
+          <label className="font-montserrat uppercase" style={labelStyle}>
             TikTok Handle
           </label>
           <input
@@ -232,16 +224,16 @@ export default function ProfileSetupPage() {
             value={tiktok}
             onChange={(e) => setTiktok(e.target.value)}
             placeholder="@yourhandle"
-            className="font-montserrat font-normal"
+            className="font-montserrat"
             style={inputStyle(false)}
-            onFocus={(e) => (e.target.style.borderColor = "#e4dcd1")}
-            onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.08)")}
+            onFocus={(e) => (e.target.style.borderColor = "var(--accent)")}
+            onBlur={(e) => (e.target.style.borderColor = "var(--border)")}
           />
         </div>
 
         {/* YouTube */}
         <div className="flex flex-col gap-[6px]">
-          <label className="font-montserrat font-medium uppercase" style={{ fontSize: "11px", letterSpacing: "0.08em", color: "#e4dcd1" }}>
+          <label className="font-montserrat uppercase" style={labelStyle}>
             YouTube URL
           </label>
           <input
@@ -249,43 +241,31 @@ export default function ProfileSetupPage() {
             value={youtube}
             onChange={(e) => setYoutube(e.target.value)}
             placeholder="https://youtube.com/@yourchannel"
-            className="font-montserrat font-normal"
+            className="font-montserrat"
             style={inputStyle(false)}
-            onFocus={(e) => (e.target.style.borderColor = "#e4dcd1")}
-            onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.08)")}
+            onFocus={(e) => (e.target.style.borderColor = "var(--accent)")}
+            onBlur={(e) => (e.target.style.borderColor = "var(--border)")}
           />
         </div>
 
         {/* Continue */}
-        <button
-          type="button"
-          onClick={handleContinue}
-          className="w-full font-montserrat font-semibold transition-opacity active:opacity-80"
-          style={{
-            height: "48px",
-            borderRadius: "8px",
-            background: "#e4dcd1",
-            color: "#222222",
-            fontSize: "14px",
-            marginTop: "8px",
-          }}
-        >
+        <WgyButton variant="primary" fullWidth onClick={handleContinue} style={{ marginTop: "8px" }}>
           Continue
-        </button>
+        </WgyButton>
 
         {/* Skip */}
         {/* TODO Phase 2: Navigate to /home */}
         <button
           type="button"
           className="w-full text-center font-montserrat font-normal"
-          style={{ fontSize: "12px", color: "#706b6b" }}
+          style={{ fontSize: "12px", color: "var(--text-muted)" }}
         >
           Skip for now
         </button>
       </div>
 
       <style>{`
-        input::placeholder, textarea::placeholder { color: #706b6b; }
+        input::placeholder, textarea::placeholder { color: var(--text-muted); }
       `}</style>
 
       <div className="pb-10" />
