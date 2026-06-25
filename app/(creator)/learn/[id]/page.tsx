@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { ArrowLeft, Download, ExternalLink, ChevronRight } from "lucide-react";
 import { getEmbedUrl } from "@/lib/utils";
-import { CONTENT_TYPE_BG, CONTENT_TYPE_PILL } from "@/lib/constants";
+import { CONTENT_TYPE_LABEL } from "@/lib/constants";
 
 function getTemplatePlatform(url: string): string {
   if (url.includes("canva.com")) return "Opens in Canva";
@@ -30,6 +30,22 @@ interface ContentItem {
   videoTranscript: string | null;
 }
 
+const heroPillStyle: React.CSSProperties = {
+  fontSize: "9px", fontWeight: 800, letterSpacing: "0.12em",
+  background: "rgba(17,17,17,0.75)", color: "#e4dcd1",
+  padding: "4px 12px", borderRadius: "var(--radius-pill)", backdropFilter: "blur(4px)",
+};
+
+const catBtnStyle: React.CSSProperties = {
+  fontSize: "9px", fontWeight: 700, letterSpacing: "0.08em",
+  background: "var(--surface-2)", color: "var(--text-muted)",
+  padding: "4px 8px", borderRadius: "var(--radius-pill)", cursor: "pointer", border: "none",
+};
+
+const heroTitleStyle: React.CSSProperties = {
+  fontSize: "22px", fontWeight: 800, lineHeight: 1.2, color: "#ffffff", margin: 0,
+};
+
 export default function LearnDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -52,9 +68,9 @@ export default function LearnDetailPage() {
   if (loading) {
     return (
       <div style={{ padding: "20px" }}>
-        <div style={{ height: "220px", background: "#2a2a2a", borderRadius: "12px", marginBottom: "16px" }} />
-        <div style={{ height: "24px", background: "#2a2a2a", borderRadius: "6px", marginBottom: "8px", width: "70%" }} />
-        <div style={{ height: "16px", background: "#2a2a2a", borderRadius: "6px", width: "40%" }} />
+        <div style={{ height: "220px", background: "var(--surface)", borderRadius: "var(--radius-card)", marginBottom: "16px" }} />
+        <div style={{ height: "24px", background: "var(--surface)", borderRadius: "6px", marginBottom: "8px", width: "70%" }} />
+        <div style={{ height: "16px", background: "var(--surface)", borderRadius: "6px", width: "40%" }} />
       </div>
     );
   }
@@ -62,16 +78,16 @@ export default function LearnDetailPage() {
   if (notFound || !item) {
     return (
       <div style={{ padding: "40px 20px", textAlign: "center" }}>
-        <p className="font-playfair italic text-white/40" style={{ fontSize: "20px" }}>Content not found</p>
-        <button onClick={() => router.back()} className="font-montserrat text-[#e4dcd1] mt-4" style={{ fontSize: "13px" }}>
+        <p className="font-montserrat" style={{ fontSize: "20px", fontWeight: 800, color: "var(--text)" }}>Content not found</p>
+        <button onClick={() => router.back()} className="font-montserrat mt-4" style={{ fontSize: "13px", fontWeight: 600, color: "var(--accent)" }}>
           Go back
         </button>
       </div>
     );
   }
 
-  const pillStyle = CONTENT_TYPE_PILL[item.contentType] ?? CONTENT_TYPE_PILL.blog_post;
-  const heroBg = CONTENT_TYPE_BG[item.contentType] ?? "#3a3a3a";
+  const label = CONTENT_TYPE_LABEL[item.contentType] ?? item.contentType.replace(/_/g, " ");
+  const heroBg = "linear-gradient(140deg, var(--img-b), var(--img-a))";
   const bannerSrc = item.bannerImageUrl || item.thumbnailUrl;
   const isWorkbook = item.contentType === "workbook";
   const isVideo = item.contentType === "video";
@@ -91,10 +107,11 @@ export default function LearnDetailPage() {
       <div style={{ padding: "16px 20px 0" }}>
         <button
           onClick={() => router.back()}
-          className="flex items-center gap-2 text-white/50 hover:text-white transition-colors"
+          className="flex items-center gap-2 transition-colors"
+          style={{ color: "var(--text-muted)" }}
         >
           <ArrowLeft size={16} />
-          <span className="font-montserrat" style={{ fontSize: "12px" }}>Back</span>
+          <span className="font-montserrat" style={{ fontSize: "12px", fontWeight: 600 }}>Back</span>
         </button>
       </div>
 
@@ -119,15 +136,15 @@ export default function LearnDetailPage() {
 
           {/* Type pill + categories */}
           <div style={{ padding: "16px 20px 0", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px" }}>
-            <span className="font-montserrat font-semibold uppercase" style={{ fontSize: "9px", letterSpacing: "0.10em", background: pillStyle.bg, color: pillStyle.text, border: pillStyle.border, padding: "3px 10px", borderRadius: "20px" }}>
-              {pillStyle.label}
+            <span className="font-montserrat uppercase" style={{ fontSize: "9px", fontWeight: 800, letterSpacing: "0.12em", background: "var(--beige)", color: "#111111", padding: "4px 10px", borderRadius: "var(--radius-pill)" }}>
+              {label}
             </span>
             {item.categories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => router.push(`/learn?category=${cat}`)}
-                className="font-montserrat font-semibold uppercase"
-                style={{ fontSize: "9px", letterSpacing: "0.08em", background: "#333333", color: "#706b6b", padding: "3px 8px", borderRadius: "20px", cursor: "pointer", border: "none" }}
+                className="font-montserrat uppercase"
+                style={catBtnStyle}
               >
                 {cat.replace(/_/g, " ")}
               </button>
@@ -135,14 +152,14 @@ export default function LearnDetailPage() {
           </div>
 
           {/* Title */}
-          <h1 className="font-playfair italic font-normal text-white" style={{ fontSize: "22px", lineHeight: 1.25, padding: "16px 20px 4px" }}>
+          <h1 className="font-montserrat" style={{ fontSize: "22px", fontWeight: 800, lineHeight: 1.2, color: "var(--text)", padding: "16px 20px 4px", margin: 0 }}>
             {item.title}
           </h1>
 
           {/* Meta row */}
           <div style={{ padding: "0 20px 12px", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "12px" }}>
-            {publishedDate && <span className="font-montserrat" style={{ fontSize: "11px", color: "#706b6b" }}>{publishedDate}</span>}
-            {item.readingTimeMinutes && <span className="font-montserrat" style={{ fontSize: "11px", color: "#706b6b" }}>{item.readingTimeMinutes} min read</span>}
+            {publishedDate && <span className="font-montserrat" style={{ fontSize: "11px", color: "var(--text-muted)" }}>{publishedDate}</span>}
+            {item.readingTimeMinutes && <span className="font-montserrat" style={{ fontSize: "11px", color: "var(--text-muted)" }}>{item.readingTimeMinutes} min read</span>}
           </div>
 
           {/* Body */}
@@ -155,9 +172,9 @@ export default function LearnDetailPage() {
           {/* Transcript */}
           {item.videoTranscript && (
             <div style={{ padding: "0 20px 16px" }}>
-              <p className="font-montserrat font-bold uppercase text-white/30 mb-3" style={{ fontSize: "9px", letterSpacing: "0.12em" }}>Notes</p>
-              <div style={{ background: "#2a2a2a", borderRadius: "10px", padding: "16px", border: "1px solid rgba(228,220,209,0.06)" }}>
-                <p className="font-montserrat text-white/60" style={{ fontSize: "13px", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
+              <p className="eyebrow mb-3">Notes</p>
+              <div style={{ background: "var(--surface)", borderRadius: "10px", padding: "16px", border: "1px solid var(--border)" }}>
+                <p className="font-montserrat" style={{ fontSize: "13px", fontWeight: 500, color: "var(--text-muted)", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
                   {item.videoTranscript}
                 </p>
               </div>
@@ -175,14 +192,14 @@ export default function LearnDetailPage() {
             style={{ height: bannerSrc ? "220px" : "160px", margin: "14px 0 0", background: heroBg }}
           >
             {bannerSrc && <Image src={bannerSrc} alt={item.title} fill style={{ objectFit: "cover" }} />}
-            <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(34,34,34,0.85) 100%)" }} />
+            <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.78) 100%)" }} />
             <div className="absolute top-4 left-4">
-              <span className="font-montserrat font-semibold uppercase" style={{ fontSize: "9px", letterSpacing: "0.10em", background: "rgba(34,34,34,0.75)", color: "#e4dcd1", padding: "4px 12px", borderRadius: "20px", backdropFilter: "blur(4px)" }}>
-                {pillStyle.label}
+              <span className="font-montserrat uppercase" style={heroPillStyle}>
+                {label}
               </span>
             </div>
             <div className="absolute bottom-0 left-0 right-0" style={{ padding: "0 20px 18px" }}>
-              <h1 className="font-playfair italic font-normal text-white" style={{ fontSize: "22px", lineHeight: 1.25 }}>
+              <h1 className="font-montserrat" style={heroTitleStyle}>
                 {item.title}
               </h1>
             </div>
@@ -194,8 +211,8 @@ export default function LearnDetailPage() {
               <button
                 key={cat}
                 onClick={() => router.push(`/learn?category=${cat}`)}
-                className="font-montserrat font-semibold uppercase"
-                style={{ fontSize: "9px", letterSpacing: "0.08em", background: "#333333", color: "#706b6b", padding: "3px 8px", borderRadius: "20px", cursor: "pointer", border: "none" }}
+                className="font-montserrat uppercase"
+                style={catBtnStyle}
               >
                 {cat.replace(/_/g, " ")}
               </button>
@@ -204,8 +221,8 @@ export default function LearnDetailPage() {
 
           {/* Meta row */}
           <div style={{ padding: "0 20px 12px", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "12px" }}>
-            {publishedDate && <span className="font-montserrat" style={{ fontSize: "11px", color: "#706b6b" }}>{publishedDate}</span>}
-            {item.readingTimeMinutes && <span className="font-montserrat" style={{ fontSize: "11px", color: "#706b6b" }}>{item.readingTimeMinutes} min read</span>}
+            {publishedDate && <span className="font-montserrat" style={{ fontSize: "11px", color: "var(--text-muted)" }}>{publishedDate}</span>}
+            {item.readingTimeMinutes && <span className="font-montserrat" style={{ fontSize: "11px", color: "var(--text-muted)" }}>{item.readingTimeMinutes} min read</span>}
           </div>
 
           {/* Body/description */}
@@ -221,16 +238,16 @@ export default function LearnDetailPage() {
             {item.pdfUrl && (
               <div
                 onClick={triggerPdfDownload}
-                style={{ background: "#2a2a2a", borderRadius: "12px", padding: "16px 20px", display: "flex", alignItems: "center", gap: "14px", cursor: "pointer" }}
+                style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)", padding: "16px 20px", display: "flex", alignItems: "center", gap: "14px", cursor: "pointer" }}
               >
-                <div style={{ width: "40px", height: "40px", background: "#333333", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <Download size={18} color="#e4dcd1" />
+                <div style={{ width: "40px", height: "40px", background: "var(--surface-2)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Download size={18} style={{ color: "var(--accent)" }} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <p className="font-montserrat font-semibold text-white" style={{ fontSize: "14px" }}>View PDF</p>
-                  <p className="font-montserrat" style={{ fontSize: "11px", color: "#706b6b" }}>Opens in new tab</p>
+                  <p className="font-montserrat" style={{ fontSize: "14px", fontWeight: 700, color: "var(--text)" }}>View PDF</p>
+                  <p className="font-montserrat" style={{ fontSize: "11px", color: "var(--text-muted)" }}>Opens in new tab</p>
                 </div>
-                <ChevronRight size={16} color="#706b6b" />
+                <ChevronRight size={16} style={{ color: "var(--text-muted)" }} />
               </div>
             )}
 
@@ -238,16 +255,16 @@ export default function LearnDetailPage() {
             {item.editableTemplateUrl && (
               <div
                 onClick={() => window.open(item.editableTemplateUrl!, "_blank")}
-                style={{ background: "#2a2a2a", borderRadius: "12px", padding: "16px 20px", display: "flex", alignItems: "center", gap: "14px", cursor: "pointer" }}
+                style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)", padding: "16px 20px", display: "flex", alignItems: "center", gap: "14px", cursor: "pointer" }}
               >
-                <div style={{ width: "40px", height: "40px", background: "#333333", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <ExternalLink size={18} color="#e4dcd1" />
+                <div style={{ width: "40px", height: "40px", background: "var(--surface-2)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <ExternalLink size={18} style={{ color: "var(--accent)" }} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <p className="font-montserrat font-semibold text-white" style={{ fontSize: "14px" }}>Open Editable Template</p>
-                  <p className="font-montserrat" style={{ fontSize: "11px", color: "#706b6b" }}>{getTemplatePlatform(item.editableTemplateUrl)}</p>
+                  <p className="font-montserrat" style={{ fontSize: "14px", fontWeight: 700, color: "var(--text)" }}>Open Editable Template</p>
+                  <p className="font-montserrat" style={{ fontSize: "11px", color: "var(--text-muted)" }}>{getTemplatePlatform(item.editableTemplateUrl)}</p>
                 </div>
-                <ChevronRight size={16} color="#706b6b" />
+                <ChevronRight size={16} style={{ color: "var(--text-muted)" }} />
               </div>
             )}
           </div>
@@ -263,14 +280,14 @@ export default function LearnDetailPage() {
             style={{ height: bannerSrc ? "220px" : "160px", margin: "14px 0 0", background: heroBg }}
           >
             {bannerSrc && <Image src={bannerSrc} alt={item.title} fill style={{ objectFit: "cover" }} />}
-            <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(34,34,34,0.85) 100%)" }} />
+            <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.78) 100%)" }} />
             <div className="absolute top-4 left-4">
-              <span className="font-montserrat font-semibold uppercase" style={{ fontSize: "9px", letterSpacing: "0.10em", background: "rgba(34,34,34,0.75)", color: "#e4dcd1", padding: "4px 12px", borderRadius: "20px", backdropFilter: "blur(4px)" }}>
-                {pillStyle.label}
+              <span className="font-montserrat uppercase" style={heroPillStyle}>
+                {label}
               </span>
             </div>
             <div className="absolute bottom-0 left-0 right-0" style={{ padding: "0 20px 18px" }}>
-              <h1 className="font-playfair italic font-normal text-white" style={{ fontSize: "22px", lineHeight: 1.25 }}>
+              <h1 className="font-montserrat" style={heroTitleStyle}>
                 {item.title}
               </h1>
             </div>
@@ -282,8 +299,8 @@ export default function LearnDetailPage() {
               <button
                 key={cat}
                 onClick={() => router.push(`/learn?category=${cat}`)}
-                className="font-montserrat font-semibold uppercase"
-                style={{ fontSize: "9px", letterSpacing: "0.08em", background: "#333333", color: "#706b6b", padding: "3px 8px", borderRadius: "20px", cursor: "pointer", border: "none" }}
+                className="font-montserrat uppercase"
+                style={catBtnStyle}
               >
                 {cat.replace(/_/g, " ")}
               </button>
@@ -292,8 +309,8 @@ export default function LearnDetailPage() {
 
           {/* Meta row */}
           <div style={{ padding: "12px 20px 12px", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "12px" }}>
-            {publishedDate && <span className="font-montserrat" style={{ fontSize: "11px", color: "#706b6b" }}>{publishedDate}</span>}
-            {item.readingTimeMinutes && <span className="font-montserrat" style={{ fontSize: "11px", color: "#706b6b" }}>{item.readingTimeMinutes} min read</span>}
+            {publishedDate && <span className="font-montserrat" style={{ fontSize: "11px", color: "var(--text-muted)" }}>{publishedDate}</span>}
+            {item.readingTimeMinutes && <span className="font-montserrat" style={{ fontSize: "11px", color: "var(--text-muted)" }}>{item.readingTimeMinutes} min read</span>}
           </div>
 
           {/* Body */}

@@ -50,10 +50,10 @@ function Avatar({ author, size = 28 }: { author: Author; size?: number }) {
   }
   return (
     <div style={{
-      width: size, height: size, borderRadius: '50%', background: '#e4dcd1',
+      width: size, height: size, borderRadius: '50%', background: 'var(--beige)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
     }}>
-      <span style={{ color: '#222222', fontWeight: 700, fontFamily: 'Montserrat, sans-serif', fontSize: size * 0.35 }}>
+      <span style={{ color: '#111111', fontWeight: 800, fontFamily: 'Montserrat, sans-serif', fontSize: size * 0.35 }}>
         {initials}
       </span>
     </div>
@@ -64,7 +64,7 @@ function highlightMentions(text: string) {
   const parts = text.split(/(@\w+)/g)
   return parts.map((part, i) =>
     part.startsWith('@')
-      ? <strong key={i} style={{ color: '#e4dcd1' }}>{part}</strong>
+      ? <strong key={i} style={{ color: 'var(--accent)' }}>{part}</strong>
       : <span key={i}>{part}</span>
   )
 }
@@ -140,8 +140,8 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
 
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-[#222222]">
-        <div className="w-6 h-6 border-2 border-[#e4dcd1] border-t-transparent rounded-full animate-spin" />
+      <div className="h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
+        <div className="w-6 h-6 rounded-full animate-spin" style={{ border: '2px solid var(--accent)', borderTopColor: 'transparent' }} />
       </div>
     )
   }
@@ -149,17 +149,19 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
   if (!post) return null
 
   return (
-    <div className="min-h-screen bg-[#222222]" style={{ paddingBottom: 160 }}>
+    <div className="min-h-screen" style={{ background: 'var(--bg)', paddingBottom: 160 }}>
 
       {/* Header */}
-      <div className="flex items-center gap-3 px-5 pt-4 pb-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+      <div className="flex items-center gap-3 px-5 pt-4 pb-3" style={{ borderBottom: '1px solid var(--border)' }}>
         <button
           onClick={() => router.back()}
-          className="w-8 h-8 flex items-center justify-center rounded-full bg-[#2a2a2a]"
+          className="w-8 h-8 flex items-center justify-center rounded-full"
+          style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+          aria-label="Back"
         >
-          <ArrowLeft size={16} color="#e4dcd1" />
+          <ArrowLeft size={16} style={{ color: 'var(--accent)' }} />
         </button>
-        <p className="text-white font-montserrat font-semibold text-sm">Creator Corner</p>
+        <p className="font-montserrat text-sm" style={{ fontWeight: 700, color: 'var(--text)' }}>Creator Corner</p>
       </div>
 
       {/* Post */}
@@ -167,36 +169,34 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
         <div className="flex items-center gap-3 mb-4">
           <Avatar author={post.author} size={40} />
           <div>
-            <p className="text-white font-montserrat font-semibold text-sm">
+            <p className="font-montserrat text-sm" style={{ fontWeight: 700, color: 'var(--text)' }}>
               {post.author.firstName} {post.author.lastName}
             </p>
-            <p className="text-[#706b6b] text-xs">{getAge(post.createdAt)}</p>
+            <p className="text-xs" style={{ fontWeight: 500, color: 'var(--text-muted)' }}>{getAge(post.createdAt)}</p>
           </div>
         </div>
 
-        <p className="text-[#c8c3bc] font-montserrat text-[14px] leading-relaxed">{post.body}</p>
+        <p className="font-montserrat text-[14px]" style={{ fontWeight: 500, color: 'var(--text)', lineHeight: 1.6 }}>{post.body}</p>
 
         {post.imageUrl && (
-          <div className="mt-4 rounded-xl overflow-hidden">
+          <div className="mt-4 overflow-hidden" style={{ borderRadius: 'var(--radius-card)' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={post.imageUrl} alt="Post image" className="w-full object-cover" />
           </div>
         )}
 
-        <div className="flex gap-4 mt-4 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-          <span className="text-[#706b6b] text-[12px] font-montserrat">♥ {post.likesCount}</span>
-          <span className="text-[#706b6b] text-[12px] font-montserrat">💬 {comments.length}</span>
+        <div className="flex gap-4 mt-4 pt-4" style={{ borderTop: '1px solid var(--border)' }}>
+          <span className="text-[12px] font-montserrat" style={{ fontWeight: 600, color: 'var(--text-muted)' }}>♥ {post.likesCount}</span>
+          <span className="text-[12px] font-montserrat" style={{ fontWeight: 600, color: 'var(--text-muted)' }}>💬 {comments.length}</span>
         </div>
       </div>
 
       {/* Comments */}
       <div className="px-5 mt-6">
-        <p className="font-montserrat font-bold uppercase text-[10px] tracking-[0.14em] text-[#706b6b] mb-4">
-          COMMENTS
-        </p>
+        <p className="eyebrow" style={{ marginBottom: 16 }}>Comments</p>
 
         {comments.length === 0 && (
-          <p className="text-[#706b6b] text-sm text-center py-4">No comments yet. Be the first!</p>
+          <p className="text-sm text-center py-4" style={{ fontWeight: 500, color: 'var(--text-muted)' }}>No comments yet. Be the first!</p>
         )}
 
         <div className="flex flex-col gap-5">
@@ -212,19 +212,20 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
                 <div className="flex gap-3">
                   <Avatar author={c.author} size={28} />
                   <div className="flex-1">
-                    <div className="bg-[#2a2a2a] rounded-xl rounded-tl-none px-3 py-2">
-                      <p className="text-white font-montserrat font-semibold text-[11px]">
+                    <div className="px-3 py-2" style={{ background: 'var(--surface)', borderRadius: '4px 12px 12px 12px' }}>
+                      <p className="font-montserrat text-[11px]" style={{ fontWeight: 700, color: 'var(--text)' }}>
                         {c.author.firstName} {c.author.lastName}
                       </p>
-                      <p className="text-[#c8c3bc] font-montserrat text-[12px] mt-1 leading-relaxed">
+                      <p className="font-montserrat text-[12px] mt-1" style={{ fontWeight: 500, color: 'var(--text-muted)', lineHeight: 1.6 }}>
                         {highlightMentions(c.body)}
                       </p>
                     </div>
                     <div className="flex items-center gap-3 mt-1 ml-1">
-                      <span className="text-[#706b6b] font-montserrat text-[10px]">{getAge(c.createdAt)}</span>
+                      <span className="font-montserrat text-[10px]" style={{ color: 'var(--text-muted)' }}>{getAge(c.createdAt)}</span>
                       <button
                         onClick={() => handleStartReply(c)}
-                        className="text-[#706b6b] font-montserrat font-semibold text-[11px] hover:text-[#e4dcd1] transition-colors"
+                        className="font-montserrat text-[11px] transition-colors"
+                        style={{ fontWeight: 700, color: 'var(--text-muted)' }}
                       >
                         Reply
                       </button>
@@ -234,21 +235,21 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
 
                 {/* Replies */}
                 {replies.length > 0 && (
-                  <div style={{ marginLeft: 36, paddingLeft: 12, borderLeft: '2px solid rgba(228,220,209,0.1)', marginTop: 8 }}>
+                  <div style={{ marginLeft: 36, paddingLeft: 12, borderLeft: '2px solid var(--border)', marginTop: 8 }}>
                     <div className="flex flex-col gap-3">
                       {visibleReplies.map(r => (
                         <div key={r.id} className="flex gap-2">
                           <Avatar author={r.author} size={24} />
                           <div className="flex-1">
-                            <div className="bg-[#2a2a2a] rounded-xl rounded-tl-none px-3 py-2">
-                              <p className="text-white font-montserrat font-semibold text-[10px]">
+                            <div className="px-3 py-2" style={{ background: 'var(--surface)', borderRadius: '4px 12px 12px 12px' }}>
+                              <p className="font-montserrat text-[10px]" style={{ fontWeight: 700, color: 'var(--text)' }}>
                                 {r.author.firstName} {r.author.lastName}
                               </p>
-                              <p className="text-[#c8c3bc] font-montserrat text-[11px] mt-0.5 leading-relaxed">
+                              <p className="font-montserrat text-[11px] mt-0.5" style={{ fontWeight: 500, color: 'var(--text-muted)', lineHeight: 1.6 }}>
                                 {highlightMentions(r.body)}
                               </p>
                             </div>
-                            <span className="text-[#706b6b] font-montserrat text-[10px] ml-1 mt-0.5 block">
+                            <span className="font-montserrat text-[10px] ml-1 mt-0.5 block" style={{ color: 'var(--text-muted)' }}>
                               {getAge(r.createdAt)}
                             </span>
                           </div>
@@ -259,8 +260,8 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
                     {hiddenCount > 0 && (
                       <button
                         onClick={() => toggleReplies(c.id)}
-                        className="font-montserrat font-semibold text-[11px] mt-2 block"
-                        style={{ color: '#e4dcd1' }}
+                        className="font-montserrat text-[11px] mt-2 block"
+                        style={{ fontWeight: 700, color: 'var(--accent)' }}
                       >
                         {showAllReplies ? 'Hide replies' : `View ${hiddenCount} more ${hiddenCount === 1 ? 'reply' : 'replies'}`}
                       </button>
@@ -280,8 +281,8 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
           bottom: 64,
           left: 0,
           right: 0,
-          background: '#222222',
-          borderTop: '1px solid rgba(255,255,255,0.06)',
+          background: 'var(--surface)',
+          borderTop: '1px solid var(--border)',
           zIndex: 50,
         }}
       >
@@ -289,14 +290,14 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
         {replyingTo && (
           <div style={{
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            padding: '8px 16px', background: 'rgba(228,220,209,0.08)',
+            padding: '8px 16px', background: 'var(--surface-2)',
             borderRadius: '8px 8px 0 0',
           }}>
-            <span style={{ color: '#e4dcd1', fontFamily: 'Montserrat, sans-serif', fontSize: 11 }}>
+            <span style={{ color: 'var(--accent)', fontFamily: 'Montserrat, sans-serif', fontWeight: 600, fontSize: 11 }}>
               @{replyingTo.authorName}
             </span>
-            <button onClick={handleCancelReply}>
-              <X size={14} color="#706b6b" />
+            <button onClick={handleCancelReply} aria-label="Cancel reply">
+              <X size={14} style={{ color: 'var(--text-muted)' }} />
             </button>
           </div>
         )}
@@ -315,12 +316,13 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
             rows={1}
             style={{
               flex: 1,
-              background: '#2a2a2a',
-              border: '1px solid rgba(255,255,255,0.08)',
+              background: 'var(--surface-2)',
+              border: '1px solid var(--border)',
               borderRadius: 8,
               padding: '10px 14px',
-              color: 'white',
+              color: 'var(--text)',
               fontFamily: 'Montserrat, sans-serif',
+              fontWeight: 500,
               fontSize: 13,
               resize: 'none',
               outline: 'none',
@@ -330,16 +332,18 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
           <button
             onClick={handleComment}
             disabled={!comment.trim() || submitting}
+            aria-label="Send comment"
             style={{
               width: 40, height: 40, borderRadius: '50%',
-              background: comment.trim() ? '#e4dcd1' : '#333333',
+              background: comment.trim() ? 'var(--pill-bg)' : 'var(--surface-2)',
               border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: comment.trim() ? 'pointer' : 'default', flexShrink: 0,
             }}
           >
-            <Send size={16} color={comment.trim() ? '#222222' : '#706b6b'} />
+            <Send size={16} style={{ color: comment.trim() ? 'var(--pill-text)' : 'var(--text-muted)' }} />
           </button>
         </div>
+        <style>{`textarea::placeholder { color: var(--text-muted); }`}</style>
       </div>
     </div>
   )

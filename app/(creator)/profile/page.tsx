@@ -36,17 +36,17 @@ interface SensitiveProfile {
 
 function InstagramIcon() {
   return (
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#e4dcd1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
       <circle cx="12" cy="12" r="4" />
-      <circle cx="17.5" cy="6.5" r="1" fill="#e4dcd1" stroke="none" />
+      <circle cx="17.5" cy="6.5" r="1" fill="var(--accent)" stroke="none" />
     </svg>
   )
 }
 
 function TikTokIcon() {
   return (
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="#e4dcd1">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--accent)">
       <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.19 8.19 0 0 0 4.79 1.52V6.75a4.85 4.85 0 0 1-1.02-.06z" />
     </svg>
   )
@@ -54,9 +54,9 @@ function TikTokIcon() {
 
 function YouTubeIcon() {
   return (
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="#e4dcd1">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--accent)">
       <path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.54C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z" />
-      <polygon fill="#222222" points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" />
+      <polygon fill="var(--bg)" points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" />
     </svg>
   )
 }
@@ -68,17 +68,17 @@ function Avatar({ profile, size = 88 }: { profile: CreatorProfile; size?: number
       <img
         src={profile.profileImageUrl}
         alt=""
-        style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', border: '2px solid #e4dcd1' }}
+        style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--accent)' }}
       />
     )
   }
   const initials = `${profile.firstName.charAt(0)}${profile.lastName.charAt(0)}`.toUpperCase()
   return (
     <div style={{
-      width: size, height: size, borderRadius: '50%', background: '#2a2a2a',
-      border: '2px solid #e4dcd1', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      width: size, height: size, borderRadius: '50%', background: 'var(--surface)',
+      border: '2px solid var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
-      <span className="font-montserrat font-semibold text-white" style={{ fontSize: size * 0.23 }}>
+      <span className="font-montserrat font-semibold" style={{ fontSize: size * 0.23, color: 'var(--text)' }}>
         {initials}
       </span>
     </div>
@@ -210,8 +210,8 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#222222' }}>
-        <div className="w-6 h-6 border-2 border-[#e4dcd1] border-t-transparent rounded-full animate-spin" />
+      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
+        <div className="w-6 h-6 rounded-full animate-spin" style={{ border: '2px solid var(--accent)', borderTopColor: 'transparent' }} />
       </div>
     )
   }
@@ -223,6 +223,11 @@ export default function ProfilePage() {
   const location = locationParts.length ? locationParts.join(', ') : null
   const joinedYear = new Date(profile.joinedAt).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
 
+  const outlineBtn: React.CSSProperties = {
+    fontSize: 12, fontWeight: 800, letterSpacing: '0.09em', textTransform: 'uppercase',
+    color: 'var(--accent)', border: '1px solid var(--accent)', background: 'transparent',
+  }
+
   return (
     <div style={{ paddingBottom: 80 }}>
       {/* Top profile section */}
@@ -233,15 +238,16 @@ export default function ProfilePage() {
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploadingPhoto}
+            aria-label="Change photo"
             style={{
               position: 'absolute', bottom: 0, right: 0,
               width: 28, height: 28, borderRadius: '50%',
-              background: '#e4dcd1', border: '2px solid #222222',
+              background: 'var(--pill-bg)', border: '2px solid var(--bg)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: 'pointer',
             }}
           >
-            <Camera size={13} color="#222" />
+            <Camera size={13} style={{ color: 'var(--pill-text)' }} />
           </button>
           <input
             ref={fileInputRef}
@@ -252,21 +258,21 @@ export default function ProfilePage() {
           />
         </div>
 
-        <h1 className="font-playfair italic font-normal text-white" style={{ fontSize: 22, marginTop: 12 }}>
+        <h1 className="font-montserrat" style={{ fontSize: 22, fontWeight: 800, color: 'var(--text)', marginTop: 12 }}>
           {displayName}
         </h1>
 
         <div className="mt-2">
           <span
-            className="font-montserrat font-semibold uppercase"
-            style={{ fontSize: 9, letterSpacing: '0.10em', background: '#e4dcd1', color: '#222222', padding: '3px 10px', borderRadius: 20 }}
+            className="font-montserrat uppercase"
+            style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', background: 'var(--beige)', color: '#111111', padding: '4px 10px', borderRadius: 'var(--radius-pill)' }}
           >
             WGY Creator
           </span>
         </div>
 
         {profile.bio && (
-          <p className="font-montserrat font-normal mt-3" style={{ fontSize: 13, color: '#706b6b', lineHeight: 1.6, maxWidth: 280 }}>
+          <p className="font-montserrat mt-3" style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-muted)', lineHeight: 1.6, maxWidth: 280 }}>
             {profile.bio}
           </p>
         )}
@@ -289,7 +295,7 @@ export default function ProfilePage() {
             </a>
           )}
           {!profile.instagramHandle && !profile.tiktokHandle && !profile.youtubeUrl && (
-            <button onClick={openEdit} className="font-montserrat font-semibold" style={{ fontSize: 11, color: '#706b6b', background: 'none', border: 'none', cursor: 'pointer' }}>
+            <button onClick={openEdit} className="font-montserrat font-semibold" style={{ fontSize: 11, color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
               + Add social links
             </button>
           )}
@@ -299,15 +305,13 @@ export default function ProfilePage() {
       {/* Content Niches */}
       {profile.contentNiches.length > 0 && (
         <div className="px-5 mb-5">
-          <p className="font-montserrat font-bold uppercase mb-3" style={{ fontSize: 10, letterSpacing: '0.12em', color: '#706b6b' }}>
-            Content Niches
-          </p>
+          <p className="eyebrow" style={{ marginBottom: 12 }}>Content Niches</p>
           <div className="flex flex-wrap gap-2">
             {profile.contentNiches.map(n => (
               <span
                 key={n}
-                className="font-montserrat font-semibold uppercase"
-                style={{ fontSize: 9, letterSpacing: '0.08em', background: 'rgba(228,220,209,0.12)', color: '#e4dcd1', padding: '4px 10px', borderRadius: 20 }}
+                className="font-montserrat uppercase"
+                style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', background: 'var(--surface-2)', color: 'var(--accent)', padding: '4px 10px', borderRadius: 'var(--radius-pill)' }}
               >
                 {n}
               </span>
@@ -316,13 +320,11 @@ export default function ProfilePage() {
         </div>
       )}
 
-      <div className="mx-5 mb-5" style={{ height: 1, background: 'rgba(255,255,255,0.06)' }} />
+      <div className="mx-5 mb-5" style={{ height: 1, background: 'var(--border)' }} />
 
       {/* My Details */}
       <div className="px-5">
-        <p className="font-montserrat font-bold uppercase mb-2" style={{ fontSize: 10, letterSpacing: '0.12em', color: '#706b6b' }}>
-          My Details
-        </p>
+        <p className="eyebrow" style={{ marginBottom: 8 }}>My Details</p>
         <div>
           {[
             { label: 'Name', value: `${profile.firstName} ${profile.lastName}` },
@@ -330,11 +332,11 @@ export default function ProfilePage() {
             ...(location ? [{ label: 'Location', value: location }] : []),
             { label: 'Member Since', value: joinedYear },
           ].map((row, i) => (
-            <div key={i} className="flex flex-col py-[14px]" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-              <span className="font-montserrat font-normal uppercase mb-1" style={{ fontSize: 11, letterSpacing: '0.08em', color: '#706b6b' }}>
+            <div key={i} className="flex flex-col py-[14px]" style={{ borderBottom: '1px solid var(--border)' }}>
+              <span className="font-montserrat uppercase mb-1" style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', color: 'var(--text-muted)' }}>
                 {row.label}
               </span>
-              <span className="font-montserrat font-normal text-white" style={{ fontSize: 13 }}>
+              <span className="font-montserrat" style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>
                 {row.value}
               </span>
             </div>
@@ -346,22 +348,22 @@ export default function ProfilePage() {
       <div className="px-5 mt-8 flex flex-col gap-3">
         <button
           onClick={openEdit}
-          className="w-full h-11 rounded-button font-montserrat font-semibold transition-opacity active:opacity-70"
-          style={{ fontSize: 13, color: '#e4dcd1', border: '1px solid #e4dcd1', background: 'transparent' }}
+          className="w-full h-11 rounded-button font-montserrat transition-opacity active:opacity-70"
+          style={outlineBtn}
         >
           Edit Profile
         </button>
         <button
           onClick={() => router.push('/membership')}
-          className="w-full h-11 rounded-button font-montserrat font-semibold transition-opacity active:opacity-70"
-          style={{ fontSize: 13, color: '#e4dcd1', border: '1px solid #e4dcd1', background: 'transparent' }}
+          className="w-full h-11 rounded-button font-montserrat transition-opacity active:opacity-70"
+          style={outlineBtn}
         >
           Manage Membership
         </button>
         <button
           onClick={() => signOut({ callbackUrl: '/sign-in' })}
           className="w-full text-center font-montserrat font-normal mt-1"
-          style={{ fontSize: 12, color: '#706b6b', background: 'none', border: 'none', cursor: 'pointer' }}
+          style={{ fontSize: 12, color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}
         >
           Sign Out
         </button>
@@ -369,12 +371,12 @@ export default function ProfilePage() {
 
       {/* Edit Modal */}
       {editOpen && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', flexDirection: 'column', background: '#222222', overflowY: 'auto' }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', flexDirection: 'column', background: 'var(--bg)', overflowY: 'auto' }}>
           {/* Modal Header */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
-            <p className="font-montserrat font-semibold text-white" style={{ fontSize: 14 }}>Edit Profile</p>
-            <button onClick={() => setEditOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
-              <X size={18} color="#706b6b" />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
+            <p className="font-montserrat" style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>Edit Profile</p>
+            <button onClick={() => setEditOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }} aria-label="Close">
+              <X size={18} style={{ color: 'var(--text-muted)' }} />
             </button>
           </div>
 
@@ -419,11 +421,11 @@ export default function ProfilePage() {
                     key={n}
                     onClick={() => toggleNiche(n)}
                     style={{
-                      padding: '5px 12px', borderRadius: 20, fontSize: 11,
+                      padding: '5px 12px', borderRadius: 'var(--radius-pill)', fontSize: 11,
                       fontFamily: 'Montserrat, sans-serif', fontWeight: 600,
                       cursor: 'pointer', border: 'none',
-                      background: form.contentNiches.includes(n) ? '#e4dcd1' : 'rgba(255,255,255,0.08)',
-                      color: form.contentNiches.includes(n) ? '#222' : '#c8c3bc',
+                      background: form.contentNiches.includes(n) ? 'var(--pill-bg)' : 'var(--surface-2)',
+                      color: form.contentNiches.includes(n) ? 'var(--pill-text)' : 'var(--text-muted)',
                     }}
                   >
                     {n}
@@ -441,19 +443,20 @@ export default function ProfilePage() {
                 />
                 <button
                   onClick={addCustomNiche}
-                  style={{ width: 36, height: 36, borderRadius: 8, background: '#e4dcd1', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                  aria-label="Add niche"
+                  style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--pill-bg)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
                 >
-                  <Plus size={14} color="#222" />
+                  <Plus size={14} style={{ color: 'var(--pill-text)' }} />
                 </button>
               </div>
               {/* Custom niches */}
               {form.contentNiches.filter(n => !NICHE_OPTIONS.includes(n)).length > 0 && (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
                   {form.contentNiches.filter(n => !NICHE_OPTIONS.includes(n)).map(n => (
-                    <span key={n} style={{ display: 'flex', alignItems: 'center', gap: 4, background: '#e4dcd1', color: '#222', padding: '3px 10px', borderRadius: 20, fontSize: 11, fontFamily: 'Montserrat, sans-serif', fontWeight: 600 }}>
+                    <span key={n} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'var(--beige)', color: '#111111', padding: '3px 10px', borderRadius: 'var(--radius-pill)', fontSize: 11, fontFamily: 'Montserrat, sans-serif', fontWeight: 600 }}>
                       {n}
-                      <button onClick={() => toggleNiche(n)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}>
-                        <X size={10} color="#222" />
+                      <button onClick={() => toggleNiche(n)} aria-label={`Remove ${n}`} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}>
+                        <X size={10} color="#111111" />
                       </button>
                     </span>
                   ))}
@@ -509,11 +512,12 @@ export default function ProfilePage() {
               onClick={handleSave}
               disabled={saving}
               style={{
-                width: '100%', height: 48, borderRadius: 8,
-                background: saving ? '#333' : '#e4dcd1',
-                color: saving ? '#706b6b' : '#222222',
-                border: 'none', fontSize: 14, fontFamily: 'Montserrat, sans-serif',
-                fontWeight: 700, cursor: saving ? 'default' : 'pointer',
+                width: '100%', height: 48, borderRadius: 'var(--radius-pill)',
+                background: saving ? 'var(--surface-2)' : 'var(--pill-bg)',
+                color: saving ? 'var(--text-muted)' : 'var(--pill-text)',
+                border: 'none', fontSize: 12, fontFamily: 'Montserrat, sans-serif',
+                fontWeight: 800, letterSpacing: '0.09em', textTransform: 'uppercase',
+                cursor: saving ? 'default' : 'pointer',
                 marginTop: 8, marginBottom: 24,
               }}
             >
@@ -526,19 +530,20 @@ export default function ProfilePage() {
       <style>{`
         input, textarea, select {
           width: 100%;
-          background: #2a2a2a;
-          border: 1px solid rgba(255,255,255,0.08);
+          background: var(--surface);
+          border: 1px solid var(--border);
           border-radius: 8px;
           padding: 10px 14px;
-          color: white;
+          color: var(--text);
           font-family: Montserrat, sans-serif;
           font-size: 13px;
+          font-weight: 500;
           outline: none;
           resize: none;
           box-sizing: border-box;
         }
-        select option { background: #2a2a2a; }
-        input::placeholder, textarea::placeholder { color: #706b6b; }
+        select option { background: var(--surface); color: var(--text); }
+        input::placeholder, textarea::placeholder { color: var(--text-muted); }
       `}</style>
     </div>
   )
@@ -547,9 +552,7 @@ export default function ProfilePage() {
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="font-montserrat font-bold uppercase mb-3" style={{ fontSize: 10, letterSpacing: '0.12em', color: '#9b7e56' }}>
-        {label}
-      </p>
+      <p className="eyebrow" style={{ marginBottom: 12 }}>{label}</p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {children}
       </div>
@@ -560,7 +563,7 @@ function Section({ label, children }: { label: string; children: React.ReactNode
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="font-montserrat font-normal uppercase mb-1" style={{ fontSize: 10, letterSpacing: '0.08em', color: '#706b6b' }}>
+      <p className="font-montserrat uppercase mb-1" style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', color: 'var(--text-muted)' }}>
         {label}
       </p>
       {children}

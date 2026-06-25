@@ -67,13 +67,13 @@ export default function NotificationsPage() {
   return (
     <div>
       <div className="px-5 pt-6 pb-4">
-        <h1 className="text-page-heading text-white">Notifications</h1>
+        <h1 className="text-page-heading" style={{ margin: 0 }}>Notifications</h1>
       </div>
 
       {loading && (
         <div className="px-5 flex flex-col gap-3">
           {[1, 2, 3].map(i => (
-            <div key={i} className="h-16 bg-[#2a2a2a] rounded-xl animate-pulse" />
+            <div key={i} className="h-16 animate-pulse" style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-card)' }} />
           ))}
         </div>
       )}
@@ -82,14 +82,14 @@ export default function NotificationsPage() {
         <div className="flex flex-col items-center" style={{ padding: '60px 20px' }}>
           <div
             className="flex items-center justify-center"
-            style={{ width: 64, height: 64, borderRadius: '50%', background: '#2a2a2a' }}
+            style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--surface)', border: '1px solid var(--border)' }}
           >
-            <Bell size={28} color="#706b6b" strokeWidth={1.5} />
+            <Bell size={28} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} />
           </div>
-          <p className="font-playfair italic font-normal text-white text-center" style={{ fontSize: 18, marginTop: 16 }}>
+          <p className="font-montserrat text-center" style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', marginTop: 16 }}>
             No notifications yet
           </p>
-          <p className="font-montserrat font-normal text-center" style={{ fontSize: 13, color: '#706b6b', marginTop: 6 }}>
+          <p className="font-montserrat text-center" style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-muted)', marginTop: 6 }}>
             You are all caught up!
           </p>
         </div>
@@ -104,40 +104,40 @@ export default function NotificationsPage() {
                 <div
                   className="flex gap-3 px-5 py-[14px] cursor-pointer"
                   style={{
-                    background: '#222222',
-                    borderLeft: n.isRead ? '2px solid transparent' : '2px solid #e4dcd1',
+                    background: 'var(--bg)',
+                    borderLeft: n.isRead ? '2px solid transparent' : '2px solid var(--accent)',
                   }}
                   onClick={() => handleClick(n)}
                 >
                   <div
                     className="w-9 h-9 rounded-full flex items-center justify-center flex-none"
-                    style={{ background: '#2a2a2a' }}
+                    style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
                   >
-                    <Icon size={16} color={n.isRead ? '#706b6b' : '#e4dcd1'} strokeWidth={1.5} />
+                    <Icon size={16} strokeWidth={1.5} style={{ color: n.isRead ? 'var(--text-muted)' : 'var(--accent)' }} />
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <p
-                      className="font-montserrat font-semibold"
-                      style={{ fontSize: 13, color: n.isRead ? '#706b6b' : 'white' }}
+                      className="font-montserrat"
+                      style={{ fontSize: 13, fontWeight: 700, color: n.isRead ? 'var(--text-muted)' : 'var(--text)' }}
                     >
                       {n.title}
                     </p>
                     <p
-                      className="font-montserrat font-normal mt-[2px]"
-                      style={{ fontSize: 12, color: '#706b6b' }}
+                      className="font-montserrat mt-[2px]"
+                      style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)' }}
                     >
                       {n.description}
                     </p>
                   </div>
 
-                  <span className="font-montserrat font-normal flex-none" style={{ fontSize: 10, color: '#706b6b' }}>
+                  <span className="font-montserrat flex-none" style={{ fontSize: 10, color: 'var(--text-muted)' }}>
                     {getAge(n.createdAt)}
                   </span>
                 </div>
 
                 {i < notifications.length - 1 && (
-                  <div className="mx-5" style={{ height: 1, background: 'rgba(255,255,255,0.04)' }} />
+                  <div className="mx-5" style={{ height: 1, background: 'var(--border)' }} />
                 )}
               </div>
             )

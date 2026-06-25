@@ -5,7 +5,8 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { CONTENT_TYPE_BG, CONTENT_TYPE_PILL } from "@/lib/constants";
+import { CONTENT_TYPE_LABEL } from "@/lib/constants";
+import { Eyebrow } from "@/components/ui/eyebrow";
 
 interface ContentItem {
   id: string;
@@ -31,14 +32,34 @@ const TYPE_FILTERS = [
   { label: "INDUSTRY UPDATE", value: "industry_update" },
 ];
 
+const cardStyle: React.CSSProperties = {
+  background: "var(--surface)",
+  borderRadius: "var(--radius-card)",
+  overflow: "hidden",
+  border: "1px solid var(--border)",
+  display: "block",
+  textDecoration: "none",
+};
+
+const mediaPlaceholder = "linear-gradient(140deg, var(--img-b), var(--img-a))";
+
+function KindPill({ label }: { label: string }) {
+  return (
+    <span
+      className="font-montserrat uppercase"
+      style={{ fontSize: "9px", fontWeight: 800, letterSpacing: "0.12em", background: "rgba(17,17,17,0.72)", color: "#e4dcd1", padding: "5px 10px", borderRadius: "var(--radius-pill)", border: "1px solid rgba(228,220,209,0.2)" }}
+    >
+      {label}
+    </span>
+  );
+}
 
 function ContentCard({ item }: { item: ContentItem }) {
   const router = useRouter();
   const isWorkbook = item.contentType === "workbook";
   const isVideo = item.contentType === "video";
   const hasThumbnail = !!item.thumbnailUrl;
-  const pillStyle = CONTENT_TYPE_PILL[item.contentType] ?? CONTENT_TYPE_PILL.blog_post;
-  const bg = CONTENT_TYPE_BG[item.contentType] ?? "#3a3a3a";
+  const label = CONTENT_TYPE_LABEL[item.contentType] ?? item.contentType.replace(/_/g, " ");
 
   // Workbook: thumbnail image if available, then PDF icon fallback — fully clickable
   if (isWorkbook) {
@@ -46,28 +67,19 @@ function ContentCard({ item }: { item: ContentItem }) {
       <div
         onClick={() => router.push(`/learn/${item.id}`)}
         className="cursor-pointer"
-        style={{
-          background: "#2a2a2a",
-          borderRadius: "12px",
-          overflow: "hidden",
-          border: "1px solid rgba(228,220,209,0.08)",
-        }}
+        style={cardStyle}
       >
         {/* Thumbnail area */}
-        <div className="relative" style={{ height: "180px", background: hasThumbnail ? undefined : bg }}>
+        <div className="relative" style={{ height: "180px", background: hasThumbnail ? undefined : mediaPlaceholder }}>
           {hasThumbnail ? (
             <Image src={item.thumbnailUrl!} alt={item.title} fill style={{ objectFit: "cover" }} />
           ) : null}
-          <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.2)" }} />
-          <div className="absolute top-3 left-3">
-            <span className="font-montserrat font-semibold uppercase" style={{ fontSize: "9px", letterSpacing: "0.10em", background: pillStyle.bg, color: pillStyle.text, padding: "3px 10px", borderRadius: "20px" }}>
-              {pillStyle.label}
-            </span>
-          </div>
+          {hasThumbnail && <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.2)" }} />}
+          <div className="absolute top-3 left-3"><KindPill label={label} /></div>
         </div>
-        <div style={{ padding: "12px" }}>
-          <p className="font-playfair font-normal text-white" style={{ fontSize: "15px", lineHeight: 1.3 }}>{item.title}</p>
-          <p className="font-montserrat font-normal mt-1" style={{ fontSize: "11px", color: "#706b6b" }}>Workbook</p>
+        <div style={{ padding: "13px 15px 16px" }}>
+          <h3 className="font-montserrat" style={{ fontSize: "15px", fontWeight: 800, lineHeight: 1.25, color: "var(--text)", margin: 0 }}>{item.title}</h3>
+          <p className="font-montserrat uppercase mt-1" style={{ fontSize: "10.5px", fontWeight: 600, letterSpacing: "0.04em", color: "var(--text-muted)" }}>Download</p>
         </div>
       </div>
     );
@@ -76,39 +88,25 @@ function ContentCard({ item }: { item: ContentItem }) {
   // Video: card with play button
   if (isVideo) {
     return (
-      <Link
-        href={`/learn/${item.id}`}
-        style={{
-          background: "#2a2a2a",
-          borderRadius: "12px",
-          overflow: "hidden",
-          border: "1px solid rgba(228,220,209,0.08)",
-          display: "block",
-          textDecoration: "none",
-        }}
-      >
-        <div className="relative" style={{ height: "130px", background: hasThumbnail ? undefined : bg }}>
+      <Link href={`/learn/${item.id}`} style={cardStyle}>
+        <div className="relative" style={{ height: "130px", background: hasThumbnail ? undefined : mediaPlaceholder }}>
           {hasThumbnail && <Image src={item.thumbnailUrl!} alt={item.title} fill style={{ objectFit: "cover" }} />}
           <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.25)" }} />
-          <div className="absolute top-3 left-3">
-            <span className="font-montserrat font-semibold uppercase" style={{ fontSize: "9px", letterSpacing: "0.10em", background: pillStyle.bg, color: pillStyle.text, border: pillStyle.border, padding: "3px 10px", borderRadius: "20px" }}>
-              {pillStyle.label}
-            </span>
-          </div>
+          <div className="absolute top-3 left-3"><KindPill label={label} /></div>
           <div className="absolute inset-0 flex items-center justify-center">
             <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "rgba(228,220,209,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Play size={16} color="#e4dcd1" fill="#e4dcd1" />
+              <Play size={16} style={{ color: "var(--accent)" }} fill="currentColor" />
             </div>
           </div>
         </div>
-        <div style={{ padding: "12px" }}>
-          <p className="font-playfair font-normal text-white" style={{ fontSize: "15px", lineHeight: 1.3 }}>{item.title}</p>
+        <div style={{ padding: "13px 15px 16px" }}>
+          <h3 className="font-montserrat" style={{ fontSize: "15px", fontWeight: 800, lineHeight: 1.25, color: "var(--text)", margin: 0 }}>{item.title}</h3>
           <div className="flex items-center gap-2 mt-1">
-            <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#706b6b" }}>Video</span>
+            <span className="font-montserrat" style={{ fontSize: "11px", fontWeight: 500, color: "var(--text-muted)" }}>Video</span>
             {item.categories.length > 0 && (
               <>
-                <span style={{ fontSize: "11px", color: "#444" }}>·</span>
-                <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#706b6b" }}>{item.categories[0].replace(/_/g, " ")}</span>
+                <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>·</span>
+                <span className="font-montserrat" style={{ fontSize: "11px", fontWeight: 500, color: "var(--text-muted)" }}>{item.categories[0].replace(/_/g, " ")}</span>
               </>
             )}
           </div>
@@ -119,39 +117,25 @@ function ContentCard({ item }: { item: ContentItem }) {
 
   // Blog post, course, industry update: card with thumbnail
   return (
-    <Link
-      href={`/learn/${item.id}`}
-      style={{
-        background: "#2a2a2a",
-        borderRadius: "12px",
-        overflow: "hidden",
-        border: "1px solid rgba(228,220,209,0.08)",
-        display: "block",
-        textDecoration: "none",
-      }}
-    >
-      <div className="relative" style={{ height: "130px", background: hasThumbnail ? undefined : bg }}>
+    <Link href={`/learn/${item.id}`} style={cardStyle}>
+      <div className="relative" style={{ height: "130px", background: hasThumbnail ? undefined : mediaPlaceholder }}>
         {hasThumbnail && <Image src={item.thumbnailUrl!} alt={item.title} fill style={{ objectFit: "cover" }} />}
         <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.25)" }} />
-        <div className="absolute top-3 left-3">
-          <span className="font-montserrat font-semibold uppercase" style={{ fontSize: "9px", letterSpacing: "0.10em", background: pillStyle.bg, color: pillStyle.text, border: pillStyle.border, padding: "3px 10px", borderRadius: "20px" }}>
-            {pillStyle.label}
-          </span>
-        </div>
+        <div className="absolute top-3 left-3"><KindPill label={label} /></div>
         <div className="absolute bottom-3 right-3">
-          <BookOpen size={16} color="rgba(228,220,209,0.4)" />
+          <BookOpen size={16} style={{ color: "rgba(228,220,209,0.4)" }} />
         </div>
       </div>
-      <div style={{ padding: "12px" }}>
-        <p className="font-playfair font-normal text-white" style={{ fontSize: "15px", lineHeight: 1.3 }}>{item.title}</p>
+      <div style={{ padding: "13px 15px 16px" }}>
+        <h3 className="font-montserrat" style={{ fontSize: "15px", fontWeight: 800, lineHeight: 1.25, color: "var(--text)", margin: 0 }}>{item.title}</h3>
         <div className="flex items-center gap-2 mt-1">
           {item.readingTimeMinutes && (
-            <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#706b6b" }}>{item.readingTimeMinutes} min read</span>
+            <span className="font-montserrat" style={{ fontSize: "11px", fontWeight: 500, color: "var(--text-muted)" }}>{item.readingTimeMinutes} min read</span>
           )}
           {item.categories.length > 0 && (
             <>
-              {item.readingTimeMinutes && <span style={{ fontSize: "11px", color: "#444" }}>·</span>}
-              <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "#706b6b" }}>{item.categories[0].replace(/_/g, " ")}</span>
+              {item.readingTimeMinutes && <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>·</span>}
+              <span className="font-montserrat" style={{ fontSize: "11px", fontWeight: 500, color: "var(--text-muted)" }}>{item.categories[0].replace(/_/g, " ")}</span>
             </>
           )}
         </div>
@@ -192,31 +176,33 @@ function LearnPageInner() {
   });
 
   const pillBase = {
-    fontSize: "9px" as const,
-    letterSpacing: "0.10em",
+    fontSize: "10px" as const,
+    fontWeight: 700 as const,
+    letterSpacing: "0.12em",
     padding: "5px 14px",
-    borderRadius: "20px",
+    borderRadius: "var(--radius-pill)",
   };
 
   return (
     <div>
       {/* Header */}
-      <div style={{ padding: "20px 20px 16px" }}>
-        <h1 className="text-page-heading text-white">Learning Lounge</h1>
+      <div style={{ padding: "24px 20px 16px" }}>
+        <Eyebrow style={{ marginBottom: 8 }}>Learning Lounge</Eyebrow>
+        <h2 className="text-heading-large" style={{ margin: 0 }}>Level <em className="font-accent">up</em></h2>
       </div>
 
       {/* Search bar */}
       <div className="relative flex items-center" style={{ margin: "0 20px 16px", height: "44px" }}>
-        <Search size={16} color="#706b6b" className="absolute left-4" style={{ pointerEvents: "none" }} />
+        <Search size={16} className="absolute left-4" style={{ pointerEvents: "none", color: "var(--text-muted)" }} />
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search resources..."
-          className="w-full h-full font-montserrat font-normal outline-none"
-          style={{ background: "#2a2a2a", borderRadius: "8px", paddingLeft: "44px", paddingRight: "16px", fontSize: "13px", color: "#ffffff", caretColor: "#e4dcd1" }}
+          className="w-full h-full font-montserrat outline-none"
+          style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "var(--radius-pill)", paddingLeft: "44px", paddingRight: "16px", fontSize: "13px", fontWeight: 500, color: "var(--text)", caretColor: "var(--accent)" }}
         />
-        <style>{`input::placeholder { color: #706b6b; }`}</style>
+        <style>{`input::placeholder { color: var(--text-muted); }`}</style>
       </div>
 
       {/* Type filter pills */}
@@ -227,8 +213,8 @@ function LearnPageInner() {
             <button
               key={f.value}
               onClick={() => setActiveType(f.value)}
-              className="flex-none font-montserrat font-semibold uppercase transition-colors"
-              style={{ ...pillBase, background: isActive ? "#e4dcd1" : "transparent", color: isActive ? "#222222" : "#706b6b", border: isActive ? "none" : "1px solid rgba(228,220,209,0.25)" }}
+              className="flex-none font-montserrat uppercase transition-colors"
+              style={{ ...pillBase, background: isActive ? "var(--pill-bg)" : "transparent", color: isActive ? "var(--pill-text)" : "var(--text-muted)", border: isActive ? "1px solid var(--pill-bg)" : "1px solid var(--border-strong)" }}
             >
               {f.label}
             </button>
@@ -241,13 +227,13 @@ function LearnPageInner() {
         {loading ? (
           <>
             {[1, 2, 3].map((i) => (
-              <div key={i} style={{ height: "180px", background: "#2a2a2a", borderRadius: "12px", opacity: 0.5 }} />
+              <div key={i} style={{ height: "180px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)", opacity: 0.5 }} />
             ))}
           </>
         ) : filtered.length === 0 ? (
           <div style={{ padding: "40px 0", textAlign: "center" }}>
-            <p className="font-playfair italic text-white/40" style={{ fontSize: "18px" }}>Nothing here yet</p>
-            <p className="font-montserrat text-white/25 mt-1" style={{ fontSize: "12px" }}>Check back soon for new resources</p>
+            <p className="font-montserrat" style={{ fontSize: "18px", fontWeight: 800, color: "var(--text)" }}>Nothing here yet</p>
+            <p className="font-montserrat mt-1" style={{ fontSize: "12px", fontWeight: 500, color: "var(--text-muted)" }}>Check back soon for new resources</p>
           </div>
         ) : (
           filtered.map((item) => <ContentCard key={item.id} item={item} />)

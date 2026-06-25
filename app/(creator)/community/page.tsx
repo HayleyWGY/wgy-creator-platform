@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { COMMUNITY_ROOMS } from '@/lib/constants'
 import { CreatorPostCard, type CreatorPost } from '@/components/creator/creator-post-card'
+import { Eyebrow } from '@/components/ui/eyebrow'
+import { SectionHeader } from '@/components/ui/section-header'
 
 function RoomsList() {
   const router = useRouter()
@@ -12,14 +14,18 @@ function RoomsList() {
         <div
           key={room.id}
           onClick={() => router.push(`/community/${room.id}`)}
-          className="flex items-center gap-3 p-4 rounded-xl bg-[#2a2a2a] cursor-pointer active:opacity-80 transition-opacity"
+          className="flex items-center gap-3 p-4 cursor-pointer active:opacity-80 transition-opacity"
+          style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-card)' }}
         >
-          <div className="w-10 h-10 rounded-xl bg-[#333333] flex items-center justify-center text-lg flex-shrink-0">
+          <div
+            className="w-10 h-10 flex items-center justify-center text-lg flex-shrink-0"
+            style={{ background: 'var(--surface-2)', borderRadius: 12 }}
+          >
             {room.emoji}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-white font-montserrat font-semibold text-sm">{room.name}</p>
-            <p className="text-[#706b6b] text-xs truncate mt-0.5">{room.description}</p>
+            <p className="font-montserrat text-sm" style={{ fontWeight: 700, color: 'var(--text)' }}>{room.name}</p>
+            <p className="text-xs truncate mt-0.5" style={{ fontWeight: 500, color: 'var(--text-muted)' }}>{room.description}</p>
           </div>
         </div>
       ))}
@@ -40,41 +46,34 @@ export default function CommunityPage() {
   }, [])
 
   return (
-    <div className="pb-20 bg-[#222222] min-h-screen">
+    <div className="pb-20 min-h-screen" style={{ background: 'var(--bg)' }}>
 
       {/* Header */}
-      <div className="px-5 pt-4 pb-2">
-        <h1 className="text-page-heading text-white">Community</h1>
+      <div className="px-5 pt-6 pb-2">
+        <Eyebrow style={{ marginBottom: 8 }}>Community</Eyebrow>
+        <h2 className="text-heading-large" style={{ margin: 0 }}>The <em className="font-accent">collective</em></h2>
       </div>
 
       {/* Chat Rooms */}
-      <div className="px-5 mt-3">
-        <p className="font-montserrat font-bold uppercase text-[10px] tracking-[0.14em] text-[#706b6b] mb-3">
-          CHAT ROOMS
-        </p>
+      <div className="px-5 mt-4">
+        <Eyebrow style={{ marginBottom: 12 }}>Chat Rooms</Eyebrow>
         <RoomsList />
       </div>
 
       {/* Creator Corner */}
-      <div className="px-5 mt-6">
-        <div className="flex items-center justify-between mb-3">
-          <p className="font-montserrat font-bold uppercase text-[10px] tracking-[0.14em] text-[#e4dcd1]">
-            CREATOR CORNER
-          </p>
-          <button
-            onClick={() => router.push('/community/creator-corner')}
-            className="text-[#e4dcd1] font-montserrat font-semibold text-[11px]"
-          >
-            View all →
-          </button>
+      <div className="px-5 mt-7">
+        <Eyebrow style={{ marginBottom: 10 }}>Creator Corner</Eyebrow>
+        <div className="mb-3">
+          <SectionHeader lead="From the" accent="community" seeAllHref="/community/creator-corner" />
         </div>
 
         {/* New post prompt */}
         <button
           onClick={() => router.push('/community/creator-corner/new')}
-          className="w-full p-4 rounded-xl bg-[#2a2a2a] text-left mb-3 border border-white/5 active:opacity-80 transition-opacity"
+          className="w-full p-4 text-left mb-3 active:opacity-80 transition-opacity"
+          style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-card)' }}
         >
-          <p className="text-[#706b6b] font-montserrat text-sm">
+          <p className="font-montserrat text-sm" style={{ fontWeight: 500, color: 'var(--text-muted)' }}>
             Share something with the community...
           </p>
         </button>
@@ -83,7 +82,7 @@ export default function CommunityPage() {
         {postsLoading ? (
           <div className="flex flex-col gap-3">
             {[1, 2].map(i => (
-              <div key={i} className="h-24 bg-[#2a2a2a] rounded-xl animate-pulse" />
+              <div key={i} className="h-24 animate-pulse" style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-card)' }} />
             ))}
           </div>
         ) : (
@@ -96,7 +95,7 @@ export default function CommunityPage() {
               />
             ))}
             {posts.length === 0 && (
-              <p className="text-center py-8 font-montserrat text-[#706b6b] text-sm">
+              <p className="text-center py-8 font-montserrat text-sm" style={{ fontWeight: 500, color: 'var(--text-muted)' }}>
                 No posts yet. Be the first!
               </p>
             )}

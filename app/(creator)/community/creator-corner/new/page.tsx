@@ -75,24 +75,27 @@ export default function NewPostPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#222222] pb-10">
+    <div className="min-h-screen pb-10" style={{ background: 'var(--bg)' }}>
 
       {/* Header */}
       <div
         className="flex items-center justify-between px-5 pt-4 pb-4"
-        style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}
+        style={{ borderBottom: '1px solid var(--border)' }}
       >
         <button
           onClick={() => router.back()}
-          className="w-8 h-8 flex items-center justify-center rounded-full bg-[#2a2a2a]"
+          className="w-8 h-8 flex items-center justify-center rounded-full"
+          style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+          aria-label="Back"
         >
-          <ArrowLeft size={16} color="#e4dcd1" />
+          <ArrowLeft size={16} style={{ color: 'var(--accent)' }} />
         </button>
-        <p className="text-white font-montserrat font-semibold text-sm">New Post</p>
+        <p className="font-montserrat text-sm" style={{ fontWeight: 700, color: 'var(--text)' }}>New Post</p>
         <button
           onClick={handleSubmit}
           disabled={!body.trim() || wordCount > 1000 || submitting}
-          className="text-[#e4dcd1] font-montserrat font-semibold text-sm disabled:opacity-40 transition-opacity"
+          className="font-montserrat uppercase text-[12px] disabled:opacity-40 transition-opacity"
+          style={{ fontWeight: 800, letterSpacing: '0.09em', color: 'var(--accent)' }}
         >
           {submitting ? 'Posting...' : 'Post'}
         </button>
@@ -103,25 +106,28 @@ export default function NewPostPage() {
           value={body}
           onChange={e => setBody(e.target.value)}
           placeholder="Share something with the WGY community..."
-          className="w-full bg-transparent text-white font-montserrat text-[14px] leading-relaxed focus:outline-none resize-none"
-          style={{ color: '#ffffff', minHeight: '200px' }}
+          className="w-full bg-transparent font-montserrat text-[14px] leading-relaxed focus:outline-none resize-none"
+          style={{ color: 'var(--text)', fontWeight: 500, minHeight: '200px' }}
           rows={10}
           autoFocus
         />
+        <style>{`textarea::placeholder { color: var(--text-muted); }`}</style>
 
-        <p className={`text-right text-[11px] font-montserrat mt-2 ${
-          wordCount > 1000 ? 'text-red-400' : wordCount > 900 ? 'text-[#9b7e56]' : 'text-[#706b6b]'
-        }`}>
+        <p
+          className="text-right text-[11px] font-montserrat mt-2"
+          style={{ fontWeight: 600, color: wordCount > 1000 ? 'var(--error)' : wordCount > 900 ? 'var(--accent)' : 'var(--text-muted)' }}
+        >
           {wordCount} / 1000 words
         </p>
 
         {imageUrl && (
           <div className="mt-4 relative">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={imageUrl} alt="Post image" className="w-full rounded-xl object-cover max-h-64" />
+            <img src={imageUrl} alt="Post image" className="w-full object-cover max-h-64" style={{ borderRadius: 'var(--radius-card)' }} />
             <button
               onClick={() => setImageUrl('')}
               className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 text-white flex items-center justify-center text-xs"
+              aria-label="Remove image"
             >
               ✕
             </button>
@@ -130,14 +136,17 @@ export default function NewPostPage() {
 
         {!imageUrl && (
           <div className="mt-4">
-            <label className={`flex items-center gap-2 font-montserrat text-sm transition-colors ${uploading ? 'text-[#e4dcd1] cursor-wait' : 'text-[#706b6b] cursor-pointer hover:text-[#e4dcd1]'}`}>
+            <label
+              className="flex items-center gap-2 font-montserrat text-sm transition-colors"
+              style={{ fontWeight: 600, color: uploading ? 'var(--accent)' : 'var(--text-muted)', cursor: uploading ? 'wait' : 'pointer' }}
+            >
               {uploading ? (
                 <>
                   <span
                     style={{
                       width: 18, height: 18, borderRadius: '50%',
-                      border: '2px solid rgba(228,220,209,0.3)',
-                      borderTopColor: '#e4dcd1',
+                      border: '2px solid var(--border-strong)',
+                      borderTopColor: 'var(--accent)',
                       display: 'inline-block',
                       animation: 'spin 0.7s linear infinite',
                       flexShrink: 0,
@@ -163,7 +172,7 @@ export default function NewPostPage() {
         )}
 
         {error && (
-          <p className="text-red-400 font-montserrat text-[12px] mt-3">{error}</p>
+          <p className="font-montserrat text-[12px] mt-3" style={{ color: 'var(--error)' }}>{error}</p>
         )}
       </div>
     </div>

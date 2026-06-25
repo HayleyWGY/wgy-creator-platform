@@ -6,6 +6,7 @@ import Link from "next/link";
 import { CampaignCard } from "@/components/creator/campaign-card";
 import { OPPORTUNITY_FILTERS } from "@/lib/constants";
 import { getAge } from "@/lib/utils";
+import { Eyebrow } from "@/components/ui/eyebrow";
 
 interface Campaign {
   id: string;
@@ -54,21 +55,22 @@ export default function OpportunitiesPage() {
     <div>
       {/* Page header */}
       <div className="px-5 pt-6 pb-4">
-        <h1 className="text-page-heading text-white">Opportunities</h1>
+        <Eyebrow style={{ marginBottom: 8 }}>Opportunities</Eyebrow>
+        <h2 className="text-heading-large" style={{ margin: 0 }}>This week&apos;s <em className="font-accent">drops</em></h2>
       </div>
 
       {/* Search bar */}
       <div className="mx-5 mb-4 relative">
-        <Search size={15} color="#706b6b" className="absolute left-3 top-1/2 -translate-y-1/2" />
+        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--text-muted)" }} />
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search campaigns..."
-          className="w-full font-montserrat font-normal outline-none pl-9 pr-4 py-2.5 rounded-button"
-          style={{ background: "#2a2a2a", color: "#ffffff", fontSize: "13px", caretColor: "#e4dcd1" }}
+          className="w-full font-montserrat outline-none pl-9 pr-4 py-2.5"
+          style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "var(--radius-pill)", color: "var(--text)", fontSize: "13px", fontWeight: 500, caretColor: "var(--accent)" }}
         />
-        <style>{`input::placeholder { color: #706b6b; }`}</style>
+        <style>{`input::placeholder { color: var(--text-muted); }`}</style>
       </div>
 
       {/* Filter pills */}
@@ -79,13 +81,15 @@ export default function OpportunitiesPage() {
             <button
               key={filter}
               onClick={() => setActiveFilter(filter)}
-              className="flex-none font-montserrat font-semibold uppercase rounded-pill px-4 py-[6px] transition-colors"
+              className="flex-none font-montserrat uppercase px-4 py-[6px] transition-colors"
               style={{
-                fontSize: "9px",
-                letterSpacing: "0.10em",
-                background: isActive ? "#e4dcd1" : "transparent",
-                color: isActive ? "#222222" : "#706b6b",
-                border: isActive ? "none" : "1px solid rgba(228,220,209,0.3)",
+                fontSize: "10px",
+                fontWeight: 700,
+                letterSpacing: "0.12em",
+                borderRadius: "var(--radius-pill)",
+                background: isActive ? "var(--pill-bg)" : "transparent",
+                color: isActive ? "var(--pill-text)" : "var(--text-muted)",
+                border: isActive ? "1px solid var(--pill-bg)" : "1px solid var(--border-strong)",
               }}
             >
               {filter}
@@ -101,13 +105,13 @@ export default function OpportunitiesPage() {
           Array.from({ length: 3 }).map((_, i) => (
             <div
               key={i}
-              className="rounded-card overflow-hidden"
-              style={{ background: "#2a2a2a", height: "220px", opacity: 0.5 }}
+              className="overflow-hidden"
+              style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)", height: "220px", opacity: 0.5 }}
             />
           ))
         ) : filtered.length === 0 ? (
           <div className="text-center py-16">
-            <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "#706b6b" }}>
+            <p className="font-montserrat" style={{ fontSize: "13px", fontWeight: 500, color: "var(--text-muted)" }}>
               No campaigns found.
             </p>
           </div>

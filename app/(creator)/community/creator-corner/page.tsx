@@ -17,22 +17,26 @@ export default function CreatorCornerPage() {
   }, [])
 
   return (
-    <div className="pb-20 min-h-screen bg-[#222222]">
+    <div className="pb-20 min-h-screen" style={{ background: 'var(--bg)' }}>
 
       {/* Header */}
       <div className="flex items-center gap-3 px-5 pt-4 pb-4">
         <button
           onClick={() => router.back()}
-          className="w-8 h-8 flex items-center justify-center rounded-full bg-[#2a2a2a]"
+          className="w-8 h-8 flex items-center justify-center rounded-full"
+          style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+          aria-label="Back"
         >
-          <ArrowLeft size={16} color="#e4dcd1" />
+          <ArrowLeft size={16} style={{ color: 'var(--accent)' }} />
         </button>
-        <h1 className="text-page-heading text-white flex-1">Creator Corner</h1>
+        <h1 className="text-page-heading flex-1" style={{ margin: 0 }}>Creator Corner</h1>
         <button
           onClick={() => router.push('/community/creator-corner/new')}
-          className="w-9 h-9 rounded-full bg-[#e4dcd1] flex items-center justify-center"
+          className="w-9 h-9 rounded-full flex items-center justify-center"
+          style={{ background: 'var(--pill-bg)' }}
+          aria-label="New post"
         >
-          <Plus size={18} color="#222222" />
+          <Plus size={18} style={{ color: 'var(--pill-text)' }} />
         </button>
       </div>
 
@@ -40,12 +44,12 @@ export default function CreatorCornerPage() {
       <div className="px-5 flex flex-col gap-3">
         {loading ? (
           Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-28 bg-[#2a2a2a] rounded-xl animate-pulse" />
+            <div key={i} className="h-28 animate-pulse" style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-card)' }} />
           ))
         ) : posts.length === 0 ? (
           <div className="text-center py-16">
-            <p className="font-playfair italic text-white text-lg">No posts yet</p>
-            <p className="text-[#706b6b] text-sm mt-2">Be the first to share something!</p>
+            <p className="font-montserrat" style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)' }}>No posts yet</p>
+            <p className="text-sm mt-2" style={{ fontWeight: 500, color: 'var(--text-muted)' }}>Be the first to share something!</p>
           </div>
         ) : (
           posts.map(post => (
