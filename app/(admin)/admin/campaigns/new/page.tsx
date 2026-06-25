@@ -137,7 +137,7 @@ export default function NewCampaignPage() {
           <span className="font-montserrat font-normal" style={{ fontSize: "12px", color: "var(--text-muted)" }}>Back to Campaigns</span>
         </Link>
         <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "var(--text-muted)" }}>New Campaign</p>
-        <h1 className="font-playfair italic font-normal text-white" style={{ fontSize: "32px", marginTop: "4px" }}>Create Campaign</h1>
+        <h1 className="admin-title" style={{ fontSize: "32px", marginTop: "4px" }}>Create Campaign</h1>
       </div>
 
       <div style={{ padding: "0 32px 32px", display: "grid", gridTemplateColumns: "2fr 1fr", gap: "24px", alignItems: "start" }}>
@@ -169,8 +169,8 @@ export default function NewCampaignPage() {
           <div style={{ marginTop: "16px", display: "flex", flexDirection: "column", gap: "16px" }}>
             <Field label="Campaign Title">
               <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Campaign title..."
-                className="font-playfair italic font-normal"
-                style={{ ...inputBase, height: "52px", fontSize: "20px", fontFamily: "var(--font-playfair)" }}
+                className="font-montserrat"
+                style={{ ...inputBase, height: "52px", fontSize: "20px", fontFamily: "var(--font-montserrat)", fontWeight: 800 }}
                 onFocus={focusBorder} onBlur={blurBorder} />
             </Field>
             <Field label="Brand Name">
@@ -397,7 +397,7 @@ export default function NewCampaignPage() {
             <div style={{ marginTop: "10px", borderRadius: "10px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)" }}>
               <div style={{ height: "80px", background: coverImageUrl ? "transparent" : "var(--surface-2)", position: "relative", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
                 {coverImageUrl && <Image src={coverImageUrl} alt="" fill style={{ objectFit: "cover" }} />}
-                <span className="font-playfair font-normal" style={{ fontSize: "14px", color: brand ? "var(--text)" : "rgba(255,255,255,0.3)", position: "relative", zIndex: 1, textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>
+                <span className="font-montserrat font-bold" style={{ fontSize: "14px", color: brand ? "var(--text)" : "rgba(255,255,255,0.3)", position: "relative", zIndex: 1, textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>
                   {brand || "Brand name"}
                 </span>
               </div>
@@ -405,7 +405,7 @@ export default function NewCampaignPage() {
                 <span className="font-montserrat font-semibold uppercase" style={{ fontSize: "8px", letterSpacing: "0.10em", background: "var(--text-muted)", color: "var(--accent)", padding: "2px 8px", borderRadius: "20px" }}>
                   {CAMPAIGN_TYPE_OPTIONS.find((o) => o.value === campaignType)?.label ?? campaignType}
                 </span>
-                <p className="font-playfair font-normal" style={{ fontSize: "12px", color: title ? "var(--text)" : "rgba(255,255,255,0.3)", marginTop: "4px", lineHeight: 1.3 }}>
+                <p className="font-montserrat font-bold" style={{ fontSize: "12px", color: title ? "var(--text)" : "rgba(255,255,255,0.3)", marginTop: "4px", lineHeight: 1.3 }}>
                   {title || "Campaign title"}
                 </p>
               </div>

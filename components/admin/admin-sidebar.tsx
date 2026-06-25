@@ -7,7 +7,6 @@ import { signOut } from "next-auth/react";
 import {
   LayoutDashboard,
   Megaphone,
-  CheckSquare,
   Inbox,
   Users,
   Tag,
@@ -25,7 +24,6 @@ import {
 const NAV_ITEMS: { label: string; icon: LucideIcon; href: string }[] = [
   { label: "Dashboard",  icon: LayoutDashboard, href: "/admin/dashboard"  },
   { label: "Campaigns",  icon: Megaphone,       href: "/admin/campaigns"  },
-  { label: "Approvals",  icon: CheckSquare,     href: "/admin/approvals"  },
   { label: "Community",  icon: MessageCircle,   href: "/admin/community"  },
   { label: "Inbox",      icon: Inbox,           href: "/admin/inbox"      },
   { label: "Creators",   icon: Users,           href: "/admin/creators"   },

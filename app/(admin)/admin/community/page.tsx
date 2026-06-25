@@ -96,7 +96,7 @@ export default function AdminCommunityPage() {
       <p style={{ color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', margin: '0 0 4px' }}>
         COMMUNITY
       </p>
-      <p style={{ color: 'white', fontFamily: 'Playfair Display, serif', fontStyle: 'italic', fontSize: 32, margin: '0 0 24px' }}>
+      <p style={{ color: 'var(--text)', fontFamily: 'Montserrat, sans-serif', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '-0.005em', fontSize: 32, margin: '0 0 24px' }}>
         Community Overview
       </p>
 

@@ -100,7 +100,7 @@ function CloseModal({
         <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "#C0392B" }}>
           Close Campaign
         </p>
-        <h2 className="font-playfair italic font-normal text-white" style={{ fontSize: "20px", marginTop: "8px" }}>
+        <h2 className="admin-title" style={{ fontSize: "20px", marginTop: "8px" }}>
           Close &ldquo;{campaignName}&rdquo;?
         </h2>
         <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "12px", lineHeight: 1.6 }}>
@@ -192,7 +192,7 @@ export default function CampaignsPage() {
       <div style={{ padding: "32px 32px 0", display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
         <div>
           <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "var(--text-muted)" }}>Campaigns</p>
-          <h1 className="font-playfair italic font-normal text-white" style={{ fontSize: "32px", marginTop: "4px" }}>Campaign Management</h1>
+          <h1 className="admin-title" style={{ fontSize: "32px", marginTop: "4px" }}>Campaign Management</h1>
         </div>
         <Link
           href="/admin/campaigns/new"

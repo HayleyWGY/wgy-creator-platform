@@ -55,7 +55,7 @@ export default function AnalyticsPage() {
       <div style={{ padding: "32px 32px 0", display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
         <div>
           <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "var(--text-muted)" }}>Analytics</p>
-          <h1 className="font-playfair italic font-normal text-white" style={{ fontSize: "32px", marginTop: "4px" }}>Platform Analytics</h1>
+          <h1 className="admin-title" style={{ fontSize: "32px", marginTop: "4px" }}>Platform Analytics</h1>
         </div>
         <select value={dateRange} onChange={(e) => setDateRange(e.target.value)} className="font-montserrat font-normal"
           style={{ background: "var(--surface)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "8px", padding: "0 14px", height: "40px", color: "var(--accent)", fontSize: "12px", outline: "none", cursor: "pointer" }}>
@@ -71,7 +71,7 @@ export default function AnalyticsPage() {
         {STATS.map((s) => (
           <div key={s.label} style={{ background: "var(--surface)", borderRadius: "12px", padding: "20px 24px", border: "1px solid rgba(255,255,255,0.06)" }}>
             <p className="font-montserrat font-bold uppercase" style={{ fontSize: "9px", letterSpacing: "0.12em", color: "var(--text-muted)" }}>{s.label}</p>
-            <p className="font-playfair italic font-normal text-white" style={{ fontSize: "40px", lineHeight: 1.1, marginTop: "6px" }}>{s.value}</p>
+            <p className="admin-title" style={{ fontSize: "40px", lineHeight: 1.1, marginTop: "6px" }}>{s.value}</p>
             <p className="font-montserrat font-normal" style={{ fontSize: "11px", color: s.colour, marginTop: "6px" }}>{s.trend}</p>
           </div>
         ))}

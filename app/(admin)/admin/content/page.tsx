@@ -222,7 +222,7 @@ export default function ContentPage() {
           <p className="font-montserrat font-bold uppercase text-[var(--accent)]" style={{ fontSize: "10px", letterSpacing: "0.12em" }}>
             Learning Lounge
           </p>
-          <h1 className="font-playfair italic font-normal text-white" style={{ fontSize: "32px", marginTop: "4px" }}>
+          <h1 className="admin-title" style={{ fontSize: "32px", marginTop: "4px" }}>
             Content
           </h1>
         </div>
@@ -355,7 +355,7 @@ export default function ContentPage() {
           >
             {/* Modal header */}
             <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-              <h2 className="font-playfair italic text-white" style={{ fontSize: "20px" }}>
+              <h2 className="admin-title" style={{ fontSize: "20px" }}>
                 {editingId ? "Edit Content" : "Add Content"}
               </h2>
               <button onClick={() => setModalOpen(false)} className="text-white/40 hover:text-white transition-colors">

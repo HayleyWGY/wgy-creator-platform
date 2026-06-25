@@ -8,7 +8,7 @@ export default function SettingsPage() {
         Coming Soon
       </p>
       <h1
-        className="font-playfair italic font-normal text-white"
+        className="admin-title"
         style={{ fontSize: "32px", marginTop: "4px" }}
       >
         Settings

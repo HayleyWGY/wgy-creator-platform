@@ -422,7 +422,7 @@ export default function WorkflowEditorPage({ params }: { params: { slug: string 
           <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "var(--text-muted)" }}>
             Workflow
           </p>
-          <h1 className="font-playfair italic font-normal text-white" style={{ fontSize: "32px", marginTop: "4px" }}>
+          <h1 className="admin-title" style={{ fontSize: "32px", marginTop: "4px" }}>
             {base.name}
           </h1>
 

@@ -90,7 +90,7 @@ export default function TagDetailPage({ params }: { params: { tagId: string } })
               marginTop: "4px",
             }}
           />
-          <h1 className="font-playfair italic font-normal text-white" style={{ fontSize: "32px" }}>
+          <h1 className="admin-title" style={{ fontSize: "32px" }}>
             {tag.name}
           </h1>
         </div>

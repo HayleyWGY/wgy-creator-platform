@@ -88,7 +88,7 @@ export default function MassDMPage() {
             Mass DM
           </p>
           <h1
-            className="font-playfair italic font-normal text-white"
+            className="admin-title"
             style={{ fontSize: "32px", marginTop: "4px" }}
           >
             Send Mass DM
@@ -108,7 +108,7 @@ export default function MassDMPage() {
           >
             <CheckCircle size={64} color="#27AE60" strokeWidth={1.5} style={{ margin: "0 auto" }} />
             <h2
-              className="font-playfair italic font-normal text-white"
+              className="admin-title"
               style={{ fontSize: "24px", marginTop: "20px" }}
             >
               Message Sent!
@@ -144,7 +144,7 @@ export default function MassDMPage() {
           Mass DM
         </p>
         <h1
-          className="font-playfair italic font-normal text-white"
+          className="admin-title"
           style={{ fontSize: "32px", marginTop: "4px" }}
         >
           Send Mass DM

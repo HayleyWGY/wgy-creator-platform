@@ -111,7 +111,7 @@ export default function AdminInboxPage() {
       <div style={{ background: 'var(--surface)', borderRight: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{ padding: '24px 20px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
           <p style={{ color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', margin: 0 }}>INBOX</p>
-          <p style={{ color: 'white', fontFamily: 'Playfair Display, serif', fontStyle: 'italic', fontSize: 24, margin: '4px 0 0' }}>Creator Messages</p>
+          <p style={{ color: 'var(--text)', fontFamily: 'Montserrat, sans-serif', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '-0.005em', fontSize: 24, margin: '4px 0 0' }}>Creator Messages</p>
           <p style={{ color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontSize: 11, margin: '4px 0 0' }}>
             {threads.length} conversation{threads.length !== 1 ? 's' : ''}
           </p>
@@ -176,7 +176,7 @@ export default function AdminInboxPage() {
       <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--bg)' }}>
         {!activeThread ? (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-            <p style={{ color: 'white', fontFamily: 'Playfair Display, serif', fontStyle: 'italic', fontSize: 20 }}>Select a conversation</p>
+            <p style={{ color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontWeight: 600, fontSize: 16 }}>Select a conversation</p>
             <p style={{ color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontSize: 13 }}>Choose a creator from the list</p>
           </div>
         ) : (

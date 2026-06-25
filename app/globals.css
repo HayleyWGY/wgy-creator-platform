@@ -138,6 +138,16 @@
     line-height: 1.5;
   }
 
+  /* Admin page/section title — Montserrat 800 uppercase (brand type system) */
+  .admin-title {
+    font-family: var(--font-montserrat), sans-serif;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: -0.005em;
+    line-height: 1.1;
+    color: var(--text);
+  }
+
   /* Button text — Montserrat 800 uppercase */
   .text-button {
     font-family: var(--font-montserrat), sans-serif;

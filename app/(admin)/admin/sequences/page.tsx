@@ -138,7 +138,7 @@ export default function SequencesPage() {
       <div style={{ padding: "32px 32px 0", display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
         <div>
           <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "var(--text-muted)" }}>Sequences</p>
-          <h1 className="font-playfair italic font-normal text-white" style={{ fontSize: "32px", marginTop: "4px" }}>Message Sequences</h1>
+          <h1 className="admin-title" style={{ fontSize: "32px", marginTop: "4px" }}>Message Sequences</h1>
           <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "6px" }}>
             Automatically sent as in-app DMs to creators on a schedule after joining.<br />Email workflows are managed in Klaviyo.
           </p>

@@ -119,7 +119,7 @@ function NewWorkflowModal({ onClose, onCreate }: {
         <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "var(--accent)" }}>
           New Workflow
         </p>
-        <h2 className="font-playfair italic font-normal text-white" style={{ fontSize: "22px", marginTop: "6px" }}>
+        <h2 className="admin-title" style={{ fontSize: "22px", marginTop: "6px" }}>
           Create Workflow
         </h2>
 
@@ -210,7 +210,7 @@ function DeleteModal({ name, onConfirm, onCancel }: { name: string; onConfirm: (
         style={{ background: "var(--surface)", borderRadius: "12px", padding: "28px", maxWidth: "400px", width: "100%", margin: "0 20px" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="font-playfair italic font-normal text-white" style={{ fontSize: "20px" }}>
+        <h2 className="admin-title" style={{ fontSize: "20px" }}>
           Delete &ldquo;{name}&rdquo;?
         </h2>
         <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "var(--text-muted)", lineHeight: 1.6, marginTop: "10px" }}>
@@ -262,7 +262,7 @@ export default function WorkflowsPage() {
           <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "var(--text-muted)" }}>
             Workflows
           </p>
-          <h1 className="font-playfair italic font-normal text-white" style={{ fontSize: "32px", marginTop: "4px" }}>
+          <h1 className="admin-title" style={{ fontSize: "32px", marginTop: "4px" }}>
             Message Workflows
           </h1>
           <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "6px" }}>
@@ -442,7 +442,7 @@ export default function WorkflowsPage() {
             }}
           >
             <Zap size={32} color="var(--text-muted)" strokeWidth={1} />
-            <p className="font-playfair italic font-normal text-white" style={{ fontSize: "18px", marginTop: "16px" }}>
+            <p className="admin-title" style={{ fontSize: "18px", marginTop: "16px" }}>
               No workflows yet
             </p>
             <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "6px" }}>

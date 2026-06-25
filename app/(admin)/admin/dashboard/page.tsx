@@ -7,6 +7,7 @@ import {
   MessageSquare,
   LucideIcon,
 } from "lucide-react";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
 
 const STAT_CARDS = [
   {
@@ -22,13 +23,6 @@ const STAT_CARDS = [
     trend: "",
     accentBorder: false,
     accentNumber: false,
-  },
-  {
-    label: "Pending Approvals",
-    value: "—",
-    trend: "Awaiting your review",
-    accentBorder: true,
-    accentNumber: true,
   },
   {
     label: "Unread DMs",
@@ -171,30 +165,13 @@ export default function DashboardPage() {
   return (
     <div style={{ padding: "32px" }}>
       {/* Header */}
-      <p
-        className="font-montserrat font-bold uppercase"
-        style={{ fontSize: "10px", letterSpacing: "0.12em", color: "var(--text-muted)" }}
-      >
-        Overview
-      </p>
-      <h1
-        className="font-playfair italic font-normal text-white"
-        style={{ fontSize: "32px", marginTop: "4px" }}
-      >
-        Welcome back, Hayley
-      </h1>
-      <p
-        className="font-montserrat font-normal"
-        style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "6px" }}
-      >
-        Here&apos;s what&apos;s happening today.
-      </p>
+      <AdminPageHeader eyebrow="Overview" title="Welcome back," accent="Hayley" subtitle="Here's what's happening today." />
 
       {/* Stat cards */}
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
+          gridTemplateColumns: "repeat(3, 1fr)",
           gap: "16px",
           marginTop: "24px",
         }}
@@ -204,10 +181,10 @@ export default function DashboardPage() {
             key={card.label}
             style={{
               background: "var(--surface)",
-              borderRadius: "12px",
+              borderRadius: "var(--radius-card)",
               padding: "20px",
-              border: "1px solid rgba(255,255,255,0.06)",
-              borderLeft: card.accentBorder ? "3px solid var(--accent)" : "1px solid rgba(255,255,255,0.06)",
+              border: "1px solid var(--border)",
+              borderLeft: card.accentBorder ? "3px solid var(--accent)" : "1px solid var(--border)",
             }}
           >
             <p
@@ -217,8 +194,8 @@ export default function DashboardPage() {
               {card.label}
             </p>
             <p
-              className="font-playfair italic font-normal"
-              style={{ fontSize: "40px", color: card.accentNumber ? "var(--accent)" : "var(--text)", marginTop: "8px", lineHeight: 1 }}
+              className="font-montserrat"
+              style={{ fontSize: "40px", fontWeight: 900, letterSpacing: "-0.04em", color: card.accentNumber ? "var(--accent)" : "var(--text)", marginTop: "8px", lineHeight: 1 }}
             >
               {card.value}
             </p>

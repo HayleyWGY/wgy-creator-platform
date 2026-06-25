@@ -149,7 +149,7 @@ function CreatorPanel({ creatorId, onClose }: { creatorId: string; onClose: () =
             <p className="font-montserrat font-bold uppercase" style={{ fontSize: 10, letterSpacing: '0.12em', color: 'var(--accent)' }}>
               Creator Profile
             </p>
-            <h2 className="font-playfair italic font-normal text-white" style={{ fontSize: 24, marginTop: 8 }}>
+            <h2 className="admin-title" style={{ fontSize: 24, marginTop: 8 }}>
               {detail.firstName} {detail.lastName}
             </h2>
 
@@ -287,7 +287,7 @@ export default function CreatorsPage() {
       {/* Header */}
       <div style={{ padding: '32px 32px 24px' }}>
         <p className="font-montserrat font-bold uppercase" style={{ fontSize: 10, letterSpacing: '0.12em', color: 'var(--text-muted)' }}>Creators</p>
-        <h1 className="font-playfair italic font-normal text-white" style={{ fontSize: 32, marginTop: 4 }}>Creator Management</h1>
+        <h1 className="admin-title" style={{ fontSize: 32, marginTop: 4 }}>Creator Management</h1>
       </div>
 
       {/* Action row */}
