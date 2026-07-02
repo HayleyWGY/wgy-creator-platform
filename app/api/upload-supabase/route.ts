@@ -1,7 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getActiveSession } from "@/lib/session"
 import { rateLimit } from '@/lib/rate-limit'
 
 // Only buckets the app legitimately writes to via this endpoint.
@@ -22,7 +21,7 @@ const MAX_SIZE_BYTES = 5 * 1024 * 1024 // 5MB — matches the client-side limit
 
 export async function POST(req: Request) {
   // Auth required — this endpoint was previously open to the internet.
-  const session = await getServerSession(authOptions)
+  const session = await getActiveSession()
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
   }

@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getActiveSession } from "@/lib/session"
 import { rateLimit } from '@/lib/rate-limit'
 import { prisma } from '@/lib/prisma'
 
 // GET — list all DM threads (admin only)
 export async function GET() {
-  const session = await getServerSession(authOptions)
+  const session = await getActiveSession()
   if (!session?.user?.id || !session.user.isAdmin) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
@@ -34,7 +33,7 @@ export async function GET() {
 
 // POST — admin sends a message to a creator's thread
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions)
+  const session = await getActiveSession()
   if (!session?.user?.id || !session.user.isAdmin) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }

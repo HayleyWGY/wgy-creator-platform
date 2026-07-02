@@ -1,12 +1,11 @@
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getActiveSession } from "@/lib/session"
 import { rateLimit } from '@/lib/rate-limit'
 import { createClient } from '@supabase/supabase-js'
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions)
+  const session = await getActiveSession()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   if (!rateLimit(`upload:${session.user.id}`, 5, 60_000)) {
@@ -19,10 +18,23 @@ export async function POST(req: Request) {
   )
 
   const formData = await req.formData()
-  const file = formData.get('file') as File
-  if (!file) return NextResponse.json({ error: 'No file provided' }, { status: 400 })
+  const file = formData.get('file')
+  if (!(file instanceof File)) return NextResponse.json({ error: 'No file provided' }, { status: 400 })
 
-  const ext = file.name.split('.').pop() || 'jpg'
+  // Server-side validation — extension derived from validated MIME, never the client filename
+  const ALLOWED_TYPES: Record<string, string> = {
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+  }
+  const ext = ALLOWED_TYPES[file.type]
+  if (!ext) {
+    return NextResponse.json({ error: 'Profile photo must be a JPEG, PNG or WebP image' }, { status: 400 })
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    return NextResponse.json({ error: 'Image must be under 5MB' }, { status: 400 })
+  }
+
   const fileName = `${session.user.id}-${Date.now()}.${ext}`
 
   const bytes = await file.arrayBuffer()
@@ -34,7 +46,7 @@ export async function POST(req: Request) {
 
   if (error) {
     console.error('Profile upload error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Upload failed' }, { status: 500 })
   }
 
   const { data } = supabase.storage.from('profiles').getPublicUrl(fileName)

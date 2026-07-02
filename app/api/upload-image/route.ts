@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { v2 as cloudinary } from 'cloudinary'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getActiveSession } from "@/lib/session"
 import { rateLimit } from '@/lib/rate-limit'
 
 cloudinary.config({
@@ -12,7 +11,7 @@ cloudinary.config({
 
 // Creator post image uploads — any authenticated creator, 25s timeout
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions)
+  const session = await getActiveSession()
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
   }
@@ -31,6 +30,9 @@ export async function POST(req: NextRequest) {
 
     if (!file.type.startsWith('image/')) {
       return NextResponse.json({ error: 'File must be an image' }, { status: 400 })
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      return NextResponse.json({ error: 'Image must be under 5MB' }, { status: 400 })
     }
 
     const bytes = await file.arrayBuffer()
@@ -56,7 +58,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ url: result.secure_url })
   } catch (err) {
     console.error('[POST /api/upload-image]', err)
-    const message = err instanceof Error ? err.message : 'Upload failed'
-    return NextResponse.json({ error: message }, { status: 500 })
+    return NextResponse.json({ error: 'Upload failed' }, { status: 500 })
   }
 }

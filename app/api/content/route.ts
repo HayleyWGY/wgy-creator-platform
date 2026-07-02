@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getActiveSession } from "@/lib/session";
+import { sanitizeRichText } from "@/lib/sanitize";
 import { prisma } from "@/lib/prisma";
 import { calculateReadingTime } from "@/lib/reading-time";
 
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await getActiveSession();
   if (!session?.user?.isAdmin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
       data: {
         title:               body.title,
         contentType:         body.contentType,
-        body:                body.body ?? null,
+        body:                body.body ? sanitizeRichText(body.body) : null,
         pdfUrl:              body.pdfUrl ?? null,
         editableTemplateUrl: body.editableTemplateUrl ?? null,
         videoEmbedUrl:       body.videoEmbedUrl ?? null,

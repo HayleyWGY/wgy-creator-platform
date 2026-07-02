@@ -72,6 +72,21 @@ export const authOptions: NextAuthOptions = {
         token.lastName = user.lastName
         token.isAdmin = user.isAdmin
         token.membershipStatus = user.membershipStatus
+      } else if (token.id) {
+        // Re-read live status on every request so revocation is immediate:
+        // cancelling a member (or demoting an admin) takes effect on their
+        // next request, regardless of the 30-day cookie lifetime.
+        const creator = await prisma.creator.findUnique({
+          where: { id: token.id as string },
+          select: { membershipStatus: true, isAdmin: true },
+        })
+        if (!creator) {
+          token.membershipStatus = 'cancelled'
+          token.isAdmin = false
+        } else {
+          token.membershipStatus = creator.membershipStatus
+          token.isAdmin = creator.isAdmin
+        }
       }
       return token
     },

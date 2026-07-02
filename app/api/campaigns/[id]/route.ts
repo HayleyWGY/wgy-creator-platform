@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getActiveSession } from "@/lib/session";
 
 const POST_TYPE_LABEL: Record<string, string> = {
   "pr-gifted":    "PR / Gifted",
@@ -68,7 +67,7 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getServerSession(authOptions);
+  const session = await getActiveSession();
   if (!session?.user?.isAdmin) {
     return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   }

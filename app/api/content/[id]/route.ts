@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getActiveSession } from "@/lib/session";
+import { sanitizeRichText } from "@/lib/sanitize";
 import { prisma } from "@/lib/prisma";
 import { calculateReadingTime } from "@/lib/reading-time";
 
@@ -22,7 +22,7 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const session = await getServerSession(authOptions);
+  const session = await getActiveSession();
   if (!session?.user?.isAdmin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -34,7 +34,7 @@ export async function PATCH(
     const data: Record<string, unknown> = {
       title:               body.title,
       contentType:         body.contentType,
-      body:                body.body ?? null,
+      body:                body.body ? sanitizeRichText(body.body) : null,
       pdfUrl:              body.pdfUrl ?? null,
       editableTemplateUrl: body.editableTemplateUrl ?? null,
       videoEmbedUrl:       body.videoEmbedUrl ?? null,
@@ -71,7 +71,7 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const session = await getServerSession(authOptions);
+  const session = await getActiveSession();
   if (!session?.user?.isAdmin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }

@@ -6,6 +6,13 @@ export default withAuth(
     const token = req.nextauth.token
     const pathname = req.nextUrl.pathname
 
+    // Cancelled members are fully revoked. The API layer enforces this
+    // instantly via getActiveSession(); this sweep also pushes them off
+    // pages once their token refreshes (SessionProvider poll / focus).
+    if (token?.membershipStatus === 'cancelled') {
+      return NextResponse.redirect(new URL('/sign-in', req.url))
+    }
+
     // Redirect admin users away from creator routes
     if (token?.isAdmin && pathname.startsWith('/home')) {
       return NextResponse.redirect(new URL('/admin/dashboard', req.url))
@@ -43,6 +50,7 @@ export const config = {
     '/profile/:path*',
     '/messages/:path*',
     '/notifications/:path*',
+    '/membership/:path*',
     '/admin/:path*',
   ],
 }

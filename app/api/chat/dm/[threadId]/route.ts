@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getActiveSession } from "@/lib/session"
 import { prisma } from '@/lib/prisma'
 
 // GET — fetch messages for a specific thread (admin only)
@@ -8,7 +7,7 @@ export async function GET(
   _req: Request,
   { params }: { params: { threadId: string } }
 ) {
-  const session = await getServerSession(authOptions)
+  const session = await getActiveSession()
   if (!session?.user?.id || !session.user.isAdmin) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
@@ -41,7 +40,7 @@ export async function GET(
 
 // DELETE — soft-delete a DM message (admin only)
 export async function DELETE(req: Request) {
-  const session = await getServerSession(authOptions)
+  const session = await getActiveSession()
   if (!session?.user?.id || !session.user.isAdmin) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }

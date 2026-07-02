@@ -1,5 +1,4 @@
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getActiveSession } from "@/lib/session"
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 
@@ -33,7 +32,7 @@ const PATCHABLE_FIELDS = new Set([
 ])
 
 export async function GET() {
-  const session = await getServerSession(authOptions)
+  const session = await getActiveSession()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const creator = await prisma.creator.findUnique({
@@ -45,7 +44,7 @@ export async function GET() {
 }
 
 export async function PATCH(req: Request) {
-  const session = await getServerSession(authOptions)
+  const session = await getActiveSession()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json()

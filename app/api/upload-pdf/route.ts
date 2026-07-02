@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { put } from "@vercel/blob";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getActiveSession } from "@/lib/session";
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await getActiveSession();
   if (!session?.user?.isAdmin) {
     return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   }
@@ -17,7 +16,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    const blob = await put(file.name, file, {
+    // Server-side validation — client checks are bypassable
+    if (file.type !== "application/pdf") {
+      return NextResponse.json({ error: "File must be a PDF" }, { status: 400 });
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      return NextResponse.json({ error: "PDF must be under 20MB" }, { status: 400 });
+    }
+
+    // Safe server-generated name — never trust the client filename
+    const safeName = `wgy-content/${Date.now()}-${Math.random().toString(36).slice(2)}.pdf`;
+    const blob = await put(safeName, file, {
       access: "public",
       contentType: "application/pdf",
     });
