@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { WgyButton } from "@/components/ui/wgy-button";
@@ -149,15 +148,16 @@ export default function SignInPage() {
           </p>
         )}
 
-        {/* Forgot password */}
+        {/* Forgot password — interim mailto until the Resend reset flow
+            lands (deferred to end of the security list). Was a 404. */}
         <div className="flex justify-end" style={{ marginTop: "-6px" }}>
-          <Link
-            href="/forgot-password"
+          <a
+            href="mailto:support@wegotyouagency.com?subject=Password%20reset%20request"
             className="font-montserrat"
             style={{ fontSize: "12px", fontWeight: 500, color: "var(--accent)", textDecoration: "none" }}
           >
             Forgot password?
-          </Link>
+          </a>
         </div>
 
         {/* Submit */}
@@ -184,14 +184,26 @@ export default function SignInPage() {
 
       <div className="flex-1" />
 
-      {/* Legal links */}
+      {/* Legal links — hosted on the main WGY site */}
       <div className="flex items-center justify-center gap-4 pb-10">
-        <Link href="/privacy" className="font-montserrat" style={{ fontSize: "11px", fontWeight: 500, color: "var(--text-muted)", textDecoration: "none" }}>
+        <a
+          href="https://www.wegotyouagency.com/privacy-policy"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-montserrat"
+          style={{ fontSize: "11px", fontWeight: 500, color: "var(--text-muted)", textDecoration: "none" }}
+        >
           Privacy Policy
-        </Link>
-        <Link href="/terms" className="font-montserrat" style={{ fontSize: "11px", fontWeight: 500, color: "var(--text-muted)", textDecoration: "none" }}>
+        </a>
+        <a
+          href="https://www.wegotyouagency.com/terms-conditions"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-montserrat"
+          style={{ fontSize: "11px", fontWeight: 500, color: "var(--text-muted)", textDecoration: "none" }}
+        >
           Terms &amp; Conditions
-        </Link>
+        </a>
       </div>
 
       <style>{`input::placeholder { color: var(--text-muted); }`}</style>
