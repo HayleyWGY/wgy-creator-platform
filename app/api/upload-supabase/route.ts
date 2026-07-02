@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { rateLimit } from '@/lib/rate-limit'
 
 // Only buckets the app legitimately writes to via this endpoint.
 // The bucket must NEVER be taken freely from the request — this route runs
@@ -25,6 +26,10 @@ export async function POST(req: Request) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
   }
+  if (!rateLimit(`upload:${session.user.id}`, 10, 60_000)) {
+    return NextResponse.json({ error: 'Too many requests — please slow down' }, { status: 429 })
+  }
+
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

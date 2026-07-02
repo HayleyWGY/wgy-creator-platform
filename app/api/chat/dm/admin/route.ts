@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { rateLimit } from '@/lib/rate-limit'
 import { prisma } from '@/lib/prisma'
 
 // GET — list all DM threads (admin only)
@@ -37,6 +38,10 @@ export async function POST(req: Request) {
   if (!session?.user?.id || !session.user.isAdmin) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+  if (!rateLimit(`admin-dm-send:${session.user.id}`, 30, 60_000)) {
+    return NextResponse.json({ error: 'Too many requests — please slow down' }, { status: 429 })
+  }
+
 
   const { creatorId, body, imageUrl } = await req.json()
   if (!creatorId) return NextResponse.json({ error: 'creatorId required' }, { status: 400 })

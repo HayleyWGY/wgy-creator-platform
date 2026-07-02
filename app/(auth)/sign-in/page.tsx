@@ -33,7 +33,11 @@ export default function SignInPage() {
     });
 
     if (result?.error) {
-      setError("Invalid email or password. Please try again.");
+      setError(
+        result.error === "locked"
+          ? "Too many failed attempts. Your account is locked for 15 minutes."
+          : "Invalid email or password. Please try again."
+      );
       setLoading(false);
       return;
     }

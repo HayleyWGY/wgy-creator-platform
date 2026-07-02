@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { v2 as cloudinary } from 'cloudinary'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { rateLimit } from '@/lib/rate-limit'
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -15,6 +16,10 @@ export async function POST(req: NextRequest) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
   }
+  if (!rateLimit(`upload:${session.user.id}`, 10, 60_000)) {
+    return NextResponse.json({ error: 'Too many requests — please slow down' }, { status: 429 })
+  }
+
 
   try {
     const formData = await req.formData()

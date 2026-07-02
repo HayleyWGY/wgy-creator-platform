@@ -22,19 +22,35 @@ export const authOptions: NextAuthOptions = {
 
         if (!creator) return null
 
+        // Brute-force lockout: 5 failed attempts → locked for 15 minutes
+        if (creator.lockedUntil && creator.lockedUntil > new Date()) {
+          throw new Error('locked')
+        }
+
         const passwordMatch = await bcrypt.compare(
           credentials.password,
           creator.passwordHash
         )
 
-        if (!passwordMatch) return null
+        if (!passwordMatch) {
+          const attempts = creator.failedLoginAttempts + 1
+          const locked = attempts >= 5
+          await prisma.creator.update({
+            where: { id: creator.id },
+            data: locked
+              ? { failedLoginAttempts: 0, lockedUntil: new Date(Date.now() + 15 * 60 * 1000) }
+              : { failedLoginAttempts: attempts },
+          })
+          if (locked) throw new Error('locked')
+          return null
+        }
 
         if (creator.membershipStatus === 'cancelled') return null
 
-        // Update last seen
+        // Update last seen + clear any failed-attempt state
         await prisma.creator.update({
           where: { id: creator.id },
-          data: { lastSeenAt: new Date() },
+          data: { lastSeenAt: new Date(), failedLoginAttempts: 0, lockedUntil: null },
         })
 
         return {

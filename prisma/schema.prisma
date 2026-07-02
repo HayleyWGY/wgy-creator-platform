@@ -36,6 +36,9 @@ model Creator {
   isClient          Boolean        @default(false)
   joinedAt          DateTime       @default(now())
   lastSeenAt        DateTime       @default(now())
+  // Login brute-force protection — see lib/auth.ts authorize()
+  failedLoginAttempts Int          @default(0)
+  lockedUntil         DateTime?
   tags                CreatorTag[]
   posts               Post[]
   comments            Comment[]

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { rateLimit } from '@/lib/rate-limit'
 import { prisma } from '@/lib/prisma'
 
 export async function GET(
@@ -40,6 +41,10 @@ export async function POST(
 ) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  if (!rateLimit(`room-send:${session.user.id}`, 20, 60_000)) {
+    return NextResponse.json({ error: 'Too many requests — please slow down' }, { status: 429 })
+  }
 
   const { body, imageUrl } = await req.json()
   if (!body?.trim() && !imageUrl) {
