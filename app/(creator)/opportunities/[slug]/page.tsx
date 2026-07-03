@@ -1,13 +1,14 @@
 "use client";
 
 import {
-  Heart, MessageCircle, Bookmark, Bell, Mic, ArrowLeft,
-  Globe, Music2, Camera, Info, CalendarDays, Clock, MapPin,
+  Heart, MessageCircle, Bookmark, Bell, Send, ArrowLeft,
+  Globe, Music2, Camera, Info, CalendarDays, Clock, MapPin, Trash2,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { ASA_GUIDELINES_URL } from "@/lib/constants";
 
 interface Campaign {
@@ -37,10 +38,18 @@ interface Campaign {
   createdAt: string;
 }
 
-const COMMENTS = [
-  { initials: "LE", name: "Laura E",   tags: ["VitD"], extra: "+12", body: "I've applied!",                                  meta: "3h ago" },
-  { initials: "LT", name: "Libbie T",  tags: ["PERL"], extra: "+7",  body: "I have applied, I'm 22 so not sure if I'll get it!", meta: "1d ago" },
-];
+interface CampaignComment {
+  id: string;
+  body: string;
+  createdAt: string;
+  author: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    profileImageUrl: string | null;
+    isAdmin: boolean;
+  };
+}
 
 function getAge(createdAt: string): string {
   const diff = Date.now() - new Date(createdAt).getTime();
@@ -63,12 +72,15 @@ function Divider() {
 
 export default function CampaignDetailPage() {
   const { slug } = useParams<{ slug: string }>();
+  const { data: session } = useSession();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [loading, setLoading]   = useState(true);
   const [liked, setLiked]           = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const [bellActive, setBellActive] = useState(false);
   const [comment, setComment]       = useState("");
+  const [comments, setComments]     = useState<CampaignComment[]>([]);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (!slug) return;
@@ -77,7 +89,37 @@ export default function CampaignDetailPage() {
       .then((data) => setCampaign(data.campaign ?? null))
       .catch(() => setCampaign(null))
       .finally(() => setLoading(false));
+
+    fetch(`/api/campaigns/${slug}/comments`)
+      .then((r) => (r.ok ? r.json() : { comments: [] }))
+      .then((data) => setComments(data.comments || []))
+      .catch(() => {});
   }, [slug]);
+
+  async function submitComment() {
+    if (!comment.trim() || submitting || !campaign) return;
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/campaigns/${campaign.id}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ body: comment }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setComments((prev) => [...prev, data.comment]);
+        setComment("");
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function deleteComment(commentId: string) {
+    if (!campaign || !confirm("Delete this comment?")) return;
+    const res = await fetch(`/api/campaigns/${campaign.id}/comments/${commentId}`, { method: "DELETE" });
+    if (res.ok) setComments((prev) => prev.filter((c) => c.id !== commentId));
+  }
 
   if (loading) {
     return (
@@ -361,27 +403,47 @@ export default function CampaignDetailPage() {
           </button>
         </div>
 
-        <p className="font-montserrat" style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)" }}>{campaign.commentsCount} comments</p>
+        <p className="font-montserrat" style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)" }}>
+          {comments.length} {comments.length === 1 ? "comment" : "comments"}
+        </p>
+
+        {comments.length === 0 && (
+          <p className="font-montserrat" style={{ fontSize: "12px", fontWeight: 500, color: "var(--text-muted)" }}>
+            No comments yet — be the first!
+          </p>
+        )}
 
         <div className="flex flex-col gap-4">
-          {COMMENTS.map((c, i) => (
-            <div key={i} className="flex gap-3">
-              <div className="w-[30px] h-[30px] rounded-full flex items-center justify-center flex-none" style={{ background: "var(--surface-2)", border: "1px solid var(--border)" }}>
-                <span className="font-montserrat font-semibold" style={{ fontSize: "9px", color: "var(--text)" }}>{c.initials}</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5 flex-wrap mb-1">
-                  <span className="font-montserrat" style={{ fontSize: "12px", fontWeight: 700, color: "var(--text)" }}>{c.name}</span>
-                  {c.tags.map((tag) => (
-                    <span key={tag} className="font-montserrat uppercase" style={{ fontSize: "9px", fontWeight: 800, letterSpacing: "0.10em", background: "var(--beige)", color: "#111111", padding: "2px 8px", borderRadius: "var(--radius-pill)" }}>{tag}</span>
-                  ))}
-                  <span className="font-montserrat" style={{ fontSize: "9px", color: "var(--text-muted)", border: "1px solid var(--border-strong)", padding: "2px 8px", borderRadius: "var(--radius-pill)" }}>{c.extra}</span>
+          {comments.map((c) => {
+            const canDelete = c.author.id === session?.user?.id || session?.user?.isAdmin;
+            const initials = c.author.isAdmin ? "WG" : `${c.author.firstName[0]}${c.author.lastName[0]}`;
+            return (
+              <div key={c.id} className="flex gap-3">
+                <div className="w-[30px] h-[30px] rounded-full flex items-center justify-center flex-none overflow-hidden" style={{ background: c.author.isAdmin ? "var(--beige)" : "var(--surface-2)", border: "1px solid var(--border)" }}>
+                  {c.author.profileImageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={c.author.profileImageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  ) : (
+                    <span className="font-montserrat font-bold" style={{ fontSize: "9px", color: c.author.isAdmin ? "#111111" : "var(--text)" }}>{initials}</span>
+                  )}
                 </div>
-                <p className="font-montserrat leading-[1.6] mb-1" style={{ fontSize: "12px", fontWeight: 500, color: "var(--text-muted)" }}>{c.body}</p>
-                <p className="font-montserrat" style={{ fontSize: "10px", color: "var(--text-muted)" }}>{c.meta} · Like · Reply</p>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-montserrat" style={{ fontSize: "12px", fontWeight: 700, color: c.author.isAdmin ? "var(--gold-wgy)" : "var(--text)" }}>
+                      {c.author.isAdmin ? "WGY" : `${c.author.firstName} ${c.author.lastName}`}
+                    </span>
+                    <span className="font-montserrat" style={{ fontSize: "10px", color: "var(--text-muted)" }}>{getAge(c.createdAt)}</span>
+                    {canDelete && (
+                      <button onClick={() => deleteComment(c.id)} aria-label="Delete comment" style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", color: "var(--text-muted)", opacity: 0.6 }}>
+                        <Trash2 size={11} />
+                      </button>
+                    )}
+                  </div>
+                  <p className="font-montserrat leading-[1.6]" style={{ fontSize: "12px", fontWeight: 500, color: "var(--text-muted)", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{c.body}</p>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -406,18 +468,28 @@ export default function CampaignDetailPage() {
         style={{ bottom: "80px", background: "var(--surface)", borderTop: "1px solid var(--border)", width: "100%", maxWidth: "390px", left: "50%", transform: "translateX(-50%)" }}
       >
         <div className="w-7 h-7 rounded-full flex items-center justify-center flex-none" style={{ background: "var(--beige)" }}>
-          <span className="font-montserrat font-semibold" style={{ fontSize: "9px", color: "#111111" }}>HW</span>
+          <span className="font-montserrat font-semibold" style={{ fontSize: "9px", color: "#111111" }}>
+            {session?.user?.firstName?.[0] ?? ""}{session?.user?.lastName?.[0] ?? ""}
+          </span>
         </div>
         <div className="flex-1 flex items-center gap-2 px-4 py-2" style={{ background: "var(--surface-2)", borderRadius: "var(--radius-pill)" }}>
           <input
             type="text"
             value={comment}
             onChange={(e) => setComment(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") submitComment(); }}
             placeholder="What are your thoughts?"
             className="flex-1 bg-transparent outline-none font-montserrat"
             style={{ fontSize: "12px", fontWeight: 500, color: "var(--text)" }}
           />
-          <Mic size={14} style={{ color: "var(--text-muted)" }} />
+          <button
+            onClick={submitComment}
+            disabled={!comment.trim() || submitting}
+            aria-label="Send comment"
+            style={{ background: "none", border: "none", padding: 0, cursor: comment.trim() ? "pointer" : "default", display: "flex" }}
+          >
+            <Send size={14} style={{ color: comment.trim() ? "var(--accent)" : "var(--text-muted)" }} />
+          </button>
         </div>
         <style>{`input::placeholder { color: var(--text-muted); }`}</style>
       </div>

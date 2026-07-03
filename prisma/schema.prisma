@@ -49,6 +49,7 @@ model Creator {
   contentComments     ContentComment[]
   creatorPostLikes    CreatorPostLike[]
   chatMessages        ChatMessage[]
+  chatRoomReads       ChatRoomRead[]
   dmThread            DmThread?
   dmMessagesSent      DmMessage[]         @relation("DmSender")
 }
@@ -256,6 +257,7 @@ model ChatRoom {
   pinnedMessageId String?
   pinnedMessage   ChatMessage?  @relation("PinnedMessage", fields: [pinnedMessageId], references: [id])
   messages        ChatMessage[] @relation("RoomMessages")
+  reads           ChatRoomRead[]
   createdAt       DateTime      @default(now())
 }
 
@@ -307,4 +309,15 @@ model ContentComment {
   createdAt DateTime    @default(now())
 
   @@index([contentId])
+}
+
+// Per-creator read state for community chat rooms — powers unread badges
+model ChatRoomRead {
+  creatorId  String
+  creator    Creator  @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  roomId     String
+  room       ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  lastReadAt DateTime @default(now())
+
+  @@id([creatorId, roomId])
 }

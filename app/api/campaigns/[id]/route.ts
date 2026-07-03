@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getActiveSession } from "@/lib/session";
+import { notifyAllCreators } from "@/lib/notify";
 
 const POST_TYPE_LABEL: Record<string, string> = {
   "pr-gifted":    "PR / Gifted",
@@ -133,7 +134,18 @@ export async function PATCH(
       }
     }
 
+    // Capture the previous status so we only notify on the draft→published transition
+    const before = await prisma.post.findUnique({ where: { id }, select: { status: true } });
     const post = await prisma.post.update({ where: { id }, data });
+
+    if (before?.status !== "published" && post.status === "published") {
+      notifyAllCreators({
+        type: "campaign",
+        title: "New opportunity live",
+        description: `${post.brandName ?? "A brand"} — ${post.title}`,
+        referenceId: post.slug,
+      }).catch(err => console.error("[notify campaign publish]", err));
+    }
 
     return NextResponse.json({ campaign: { id: post.id, slug: post.slug, status: post.status } });
   } catch (err) {

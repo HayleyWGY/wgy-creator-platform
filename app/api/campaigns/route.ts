@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getActiveSession } from "@/lib/session";
+import { getActiveSession } from "@/lib/session"
+import { notifyAllCreators } from "@/lib/notify";
 
 function makeSlug(brandName: string, title: string): string {
   return `${brandName}-${title}`
@@ -196,6 +197,16 @@ export async function POST(req: NextRequest) {
         authorId:               admin.id,
       },
     });
+
+    // Notify every active creator when a campaign goes live on creation
+    if (post.status === "published") {
+      notifyAllCreators({
+        type: "campaign",
+        title: "New opportunity live",
+        description: `${post.brandName ?? "A brand"} — ${post.title}`,
+        referenceId: post.slug,
+      }).catch(err => console.error("[notify campaign publish]", err));
+    }
 
     return NextResponse.json({ campaign: { id: post.id, slug: post.slug } }, { status: 201 });
   } catch (err) {

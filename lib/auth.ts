@@ -16,8 +16,11 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
-        const creator = await prisma.creator.findUnique({
-          where: { email: credentials.email },
+        // Email matching is case-insensitive and whitespace-tolerant:
+        // "Hayley@…", "HAYLEY@…" and a trailing space all resolve to the
+        // same account.
+        const creator = await prisma.creator.findFirst({
+          where: { email: { equals: credentials.email.trim(), mode: 'insensitive' } },
         })
 
         if (!creator) return null

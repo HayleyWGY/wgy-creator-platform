@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { BottomNav } from "@/components/creator/bottom-nav";
 import { NavHeader } from "@/components/creator/NavHeader";
 import { Search } from "lucide-react";
@@ -24,9 +25,9 @@ export default function CreatorLayout({ children }: { children: React.ReactNode 
           {/* Right icons — real unread badges */}
           <div className="flex items-center gap-3">
             <NavHeader />
-            <button aria-label="Search">
+            <Link href="/search" aria-label="Search">
               <Search size={20} strokeWidth={1.5} style={{ color: "var(--text-muted)" }} />
-            </button>
+            </Link>
           </div>
         </header>
 

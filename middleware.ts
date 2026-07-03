@@ -51,6 +51,7 @@ export const config = {
     '/messages/:path*',
     '/notifications/:path*',
     '/membership/:path*',
+    '/search/:path*',
     '/admin/:path*',
   ],
 }

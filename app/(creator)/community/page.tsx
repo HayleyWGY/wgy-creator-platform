@@ -8,27 +8,49 @@ import { SectionHeader } from '@/components/ui/section-header'
 
 function RoomsList() {
   const router = useRouter()
+  const [unread, setUnread] = useState<Record<string, number>>({})
+
+  useEffect(() => {
+    fetch('/api/chat/rooms/unread')
+      .then(r => (r.ok ? r.json() : { unread: {} }))
+      .then(d => setUnread(d.unread || {}))
+      .catch(() => {})
+  }, [])
+
   return (
     <div className="flex flex-col gap-2">
-      {COMMUNITY_ROOMS.map(room => (
-        <div
-          key={room.id}
-          onClick={() => router.push(`/community/${room.id}`)}
-          className="flex items-center gap-3 p-4 cursor-pointer active:opacity-80 transition-opacity"
-          style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-card)' }}
-        >
+      {COMMUNITY_ROOMS.map(room => {
+        const count = unread[room.id] ?? 0
+        return (
           <div
-            className="w-10 h-10 flex items-center justify-center text-lg flex-shrink-0"
-            style={{ background: 'var(--surface-2)', borderRadius: 12 }}
+            key={room.id}
+            onClick={() => router.push(`/community/${room.id}`)}
+            className="flex items-center gap-3 p-4 cursor-pointer active:opacity-80 transition-opacity"
+            style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-card)' }}
           >
-            {room.emoji}
+            <div
+              className="w-10 h-10 flex items-center justify-center text-lg flex-shrink-0"
+              style={{ background: 'var(--surface-2)', borderRadius: 12 }}
+            >
+              {room.emoji}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-montserrat text-sm" style={{ fontWeight: count > 0 ? 800 : 700, color: 'var(--text)' }}>{room.name}</p>
+              <p className="text-xs truncate mt-0.5" style={{ fontWeight: 500, color: 'var(--text-muted)' }}>{room.description}</p>
+            </div>
+            {count > 0 && (
+              <div
+                className="flex items-center justify-center flex-shrink-0"
+                style={{ minWidth: 20, height: 20, borderRadius: 'var(--radius-pill)', background: 'var(--pill-bg)', padding: '0 6px' }}
+              >
+                <span className="font-montserrat font-bold" style={{ fontSize: 10, color: 'var(--pill-text)' }}>
+                  {count > 99 ? '99+' : count}
+                </span>
+              </div>
+            )}
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-montserrat text-sm" style={{ fontWeight: 700, color: 'var(--text)' }}>{room.name}</p>
-            <p className="text-xs truncate mt-0.5" style={{ fontWeight: 500, color: 'var(--text-muted)' }}>{room.description}</p>
-          </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }

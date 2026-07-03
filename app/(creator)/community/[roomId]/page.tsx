@@ -95,6 +95,12 @@ export default function ChatRoomPage({ params }: { params: { roomId: string } })
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  // Mark the room read whenever new messages are on screen — keeps the
+  // unread badge on the community hub accurate.
+  useEffect(() => {
+    fetch(`/api/chat/rooms/${slug}/read`, { method: 'POST' }).catch(() => {})
+  }, [slug, messages.length])
+
   async function sendMessage(e: FormEvent) {
     e.preventDefault()
     if (!body.trim() || sending) return
