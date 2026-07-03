@@ -191,9 +191,14 @@ export default function ProfilePage() {
       fd.append('file', file)
       const res = await fetch('/api/profile/upload', { method: 'POST', body: fd })
       const data = await res.json()
-      if (data.url && profile) {
+      if (res.ok && data.url) {
         setProfile(prev => prev ? { ...prev, profileImageUrl: data.url } : prev)
+      } else {
+        // Never fail silently — tell the user what went wrong
+        alert(data.error || 'Photo upload failed. Please try again.')
       }
+    } catch {
+      alert('Photo upload failed. Please check your connection and try again.')
     } finally {
       setUploadingPhoto(false)
     }

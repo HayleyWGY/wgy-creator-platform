@@ -31,8 +31,8 @@ export async function POST(req: Request) {
   if (!ext) {
     return NextResponse.json({ error: 'Profile photo must be a JPEG, PNG or WebP image' }, { status: 400 })
   }
-  if (file.size > 5 * 1024 * 1024) {
-    return NextResponse.json({ error: 'Image must be under 5MB' }, { status: 400 })
+  if (file.size > 10 * 1024 * 1024) {
+    return NextResponse.json({ error: 'Image must be under 10MB' }, { status: 400 })
   }
 
   const fileName = `${session.user.id}-${Date.now()}.${ext}`

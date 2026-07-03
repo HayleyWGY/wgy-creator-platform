@@ -3,6 +3,34 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 
+// 60s in-memory cache of live membership status/role, per server instance.
+// Keeps revocation near-immediate (≤60s) without a DB read on every request.
+const statusCache = new Map<string, { status: string; isAdmin: boolean; at: number }>()
+
+async function getLiveStatus(creatorId: string) {
+  const hit = statusCache.get(creatorId)
+  if (hit && Date.now() - hit.at < 60_000) return hit
+
+  const creator = await prisma.creator.findUnique({
+    where: { id: creatorId },
+    select: { membershipStatus: true, isAdmin: true },
+  })
+  const entry = {
+    status: creator?.membershipStatus ?? 'cancelled',
+    isAdmin: creator?.isAdmin ?? false,
+    at: Date.now(),
+  }
+  statusCache.set(creatorId, entry)
+
+  // Keep the cache bounded
+  if (statusCache.size > 5000) {
+    const cutoff = Date.now() - 60_000
+    statusCache.forEach((v, k) => { if (v.at < cutoff) statusCache.delete(k) })
+  }
+
+  return entry
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -76,20 +104,13 @@ export const authOptions: NextAuthOptions = {
         token.isAdmin = user.isAdmin
         token.membershipStatus = user.membershipStatus
       } else if (token.id) {
-        // Re-read live status on every request so revocation is immediate:
-        // cancelling a member (or demoting an admin) takes effect on their
-        // next request, regardless of the 30-day cookie lifetime.
-        const creator = await prisma.creator.findUnique({
-          where: { id: token.id as string },
-          select: { membershipStatus: true, isAdmin: true },
-        })
-        if (!creator) {
-          token.membershipStatus = 'cancelled'
-          token.isAdmin = false
-        } else {
-          token.membershipStatus = creator.membershipStatus
-          token.isAdmin = creator.isAdmin
-        }
+        // Live status check with a 60s in-memory cache: cancelling a member
+        // (or demoting an admin) takes effect within a minute regardless of
+        // the 30-day cookie lifetime, while DB load stays flat at scale —
+        // this callback runs on every request, including 3s chat polls.
+        const live = await getLiveStatus(token.id as string)
+        token.membershipStatus = live.status
+        token.isAdmin = live.isAdmin
       }
       return token
     },
