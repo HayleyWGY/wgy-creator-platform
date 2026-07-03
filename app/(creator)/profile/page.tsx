@@ -102,6 +102,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true)
   const [editOpen, setEditOpen] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -191,6 +192,29 @@ export default function ProfilePage() {
       }
     } finally {
       setUploadingPhoto(false)
+    }
+  }
+
+  async function handleDeleteAccount() {
+    if (deleting) return
+    const confirmed = confirm(
+      'Delete your account permanently?\n\n' +
+      'Your profile and personal details will be erased and you will be signed out immediately. ' +
+      'Anything you have posted will show as "Deleted User". This cannot be undone.\n\n' +
+      'Note: this does NOT cancel your subscription — email support@wegotyouagency.com to cancel.'
+    )
+    if (!confirmed) return
+
+    setDeleting(true)
+    try {
+      const res = await fetch('/api/profile', { method: 'DELETE' })
+      if (!res.ok) {
+        alert('Something went wrong deleting your account. Please try again or contact support.')
+        return
+      }
+      await signOut({ callbackUrl: '/sign-in' })
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -365,6 +389,41 @@ export default function ProfilePage() {
         >
           Sign Out
         </button>
+      </div>
+
+      {/* Delete account */}
+      <div className="px-5 mt-10 flex flex-col gap-3">
+        <button
+          onClick={handleDeleteAccount}
+          disabled={deleting}
+          className="w-full h-11 font-montserrat uppercase transition-opacity active:opacity-70"
+          style={{
+            fontSize: 12,
+            fontWeight: 800,
+            letterSpacing: '0.09em',
+            color: 'var(--error)',
+            border: '1px solid var(--error)',
+            borderRadius: 'var(--radius-pill)',
+            background: 'transparent',
+            cursor: deleting ? 'default' : 'pointer',
+            opacity: deleting ? 0.6 : 1,
+          }}
+        >
+          {deleting ? 'Deleting…' : 'Delete Account'}
+        </button>
+        <p
+          className="font-montserrat text-center"
+          style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-muted)', lineHeight: 1.6 }}
+        >
+          Deleting your account will not cancel your subscription. In order to cancel,
+          please email{' '}
+          <a
+            href="mailto:support@wegotyouagency.com?subject=Cancel%20my%20subscription"
+            style={{ color: 'var(--accent)', textDecoration: 'none' }}
+          >
+            support@wegotyouagency.com
+          </a>
+        </p>
       </div>
 
       {/* Edit Modal */}
