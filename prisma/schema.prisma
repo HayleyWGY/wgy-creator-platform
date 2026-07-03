@@ -36,6 +36,9 @@ model Creator {
   isClient          Boolean        @default(false)
   joinedAt          DateTime       @default(now())
   lastSeenAt        DateTime       @default(now())
+  // Set the first time the creator taps Apply on any opportunity —
+  // powers the "apply to your first opportunity" checklist item
+  firstApplyAt        DateTime?
   // Login brute-force protection — see lib/auth.ts authorize()
   failedLoginAttempts Int          @default(0)
   lockedUntil         DateTime?

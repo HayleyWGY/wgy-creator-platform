@@ -13,6 +13,7 @@ import type { CreatorPost } from "@/components/creator/creator-post-card";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { SectionHeader } from "@/components/ui/section-header";
 import { AsteriskDivider } from "@/components/ui/asterisk-divider";
+import { OnboardingChecklist } from "@/components/creator/onboarding-checklist";
 import { Heart, MessageCircle } from "lucide-react";
 
 interface Campaign {
@@ -72,6 +73,9 @@ export default function HomePage() {
           Your latest opportunities and community updates.
         </p>
       </div>
+
+      {/* New-member checklist — auto-hides once complete */}
+      <OnboardingChecklist />
 
       {/* New Opportunities */}
       <div className="mt-7 mb-3">
