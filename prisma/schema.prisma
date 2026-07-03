@@ -46,6 +46,7 @@ model Creator {
   notifications       Notification[]
   creatorPosts        CreatorPost[]
   creatorPostComments CreatorPostComment[]
+  contentComments     ContentComment[]
   creatorPostLikes    CreatorPostLike[]
   chatMessages        ChatMessage[]
   dmThread            DmThread?
@@ -179,6 +180,7 @@ model PostContent {
   commentsCount        Int       @default(0)
   sortOrder            Int       @default(0)
   readingTimeMinutes   Int?
+  comments             ContentComment[]
 }
 
 model MessageTemplate {
@@ -292,4 +294,17 @@ model DmMessage {
   isDeleted Boolean   @default(false)
   deletedAt DateTime?
   createdAt DateTime  @default(now())
+}
+
+// Comments on Learning Lounge content (blogs, videos, workbooks)
+model ContentComment {
+  id        String      @id @default(cuid())
+  contentId String
+  content   PostContent @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    Creator     @relation(fields: [authorId], references: [id])
+  body      String      @db.Text
+  createdAt DateTime    @default(now())
+
+  @@index([contentId])
 }

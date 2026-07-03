@@ -23,6 +23,13 @@ const SAFE_SELECT = {
   city: true,
   postcode: true,
   country: true,
+  // Campaign tags — only ones the admin has marked visible to the creator.
+  // Shown as "My Collabs" on the profile.
+  tags: {
+    where: { isVisibleToCreator: true },
+    select: { tag: { select: { id: true, name: true } } },
+    orderBy: { assignedAt: 'desc' as const },
+  },
 }
 
 const PATCHABLE_FIELDS = new Set([

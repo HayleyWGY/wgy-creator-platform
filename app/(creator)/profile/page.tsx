@@ -27,6 +27,7 @@ interface CreatorProfile {
   city: string | null
   postcode: string | null
   country: string | null
+  tags: { tag: { id: string; name: string } }[]
 }
 
 interface SensitiveProfile {
@@ -36,19 +37,22 @@ interface SensitiveProfile {
   gender: string | null
 }
 
+// NOTE: CSS variables don't resolve inside SVG presentation attributes
+// (stroke="var(--x)" silently fails) — so these icons use currentColor and
+// take their colour from a style prop instead. var(--text) = white on dark.
 function InstagramIcon() {
   return (
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text)' }}>
       <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
       <circle cx="12" cy="12" r="4" />
-      <circle cx="17.5" cy="6.5" r="1" fill="var(--accent)" stroke="none" />
+      <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
     </svg>
   )
 }
 
 function TikTokIcon() {
   return (
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--accent)">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" style={{ color: 'var(--text)' }}>
       <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.19 8.19 0 0 0 4.79 1.52V6.75a4.85 4.85 0 0 1-1.02-.06z" />
     </svg>
   )
@@ -56,9 +60,9 @@ function TikTokIcon() {
 
 function YouTubeIcon() {
   return (
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--accent)">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" style={{ color: 'var(--text)' }}>
       <path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.54C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z" />
-      <polygon fill="var(--bg)" points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" />
+      <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" style={{ fill: 'var(--bg)' }} />
     </svg>
   )
 }
@@ -363,6 +367,28 @@ export default function ProfilePage() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* My Collabs — campaign tags assigned by WGY, visible to the creator */}
+      <div className="px-5 mt-6">
+        <p className="eyebrow" style={{ marginBottom: 12 }}>My Collabs</p>
+        {profile.tags?.length ? (
+          <div className="flex flex-wrap gap-2">
+            {profile.tags.map(({ tag }) => (
+              <span
+                key={tag.id}
+                className="font-montserrat uppercase"
+                style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', background: 'var(--beige)', color: '#111111', padding: '5px 11px', borderRadius: 'var(--radius-pill)' }}
+              >
+                {tag.name}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <p className="font-montserrat" style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)' }}>
+            Brands you collaborate with will appear here.
+          </p>
+        )}
       </div>
 
       {/* Appearance */}

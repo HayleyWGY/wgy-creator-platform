@@ -7,7 +7,7 @@ export const ASA_GUIDELINES_URL = 'https://www.asa.org.uk'
 // lucide-react components aren't JSON-serialisable.
 export const NAV_ITEMS = [
   { label: 'Home',          href: '/home' },
-  { label: 'Opportunities', href: '/opportunities' },
+  { label: 'Opps',          href: '/opportunities' },
   { label: 'Community',     href: '/community' },
   { label: 'Learn',         href: '/learn' },
   { label: 'Profile',       href: '/profile' },

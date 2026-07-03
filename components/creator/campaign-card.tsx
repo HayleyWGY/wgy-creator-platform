@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { Heart, MessageCircle, Bell } from "lucide-react";
 import { useState } from "react";
-import { WgyBadge } from "@/components/ui/wgy-badge";
 
 interface CampaignCardProps {
   brandName: string;
@@ -52,8 +51,7 @@ export function CampaignCard({
       style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)" }}
     >
       {/* Image area — fixed 150px height. No brand-name overlay; the
-          campaign/brand title lives below the media. WGY badge sits
-          bottom-right on both real and placeholder cards. */}
+          campaign/brand title lives below the media. */}
       <div
         className="relative w-full"
         style={{ height: "150px", background: coverImageUrl ? imageBg : "linear-gradient(140deg, var(--img-a), var(--img-b))" }}
@@ -66,11 +64,6 @@ export function CampaignCard({
             style={{ objectFit: "cover" }}
           />
         )}
-
-        {/* WGY badge — consistent placement on real and placeholder cards */}
-        <div style={{ position: "absolute", bottom: 10, right: 10, zIndex: 10 }}>
-          <WgyBadge size={40} />
-        </div>
 
         {/* Event date badge */}
         {isEvent && eventDay && eventMonth && (

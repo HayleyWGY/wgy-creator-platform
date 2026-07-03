@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react'
-import { WgyButton } from '@/components/ui/wgy-button'
 
 interface MembershipProfile {
   membershipStatus: string
@@ -115,19 +114,19 @@ export default function MembershipPage() {
         {isPaid && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <p className="eyebrow" style={{ marginBottom: 4 }}>Manage</p>
-            <WgyButton
-              variant="secondary"
-              fullWidth
-              onClick={() => window.open('https://billing.stripe.com/p/login', '_blank')}
-            >
-              Manage Billing & Invoices
-            </WgyButton>
-            <button
-              className="font-montserrat font-normal"
-              style={{ width: '100%', height: 40, borderRadius: 'var(--radius-pill)', background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer' }}
+            <p className="font-montserrat text-center" style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', lineHeight: 1.6 }}>
+              For billing support please email{' '}
+              <a href="mailto:support@wegotyouagency.com?subject=Billing%20support" style={{ color: 'var(--accent)', textDecoration: 'none' }}>
+                support@wegotyouagency.com
+              </a>
+            </p>
+            <a
+              href="mailto:support@wegotyouagency.com?subject=Cancel%20my%20membership"
+              className="font-montserrat font-normal flex items-center justify-center"
+              style={{ width: '100%', height: 40, borderRadius: 'var(--radius-pill)', background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer', textDecoration: 'none' }}
             >
               Cancel Membership
-            </button>
+            </a>
           </div>
         )}
 

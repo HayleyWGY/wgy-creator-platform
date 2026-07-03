@@ -6,6 +6,7 @@ import Image from "next/image";
 import { ArrowLeft, Download, ExternalLink, ChevronRight } from "lucide-react";
 import { getEmbedUrl } from "@/lib/utils";
 import { CONTENT_TYPE_LABEL } from "@/lib/constants";
+import { ContentComments } from "@/components/creator/content-comments";
 
 function getTemplatePlatform(url: string): string {
   if (url.includes("canva.com")) return "Opens in Canva";
@@ -321,6 +322,9 @@ export default function LearnDetailPage() {
           )}
         </>
       )}
+
+      {/* Comments — all content types */}
+      <ContentComments contentId={item.id} />
     </div>
   );
 }
