@@ -27,8 +27,15 @@ export async function GET(
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    // Whether the current viewer has liked this campaign
     const session = await getActiveSession();
+
+    // Drafts are only visible to admins; published and closed campaigns
+    // stay browsable for everyone.
+    if (post.status === "draft" && !session?.user?.isAdmin) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    // Whether the current viewer has liked this campaign
     const likedByMe = session?.user?.id
       ? !!(await prisma.like.findUnique({
           where: { creatorId_postId: { creatorId: session.user.id, postId: post.id } },

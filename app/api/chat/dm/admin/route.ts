@@ -28,7 +28,52 @@ export async function GET() {
     orderBy: { updatedAt: 'desc' },
   })
 
+  // Pinned threads first, then unread, then most recent activity
+  threads.sort((a, b) => {
+    if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1
+    const aUnread = a._count.messages > 0
+    const bUnread = b._count.messages > 0
+    if (aUnread !== bUnread) return aUnread ? -1 : 1
+    return b.updatedAt.getTime() - a.updatedAt.getTime()
+  })
+
   return NextResponse.json({ threads })
+}
+
+// PATCH — pin/unpin a thread, or mark it unread (admin only)
+export async function PATCH(req: Request) {
+  const session = await getActiveSession()
+  if (!session?.user?.id || !session.user.isAdmin) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const { threadId, action } = await req.json()
+  if (!threadId || !['pin', 'unpin', 'unread'].includes(action)) {
+    return NextResponse.json({ error: 'threadId and a valid action are required' }, { status: 400 })
+  }
+
+  const thread = await prisma.dmThread.findUnique({ where: { id: threadId }, select: { id: true } })
+  if (!thread) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+  if (action === 'pin' || action === 'unpin') {
+    await prisma.dmThread.update({
+      where: { id: threadId },
+      data: { isPinned: action === 'pin' },
+    })
+    return NextResponse.json({ ok: true })
+  }
+
+  // action === 'unread' — flag the creator's latest message as unread so the
+  // thread jumps back into the unread group
+  const latest = await prisma.dmMessage.findFirst({
+    where: { threadId, isDeleted: false, senderId: { not: session.user.id } },
+    orderBy: { createdAt: 'desc' },
+    select: { id: true },
+  })
+  if (latest) {
+    await prisma.dmMessage.update({ where: { id: latest.id }, data: { isRead: false } })
+  }
+  return NextResponse.json({ ok: true })
 }
 
 // POST — admin sends a message to a creator's thread

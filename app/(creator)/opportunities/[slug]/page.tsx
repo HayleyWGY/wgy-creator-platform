@@ -35,6 +35,7 @@ interface Campaign {
   eventLocation: string | null;
   likesCount: number;
   commentsCount: number;
+  status: string;
   createdAt: string;
   likedByMe?: boolean;
 }
@@ -387,24 +388,40 @@ export default function CampaignDetailPage() {
       {/* ── Apply ────────────────────────────────────────── */}
       {campaign.applyLinkUrl && (
         <div className="px-5 flex flex-col gap-2">
-          <a
-            href={campaign.applyLinkUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => {
-              // Fire-and-forget: records their first apply for the
-              // onboarding checklist; doesn't block the link opening.
-              fetch("/api/profile/apply-click", { method: "POST" }).catch(() => {});
-            }}
-            className="w-full flex items-center justify-center font-montserrat uppercase transition-opacity active:opacity-80"
-            style={{ height: "48px", borderRadius: "var(--radius-pill)", background: "var(--pill-bg)", color: "var(--pill-text)", fontSize: "12px", fontWeight: 800, letterSpacing: "0.09em", textDecoration: "none" }}
-          >
-            {isEvent ? "Register for This Event" : "Apply for This Campaign"}
-          </a>
-          {campaign.spotsRemaining != null && (
-            <p className="font-montserrat text-center" style={{ fontSize: "11px", fontWeight: 500, color: "var(--text-muted)" }}>
-              {campaign.spotsRemaining} spots remaining
-            </p>
+          {campaign.status === "closed" ? (
+            <>
+              <div
+                className="w-full flex items-center justify-center font-montserrat uppercase"
+                style={{ height: "48px", borderRadius: "var(--radius-pill)", background: "var(--surface-2)", color: "var(--text-muted)", fontSize: "12px", fontWeight: 800, letterSpacing: "0.09em", cursor: "not-allowed" }}
+              >
+                {isEvent ? "Registration Closed" : "Applications Closed"}
+              </div>
+              <p className="font-montserrat text-center" style={{ fontSize: "11px", fontWeight: 500, color: "var(--text-muted)" }}>
+                This campaign has now closed — keep an eye out for the next drop.
+              </p>
+            </>
+          ) : (
+            <>
+              <a
+                href={campaign.applyLinkUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => {
+                  // Fire-and-forget: records their first apply for the
+                  // onboarding checklist; doesn't block the link opening.
+                  fetch("/api/profile/apply-click", { method: "POST" }).catch(() => {});
+                }}
+                className="w-full flex items-center justify-center font-montserrat uppercase transition-opacity active:opacity-80"
+                style={{ height: "48px", borderRadius: "var(--radius-pill)", background: "var(--pill-bg)", color: "var(--pill-text)", fontSize: "12px", fontWeight: 800, letterSpacing: "0.09em", textDecoration: "none" }}
+              >
+                {isEvent ? "Register for This Event" : "Apply for This Campaign"}
+              </a>
+              {campaign.spotsRemaining != null && (
+                <p className="font-montserrat text-center" style={{ fontSize: "11px", fontWeight: 500, color: "var(--text-muted)" }}>
+                  {campaign.spotsRemaining} spots remaining
+                </p>
+              )}
+            </>
           )}
         </div>
       )}

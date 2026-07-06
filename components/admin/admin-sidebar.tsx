@@ -27,7 +27,7 @@ const NAV_ITEMS: { label: string; icon: LucideIcon; href: string }[] = [
   { label: "Campaigns",  icon: Megaphone,       href: "/admin/campaigns"  },
   { label: "Community",  icon: MessageCircle,   href: "/admin/community"  },
   { label: "Inbox",      icon: Inbox,           href: "/admin/inbox"      },
-  { label: "Notifications", icon: Bell,           href: "/admin/notifications" },
+  { label: "Push Notifications", icon: Bell,      href: "/admin/notifications" },
   { label: "Creators",   icon: Users,           href: "/admin/creators"   },
   { label: "Tags",       icon: Tag,             href: "/admin/tags"       },
   { label: "Mass DM",    icon: MessageSquare,   href: "/admin/mass-dm"    },

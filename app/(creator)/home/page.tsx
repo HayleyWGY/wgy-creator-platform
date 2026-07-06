@@ -45,7 +45,7 @@ export default function HomePage() {
   const [creatorPosts, setCreatorPosts] = useState<CreatorPost[]>([]);
 
   useEffect(() => {
-    fetch("/api/campaigns?limit=3")
+    fetch("/api/campaigns?limit=3&live=1")
       .then(r => r.json())
       .then(data => setCampaigns(data.campaigns ?? []))
       .catch(() => {});

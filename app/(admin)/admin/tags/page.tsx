@@ -1,24 +1,55 @@
 "use client";
 
-import { useState } from "react";
-import { Pencil, X } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Pencil, X, Trash2 } from "lucide-react";
 import Link from "next/link";
 
-// TODO Phase 3: Replace with DB query — tags with creator count
-const TAGS = [
-  { name: "Boots May 2026", slug: "boots-may-2026", colour: "#9b7e56", count: 47 },
-  { name: "PERL",           slug: "perl",           colour: "var(--accent)", count: 89 },
-  { name: "Nature Spell",   slug: "nature-spell",   colour: "#4a5e4a", count: 23 },
-  { name: "Kaleidos",       slug: "kaleidos",       colour: "#3d3550", count: 34 },
-  { name: "VitD",           slug: "vitd",           colour: "var(--text-muted)", count: 156 },
-  { name: "Boots Apr 2026", slug: "boots-apr-2026", colour: "#8b6f5e", count: 41 },
-];
+interface TagItem {
+  id: string;
+  name: string;
+  colour: string;
+  count: number;
+}
 
-const COLOUR_SWATCHES = ["var(--accent)", "#9b7e56", "var(--text-muted)", "#4a5e4a", "#3d3550", "#8b6f5e"];
+const COLOUR_SWATCHES = ["#e4dcd1", "#9b7e56", "#8a8a8a", "#4a5e4a", "#3d3550", "#8b6f5e"];
 
-function CreateTagModal({ onClose }: { onClose: () => void }) {
-  const [tagName, setTagName]       = useState("");
-  const [selectedColour, setColour] = useState("var(--accent)");
+function TagModal({
+  tag,
+  onClose,
+  onSaved,
+}: {
+  tag: TagItem | null; // null = create mode
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [tagName, setTagName]       = useState(tag?.name ?? "");
+  const [selectedColour, setColour] = useState(tag?.colour ?? COLOUR_SWATCHES[0]);
+  const [saving, setSaving]         = useState(false);
+  const [error, setError]           = useState<string | null>(null);
+
+  async function handleSave() {
+    if (!tagName.trim() || saving) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch(tag ? `/api/admin/tags/${tag.id}` : "/api/admin/tags", {
+        method: tag ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: tagName.trim(), colour: selectedColour }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Something went wrong — please try again");
+        return;
+      }
+      onSaved();
+      onClose();
+    } catch {
+      setError("Something went wrong — please try again");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
     <div
@@ -47,7 +78,7 @@ function CreateTagModal({ onClose }: { onClose: () => void }) {
             className="font-montserrat font-bold uppercase"
             style={{ fontSize: "10px", letterSpacing: "0.12em", color: "var(--accent)" }}
           >
-            Create New Tag
+            {tag ? "Edit Tag" : "Create New Tag"}
           </p>
           <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px" }}>
             <X size={16} color="var(--text-muted)" strokeWidth={1.5} />
@@ -59,6 +90,7 @@ function CreateTagModal({ onClose }: { onClose: () => void }) {
           type="text"
           value={tagName}
           onChange={(e) => setTagName(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") handleSave(); }}
           placeholder="e.g. Boots June 2026"
           className="font-montserrat font-normal"
           style={{
@@ -104,23 +136,30 @@ function CreateTagModal({ onClose }: { onClose: () => void }) {
           ))}
         </div>
 
-        {/* Create button */}
+        {error && (
+          <p className="font-montserrat font-medium" style={{ fontSize: "12px", color: "#F97066", marginTop: "14px" }}>
+            {error}
+          </p>
+        )}
+
+        {/* Save button */}
         <button
-          onClick={onClose}
+          onClick={handleSave}
+          disabled={!tagName.trim() || saving}
           className="font-montserrat font-semibold"
           style={{
             width: "100%",
             height: "44px",
-            background: "var(--accent)",
-            color: "var(--bg)",
+            background: tagName.trim() ? "var(--accent)" : "var(--surface-2)",
+            color: tagName.trim() ? "var(--bg)" : "var(--text-muted)",
             fontSize: "13px",
             border: "none",
             borderRadius: "8px",
-            cursor: "pointer",
+            cursor: tagName.trim() ? "pointer" : "not-allowed",
             marginTop: "20px",
           }}
         >
-          Create Tag
+          {saving ? "Saving..." : tag ? "Save Changes" : "Create Tag"}
         </button>
 
         {/* Cancel */}
@@ -141,7 +180,38 @@ function CreateTagModal({ onClose }: { onClose: () => void }) {
 }
 
 export default function TagsPage() {
-  const [showModal, setShowModal] = useState(false);
+  const [tags, setTags]         = useState<TagItem[]>([]);
+  const [loading, setLoading]   = useState(true);
+  const [showCreate, setShowCreate] = useState(false);
+  const [editing, setEditing]   = useState<TagItem | null>(null);
+
+  const loadTags = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/tags");
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setTags(data.tags || []);
+    } catch {
+      // keep whatever we had
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { loadTags(); }, [loadTags]);
+
+  async function handleDelete(tag: TagItem) {
+    const ok = confirm(
+      `Delete the tag "${tag.name}"? It will be removed from all ${tag.count} creator${tag.count === 1 ? "" : "s"}. This cannot be undone.`
+    );
+    if (!ok) return;
+    const res = await fetch(`/api/admin/tags/${tag.id}`, { method: "DELETE" });
+    if (res.ok) {
+      setTags((prev) => prev.filter((t) => t.id !== tag.id));
+    } else {
+      alert("Could not delete the tag — please try again.");
+    }
+  }
 
   return (
     <div>
@@ -169,7 +239,7 @@ export default function TagsPage() {
           </h1>
         </div>
         <button
-          onClick={() => setShowModal(true)}
+          onClick={() => setShowCreate(true)}
           className="font-montserrat font-semibold"
           style={{
             background: "var(--accent)",
@@ -195,9 +265,23 @@ export default function TagsPage() {
           gap: "12px",
         }}
       >
-        {TAGS.map((tag) => (
+        {loading &&
+          [1, 2, 3].map((i) => (
+            <div key={i} style={{ height: "140px", background: "var(--surface)", borderRadius: "12px" }} />
+          ))}
+
+        {!loading && tags.length === 0 && (
+          <p
+            className="font-montserrat font-normal"
+            style={{ fontSize: "13px", color: "var(--text-muted)", gridColumn: "1 / -1" }}
+          >
+            No tags yet — create your first one to start grouping creators.
+          </p>
+        )}
+
+        {tags.map((tag) => (
           <div
-            key={tag.name}
+            key={tag.id}
             style={{
               background: "var(--surface)",
               borderRadius: "12px",
@@ -211,8 +295,19 @@ export default function TagsPage() {
               <p className="font-montserrat font-semibold" style={{ fontSize: "14px", color: "var(--text)", flex: 1 }}>
                 {tag.name}
               </p>
-              <button style={{ background: "none", border: "none", cursor: "pointer", padding: "2px" }}>
+              <button
+                onClick={() => setEditing(tag)}
+                title="Edit tag"
+                style={{ background: "none", border: "none", cursor: "pointer", padding: "2px" }}
+              >
                 <Pencil size={16} color="var(--text-muted)" strokeWidth={1.5} />
+              </button>
+              <button
+                onClick={() => handleDelete(tag)}
+                title="Delete tag"
+                style={{ background: "none", border: "none", cursor: "pointer", padding: "2px" }}
+              >
+                <Trash2 size={16} color="var(--text-muted)" strokeWidth={1.5} />
               </button>
             </div>
 
@@ -229,7 +324,7 @@ export default function TagsPage() {
 
             {/* View link */}
             <Link
-              href={`/admin/tags/${tag.slug}`}
+              href={`/admin/tags/${tag.id}`}
               className="font-montserrat font-semibold"
               style={{ fontSize: "11px", color: "var(--accent)", textDecoration: "none", display: "inline-block", marginTop: "8px" }}
             >
@@ -239,7 +334,12 @@ export default function TagsPage() {
         ))}
       </div>
 
-      {showModal && <CreateTagModal onClose={() => setShowModal(false)} />}
+      {showCreate && (
+        <TagModal tag={null} onClose={() => setShowCreate(false)} onSaved={loadTags} />
+      )}
+      {editing && (
+        <TagModal tag={editing} onClose={() => setEditing(null)} onSaved={loadTags} />
+      )}
     </div>
   );
 }

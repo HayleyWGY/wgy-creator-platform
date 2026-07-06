@@ -283,6 +283,7 @@ model DmThread {
   creatorId String      @unique
   creator   Creator     @relation(fields: [creatorId], references: [id])
   messages  DmMessage[]
+  isPinned  Boolean     @default(false)
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
 }

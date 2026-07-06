@@ -455,6 +455,12 @@ export default function CreatorsPage() {
   const [loading, setLoading] = useState(true)
   const [panelCreatorId, setPanelCreatorId] = useState<string | null>(null)
 
+  // Support deep-links like /admin/creators?open=<id> (e.g. from a tag's creator list)
+  useEffect(() => {
+    const openId = new URLSearchParams(window.location.search).get('open')
+    if (openId) setPanelCreatorId(openId)
+  }, [])
+
   const fetchCreators = useCallback(async () => {
     setLoading(true)
     const params = new URLSearchParams({ page: String(page) })

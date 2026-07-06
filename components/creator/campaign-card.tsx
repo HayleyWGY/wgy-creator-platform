@@ -16,6 +16,7 @@ interface CampaignCardProps {
   eventReminder?: boolean;
   eventDate?: string | null;
   compactBadge?: boolean;
+  closed?: boolean;
   className?: string;
 }
 
@@ -31,6 +32,7 @@ export function CampaignCard({
   eventReminder = false,
   eventDate,
   compactBadge = false,
+  closed = false,
   className = "",
 }: CampaignCardProps) {
   const [tooltipVisible, setTooltipVisible] = useState(false);
@@ -121,12 +123,22 @@ export function CampaignCard({
 
       {/* Card body */}
       <div className="px-4 pt-3 pb-4 flex flex-col gap-2">
-        <span
-          className="inline-block font-montserrat uppercase self-start"
-          style={{ fontSize: "9px", fontWeight: 800, letterSpacing: "0.12em", padding: "5px 9px", borderRadius: "var(--radius-pill)", background: "var(--beige)", color: "#111111" }}
-        >
-          {campaignType}
-        </span>
+        <div className="flex items-center gap-1.5">
+          <span
+            className="inline-block font-montserrat uppercase self-start"
+            style={{ fontSize: "9px", fontWeight: 800, letterSpacing: "0.12em", padding: "5px 9px", borderRadius: "var(--radius-pill)", background: "var(--beige)", color: "#111111" }}
+          >
+            {campaignType}
+          </span>
+          {closed && (
+            <span
+              className="inline-block font-montserrat uppercase self-start"
+              style={{ fontSize: "9px", fontWeight: 800, letterSpacing: "0.12em", padding: "5px 9px", borderRadius: "var(--radius-pill)", background: "var(--surface-2)", color: "var(--text-muted)" }}
+            >
+              Closed
+            </span>
+          )}
+        </div>
 
         <h3 className="font-montserrat leading-snug" style={{ fontSize: "15px", fontWeight: 800, color: "var(--text)", margin: 0 }}>
           {title}

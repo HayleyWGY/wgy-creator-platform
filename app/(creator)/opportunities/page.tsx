@@ -20,6 +20,7 @@ interface Campaign {
   sectionSlug: string;
   coverImageUrl: string | null;
   eventDate: string | null;
+  status: string;
 }
 
 
@@ -131,6 +132,7 @@ export default function OpportunitiesPage() {
                 commentsCount={campaign.commentsCount}
                 timestamp={getAge(campaign.createdAt)}
                 eventDate={campaign.eventDate}
+                closed={campaign.status === "closed"}
               />
             </Link>
           ))

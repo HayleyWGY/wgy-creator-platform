@@ -18,7 +18,8 @@ export async function GET(req: NextRequest) {
   const [campaigns, content] = await Promise.all([
     prisma.post.findMany({
       where: {
-        status: 'published',
+        // Closed campaigns stay searchable — only drafts are hidden
+        status: { in: ['published', 'closed'] },
         OR: [
           { title: { contains: q, mode: 'insensitive' } },
           { brandName: { contains: q, mode: 'insensitive' } },

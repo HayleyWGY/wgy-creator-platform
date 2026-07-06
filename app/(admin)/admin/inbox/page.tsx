@@ -1,12 +1,13 @@
 'use client'
 import { useEffect, useState, useRef, useCallback } from 'react'
-import { Send } from 'lucide-react'
+import { Send, Pin, MailPlus } from 'lucide-react'
 
 interface DmThread {
   id: string
   creator: { id: string; firstName: string; lastName: string }
   messages: DmMessage[]
-  unreadCount?: number
+  isPinned?: boolean
+  _count?: { messages: number }
 }
 
 interface DmMessage {
@@ -95,6 +96,29 @@ export default function AdminInboxPage() {
     }
   }
 
+  const togglePin = async (thread: DmThread) => {
+    await fetch('/api/chat/dm/admin', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ threadId: thread.id, action: thread.isPinned ? 'unpin' : 'pin' }),
+    }).catch(() => {})
+    loadThreads()
+  }
+
+  const markUnread = async (thread: DmThread) => {
+    // Deselect first — keeping the thread open would immediately re-mark it read
+    if (activeThread?.id === thread.id) {
+      setActiveThread(null)
+      setMessages([])
+    }
+    await fetch('/api/chat/dm/admin', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ threadId: thread.id, action: 'unread' }),
+    }).catch(() => {})
+    loadThreads()
+  }
+
   const getAge = (date: string) => {
     const diff = Date.now() - new Date(date).getTime()
     const mins = Math.floor(diff / 60000)
@@ -134,6 +158,7 @@ export default function AdminInboxPage() {
             const lastMsg = thread.messages?.[0]
             const isActive = activeThread?.id === thread.id
             const initials = `${thread.creator.firstName[0]}${thread.creator.lastName[0]}`
+            const unread = thread._count?.messages ?? 0
             return (
               <div
                 key={thread.id}
@@ -150,21 +175,49 @@ export default function AdminInboxPage() {
                   <span style={{ color: 'var(--bg)', fontWeight: 700, fontSize: 13, fontFamily: 'Montserrat, sans-serif' }}>{initials}</span>
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ color: 'white', fontFamily: 'Montserrat, sans-serif', fontWeight: 600, fontSize: 13 }}>
-                      {thread.creator.firstName} {thread.creator.lastName}
-                    </span>
-                    {lastMsg && (
-                      <span style={{ color: 'var(--text-muted)', fontSize: 10, fontFamily: 'Montserrat, sans-serif', flexShrink: 0 }}>
-                        {getAge(lastMsg.createdAt)}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
+                    <span style={{ color: 'white', fontFamily: 'Montserrat, sans-serif', fontWeight: unread > 0 ? 700 : 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
+                      {thread.isPinned && <Pin size={11} color="var(--accent)" strokeWidth={2} style={{ flexShrink: 0 }} />}
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {thread.creator.firstName} {thread.creator.lastName}
                       </span>
-                    )}
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                      {unread > 0 && (
+                        <span style={{ background: 'var(--accent)', color: 'var(--bg)', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 9, borderRadius: 10, padding: '2px 6px' }}>
+                          {unread}
+                        </span>
+                      )}
+                      {lastMsg && (
+                        <span style={{ color: 'var(--text-muted)', fontSize: 10, fontFamily: 'Montserrat, sans-serif' }}>
+                          {getAge(lastMsg.createdAt)}
+                        </span>
+                      )}
+                    </span>
                   </div>
                   {lastMsg && (
-                    <p style={{ color: 'var(--text-muted)', fontSize: 12, fontFamily: 'Montserrat, sans-serif', margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <p style={{ color: unread > 0 ? 'var(--text)' : 'var(--text-muted)', fontSize: 12, fontFamily: 'Montserrat, sans-serif', fontWeight: unread > 0 ? 600 : 400, margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {lastMsg.sender?.isAdmin ? 'WGY: ' : ''}{lastMsg.body || '[image]'}
                     </p>
                   )}
+                  <div style={{ display: 'flex', gap: 12, marginTop: 6 }}>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); togglePin(thread) }}
+                      title={thread.isPinned ? 'Unpin conversation' : 'Pin to top'}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: 4, color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontSize: 10, fontWeight: 600 }}
+                    >
+                      <Pin size={11} strokeWidth={1.8} />{thread.isPinned ? 'Unpin' : 'Pin'}
+                    </button>
+                    {unread === 0 && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); markUnread(thread) }}
+                        title="Mark as unread"
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: 4, color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontSize: 10, fontWeight: 600 }}
+                      >
+                        <MailPlus size={11} strokeWidth={1.8} />Mark unread
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             )

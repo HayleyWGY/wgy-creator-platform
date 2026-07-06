@@ -47,7 +47,12 @@ export async function GET(req: NextRequest) {
     const where: Record<string, unknown> = {};
 
     if (!adminAll) {
-      where.status = "published";
+      // Closed campaigns stay browsable so new members can see past
+      // opportunities — only drafts are hidden from creators. The home
+      // rail passes live=1 to show currently-open campaigns only.
+      where.status = searchParams.get("live")
+        ? "published"
+        : { in: ["published", "closed"] };
     }
 
     if (filter && FILTER_TO_CAMPAIGN_TYPE[filter]) {
