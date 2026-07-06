@@ -148,7 +148,10 @@ export default function ChatRoomPage({ params }: { params: { roomId: string } })
   }
 
   return (
-    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
+    // Height fits exactly inside the creator layout (56px app header +
+    // 80px bottom-nav padding) so the page itself can never scroll —
+    // otherwise the room header and pinned banner get dragged off-screen.
+    <div style={{ height: 'calc(100dvh - 136px)', display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
       {/* Header */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: 12,
