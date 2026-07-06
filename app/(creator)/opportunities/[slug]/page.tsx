@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  Heart, MessageCircle, Bookmark, Bell, Send, ArrowLeft,
+  Heart, MessageCircle, Bell, Send, ArrowLeft,
   Globe, Music2, Camera, Info, CalendarDays, Clock, MapPin, Trash2,
 } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -77,7 +77,6 @@ export default function CampaignDetailPage() {
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [loading, setLoading]   = useState(true);
   const [liked, setLiked]           = useState(false);
-  const [bookmarked, setBookmarked] = useState(false);
   const [bellActive, setBellActive] = useState(false);
   const [comment, setComment]       = useState("");
   const [comments, setComments]     = useState<CampaignComment[]>([]);
@@ -422,9 +421,6 @@ export default function CampaignDetailPage() {
           <button className="flex items-center gap-1.5" aria-label="Comments">
             <MessageCircle size={18} strokeWidth={1.5} style={{ color: "var(--text-muted)" }} />
             <span className="font-montserrat" style={{ fontSize: "12px", color: "var(--text-muted)" }}>{campaign.commentsCount}</span>
-          </button>
-          <button onClick={() => setBookmarked(!bookmarked)} aria-label="Bookmark">
-            <Bookmark size={18} strokeWidth={1.5} fill={bookmarked ? "var(--accent)" : "none"} style={{ color: bookmarked ? "var(--accent)" : "var(--text-muted)" }} />
           </button>
           <button onClick={() => setBellActive(!bellActive)} aria-label="Remind me">
             <Bell size={18} strokeWidth={1.5} style={{ color: bellActive ? "var(--accent)" : "var(--text-muted)" }} />
