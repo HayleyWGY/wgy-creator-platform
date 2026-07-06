@@ -148,10 +148,24 @@ export default function ChatRoomPage({ params }: { params: { roomId: string } })
   }
 
   return (
-    // Height fits exactly inside the creator layout (56px app header +
-    // 80px bottom-nav padding) so the page itself can never scroll —
-    // otherwise the room header and pinned banner get dragged off-screen.
-    <div style={{ height: 'calc(100dvh - 136px)', display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
+    // Pinned to the same viewport anchors as the sticky app header (56px)
+    // and the fixed bottom nav (80px + safe area), so the chat always fills
+    // the space between them exactly — no page scroll stealing the pinned
+    // banner off-screen, and no dead gap under the composer when the mobile
+    // browser's address bar changes the viewport height.
+    <div style={{
+      position: 'fixed',
+      top: 56,
+      bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))',
+      left: '50%',
+      transform: 'translateX(-50%)',
+      width: '100%',
+      maxWidth: 390,
+      zIndex: 10,
+      display: 'flex',
+      flexDirection: 'column',
+      background: 'var(--bg)',
+    }}>
       {/* Header */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: 12,
