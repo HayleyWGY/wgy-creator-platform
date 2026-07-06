@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { calculateReadingTime } from "@/lib/reading-time";
 import { contentNotifyTitle } from "@/lib/scheduled-publish";
 import { notifyAllCreators } from "@/lib/notify";
+import { logAudit } from "@/lib/audit";
 
 export async function GET(
   _req: NextRequest,
@@ -77,6 +78,14 @@ export async function PATCH(
       }
     }
 
+    await logAudit({
+      actorId: session.user.id,
+      action: `Edited content (${item.status})`,
+      detail: `${item.title} [${item.section}]`,
+      targetType: "content",
+      targetId: item.id,
+    });
+
     return NextResponse.json(item);
   } catch (err) {
     console.error("[PATCH /api/content/[id]]", err);
@@ -94,7 +103,18 @@ export async function DELETE(
   }
 
   try {
+    const item = await prisma.postContent.findUnique({
+      where: { id: params.id },
+      select: { title: true, section: true },
+    });
     await prisma.postContent.delete({ where: { id: params.id } });
+    await logAudit({
+      actorId: session.user.id,
+      action: "Deleted content",
+      detail: item ? `${item.title} [${item.section}]` : params.id,
+      targetType: "content",
+      targetId: params.id,
+    });
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("[DELETE /api/content/[id]]", err);

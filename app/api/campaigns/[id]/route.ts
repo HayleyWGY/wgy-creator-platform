@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getActiveSession } from "@/lib/session";
 import { notifyAllCreators } from "@/lib/notify";
+import { logAudit } from "@/lib/audit";
 
 const POST_TYPE_LABEL: Record<string, string> = {
   "pr-gifted":    "PR / Gifted",
@@ -176,6 +177,16 @@ export async function PATCH(
         referenceId: post.slug,
       }).catch(err => console.error("[notify campaign publish]", err));
     }
+
+    await logAudit({
+      actorId: session.user.id,
+      action: title
+        ? `Edited campaign (${post.status})`
+        : `Set campaign status to ${post.status}`,
+      detail: `${post.brandName ?? ""} — ${post.title}`,
+      targetType: "campaign",
+      targetId: post.id,
+    });
 
     return NextResponse.json({ campaign: { id: post.id, slug: post.slug, status: post.status } });
   } catch (err) {

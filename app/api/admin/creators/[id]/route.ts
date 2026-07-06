@@ -2,6 +2,7 @@ import { getActiveSession } from "@/lib/session"
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
+import { logAudit } from '@/lib/audit'
 
 function calcAge(dob: Date | null): number | null {
   if (!dob) return null
@@ -107,6 +108,13 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
         },
         select: { id: true, email: true, firstName: true, lastName: true, membershipStatus: true },
       })
+      await logAudit({
+        actorId: session.user.id,
+        action: 'Reinstated deleted account',
+        detail: `Reinstated as ${creator.email}`,
+        targetType: 'creator',
+        targetId: creator.id,
+      })
       return NextResponse.json({ creator, tempPassword })
     } catch (err: unknown) {
       if (typeof err === 'object' && err !== null && 'code' in err && err.code === 'P2002') {
@@ -169,6 +177,15 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       where: { id: params.id },
       data,
       select: { id: true, firstName: true, lastName: true, email: true, membershipStatus: true },
+    })
+    await logAudit({
+      actorId: session.user.id,
+      action: data.membershipStatus
+        ? `Set membership status to ${data.membershipStatus}`
+        : 'Updated creator details',
+      detail: `${creator.firstName} ${creator.lastName} (${creator.email}) — fields: ${Object.keys(data).filter(k => k !== 'cancelledAt').join(', ')}`,
+      targetType: 'creator',
+      targetId: creator.id,
     })
     return NextResponse.json({ creator })
   } catch (err: unknown) {

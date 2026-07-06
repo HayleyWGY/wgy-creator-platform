@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getActiveSession } from "@/lib/session"
 import { notifyAllCreators } from "@/lib/notify";
 import { publishDueScheduled } from "@/lib/scheduled-publish";
+import { logAudit } from "@/lib/audit";
 
 function makeSlug(brandName: string, title: string): string {
   return `${brandName}-${title}`
@@ -223,6 +224,14 @@ export async function POST(req: NextRequest) {
         referenceId: post.slug,
       }).catch(err => console.error("[notify campaign publish]", err));
     }
+
+    await logAudit({
+      actorId: session.user.id,
+      action: `Created campaign (${post.status})`,
+      detail: `${post.brandName ?? ""} — ${post.title}`,
+      targetType: "campaign",
+      targetId: post.id,
+    });
 
     return NextResponse.json({ campaign: { id: post.id, slug: post.slug } }, { status: 201 });
   } catch (err) {

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getActiveSession } from '@/lib/session'
 import { rateLimit } from '@/lib/rate-limit'
+import { logAudit } from '@/lib/audit'
 
 // GET — all tags with creator counts (admin only)
 export async function GET() {
@@ -54,6 +55,14 @@ export async function POST(req: Request) {
       colour: typeof colour === 'string' && colour ? colour : '#e4dcd1',
       createdById: session.user.id,
     },
+  })
+
+  await logAudit({
+    actorId: session.user.id,
+    action: 'Created tag',
+    detail: `"${tag.name}"`,
+    targetType: 'tag',
+    targetId: tag.id,
   })
 
   return NextResponse.json({ tag }, { status: 201 })

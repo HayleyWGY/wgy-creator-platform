@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getActiveSession } from '@/lib/session'
 import { rateLimit } from '@/lib/rate-limit'
+import { logAudit } from '@/lib/audit'
 
 // GET — one tag with its creators (admin only)
 export async function GET(
@@ -105,6 +106,13 @@ export async function PATCH(
   }
 
   const updated = await prisma.tag.update({ where: { id: tag.id }, data })
+  await logAudit({
+    actorId: session.user.id,
+    action: 'Updated tag',
+    detail: data.name && data.name !== tag.name ? `Renamed "${tag.name}" to "${updated.name}"` : `"${updated.name}"`,
+    targetType: 'tag',
+    targetId: tag.id,
+  })
   return NextResponse.json({ tag: updated })
 }
 
@@ -125,6 +133,14 @@ export async function DELETE(
     prisma.creatorTag.deleteMany({ where: { tagId: tag.id } }),
     prisma.tag.delete({ where: { id: tag.id } }),
   ])
+
+  await logAudit({
+    actorId: session.user.id,
+    action: 'Deleted tag',
+    detail: `"${tag.name}"`,
+    targetType: 'tag',
+    targetId: tag.id,
+  })
 
   return NextResponse.json({ ok: true })
 }

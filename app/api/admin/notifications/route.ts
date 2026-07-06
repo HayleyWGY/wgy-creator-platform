@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getActiveSession } from '@/lib/session'
 import { rateLimit } from '@/lib/rate-limit'
 import { notifyAllCreators } from '@/lib/notify'
+import { logAudit } from '@/lib/audit'
 
 // GET — recent announcements sent (one entry per broadcast)
 export async function GET() {
@@ -42,6 +43,13 @@ export async function POST(req: NextRequest) {
     type: 'announcement',
     title: title.trim(),
     description: description.trim(),
+  })
+
+  await logAudit({
+    actorId: session.user.id,
+    action: 'Sent push notification',
+    detail: `"${title.trim()}" to ${recipients} creators`,
+    targetType: 'notification',
   })
 
   return NextResponse.json({ recipients })

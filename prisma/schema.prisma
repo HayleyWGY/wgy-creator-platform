@@ -58,6 +58,7 @@ model Creator {
   chatRoomReads       ChatRoomRead[]
   dmThread            DmThread?
   dmMessagesSent      DmMessage[]         @relation("DmSender")
+  auditLogs           AuditLog[]          @relation("AuditActor")
 }
 
 model Section {
@@ -329,4 +330,18 @@ model ChatRoomRead {
   lastReadAt DateTime @default(now())
 
   @@id([creatorId, roomId])
+}
+
+// Trail of significant admin actions — shown in Admin Settings
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String
+  actor      Creator  @relation("AuditActor", fields: [actorId], references: [id])
+  action     String
+  detail     String?  @db.Text
+  targetType String?
+  targetId   String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
 }

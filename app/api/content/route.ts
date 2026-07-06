@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { calculateReadingTime } from "@/lib/reading-time";
 import { publishDueScheduled, contentNotifyTitle } from "@/lib/scheduled-publish";
 import { notifyAllCreators } from "@/lib/notify";
+import { logAudit } from "@/lib/audit";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -78,6 +79,14 @@ export async function POST(req: NextRequest) {
         }).catch(err => console.error("[notify content publish]", err));
       }
     }
+
+    await logAudit({
+      actorId: session.user.id,
+      action: `Created content (${item.status})`,
+      detail: `${item.title} [${item.section}]`,
+      targetType: "content",
+      targetId: item.id,
+    });
 
     return NextResponse.json(item, { status: 201 });
   } catch (err) {
