@@ -9,45 +9,29 @@ import {
 } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 
-const STAT_CARDS = [
-  {
-    label: "Total Creators",
-    value: "—",
-    trend: "",
-    accentBorder: false,
-    accentNumber: false,
-  },
-  {
-    label: "Active Subscriptions",
-    value: "—",
-    trend: "",
-    accentBorder: false,
-    accentNumber: false,
-  },
-  {
-    label: "Unread DMs",
-    value: "—",
-    trend: "From creators",
-    accentBorder: true,
-    accentNumber: true,
-  },
-];
+interface AdminStats {
+  totalCreators: number;
+  activeSubscriptions: number;
+  joinedThisMonth: number;
+  monthlyGrowth: { label: string; count: number }[];
+  recentCampaigns: { id: string; name: string; section: string; status: string }[];
+}
 
-// Normalised SVG y coords (viewBox 0 0 760 110)
-// Data: Jun 340, Jul 380, Aug 390, Sep 410, Oct 440, Nov 480, Dec 560, Jan 680, Feb 730, Mar 790, Apr 830, May 879
-// x spaced 0–759 (11 gaps), y mapped 10–100 (inverted, min=340 max=879)
-const CHART_POINTS = "0,100 69,93 138,92 207,88 276,83 345,77 414,63 483,43 552,35 621,25 690,18 759,10";
-const CHART_FILL = `${CHART_POINTS} 759,110 0,110`;
-const CHART_LABELS = ["Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May"];
+// Decorative accent dots for the campaigns list (cycled)
+const DOT_COLOURS = ["#e4a0a0", "#a0c4e4", "#a0e4b0", "#c4a0e4", "#e4dcd1", "#c9b48f"];
 
-const RECENT_CAMPAIGNS = [
-  { name: "Maybelline Gifting",        section: "PR / Gifted",        status: "LIVE",   colour: "#e4a0a0" },
-  { name: "Monday Haircare Gifting",   section: "PR / Gifted",        status: "LIVE",   colour: "#a0c4e4" },
-  { name: "The Inkey List",            section: "PR / Gifted",        status: "LIVE",   colour: "#a0e4b0" },
-  { name: "Chinese Beauty Event",      section: "Paid Collab",        status: "LIVE",   colour: "#c4a0e4" },
-  { name: "New Skincare Range",        section: "PR / Gifted",        status: "DRAFT",  colour: "#555555" },
-  { name: "Iconic Bronze TikTok",      section: "TikTok Commission",  status: "CLOSED", colour: "#444444" },
-];
+// Map 12 monthly cumulative counts onto the chart viewBox (760×110,
+// y inverted, 10 top padding / 100 baseline)
+function buildChartPoints(growth: { count: number }[]): string {
+  if (growth.length === 0) return "";
+  const max = Math.max(...growth.map(g => g.count), 1);
+  const min = Math.min(...growth.map(g => g.count));
+  const range = Math.max(max - min, 1);
+  const stepX = 759 / Math.max(growth.length - 1, 1);
+  return growth
+    .map((g, i) => `${Math.round(i * stepX)},${Math.round(100 - ((g.count - min) / range) * 90)}`)
+    .join(" ");
+}
 
 interface ActivityItem {
   icon: LucideIcon;
@@ -101,6 +85,7 @@ function StatusPill({ status }: { status: string }) {
 export default function DashboardPage() {
   const [activity, setActivity] = useState<ActivityItem[]>([])
   const [unreadDms, setUnreadDms] = useState<number | null>(null)
+  const [stats, setStats] = useState<AdminStats | null>(null)
 
   useEffect(() => {
     // Fetch DM threads for unread count + recent DM activity
@@ -155,12 +140,44 @@ export default function DashboardPage() {
           .catch(() => {})
       })
       .catch(() => {})
+
+    // Real dashboard stats: members, subscriptions, growth, campaigns
+    fetch('/api/admin/stats')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (d) setStats(d) })
+      .catch(() => {})
   }, [])
 
-  const statCards = STAT_CARDS.map(card => {
-    if (card.label === 'Unread DMs') return { ...card, value: unreadDms !== null ? String(unreadDms) : '—' }
-    return card
-  })
+  const statCards = [
+    {
+      label: 'Total Creators',
+      value: stats ? stats.totalCreators.toLocaleString() : '—',
+      trend: stats ? `+${stats.joinedThisMonth} this month` : '',
+      accentBorder: false,
+      accentNumber: false,
+    },
+    {
+      label: 'Active Subscriptions',
+      value: stats ? stats.activeSubscriptions.toLocaleString() : '—',
+      trend: stats && stats.totalCreators > 0
+        ? `${Math.round((stats.activeSubscriptions / stats.totalCreators) * 100)}% of members`
+        : '',
+      accentBorder: false,
+      accentNumber: false,
+    },
+    {
+      label: 'Unread DMs',
+      value: unreadDms !== null ? String(unreadDms) : '—',
+      trend: 'From creators',
+      accentBorder: true,
+      accentNumber: true,
+    },
+  ]
+
+  const chartPoints = stats ? buildChartPoints(stats.monthlyGrowth) : ''
+  const chartFill = chartPoints ? `${chartPoints} 759,110 0,110` : ''
+  const chartLabels = stats ? stats.monthlyGrowth.map(g => g.label) : []
+  const recentCampaigns = stats?.recentCampaigns ?? []
 
   return (
     <div style={{ padding: "32px" }}>
@@ -233,21 +250,23 @@ export default function DashboardPage() {
             style={{ width: "100%", height: "120px", display: "block" }}
           >
             {/* Fill area */}
-            <polygon
-              points={CHART_FILL}
-              fill="rgba(228,220,209,0.08)"
-            />
+            {chartFill && (
+              <polygon
+                points={chartFill}
+                fill="rgba(228,220,209,0.08)"
+              />
+            )}
             {/* Line */}
-            <polyline
-              points={CHART_POINTS}
-              fill="none"
-              stroke="var(--accent)"
-              strokeWidth="2"
-              strokeLinejoin="round"
-              strokeLinecap="round"
-            />
-            {/* End dot */}
-            <circle cx="759" cy="10" r="3" fill="var(--accent)" />
+            {chartPoints && (
+              <polyline
+                points={chartPoints}
+                fill="none"
+                stroke="var(--accent)"
+                strokeWidth="2"
+                strokeLinejoin="round"
+                strokeLinecap="round"
+              />
+            )}
           </svg>
 
           {/* X axis labels */}
@@ -260,9 +279,9 @@ export default function DashboardPage() {
               paddingRight: "0",
             }}
           >
-            {CHART_LABELS.map((label) => (
+            {chartLabels.map((label, i) => (
               <span
-                key={label}
+                key={`${label}-${i}`}
                 className="font-montserrat font-normal"
                 style={{ fontSize: "9px", color: "var(--text-muted)" }}
               >
@@ -276,7 +295,9 @@ export default function DashboardPage() {
           className="font-montserrat font-normal text-center"
           style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "12px" }}
         >
-          879 total members · 83% monthly active · +22 new this month
+          {stats
+            ? `${stats.totalCreators.toLocaleString()} total members · ${stats.joinedThisMonth} new this month`
+            : 'Loading…'}
         </p>
       </div>
 
@@ -303,8 +324,13 @@ export default function DashboardPage() {
           </div>
 
           <div style={{ marginTop: "8px" }}>
-            {RECENT_CAMPAIGNS.map((c, i) => (
-              <div key={i}>
+            {recentCampaigns.length === 0 && (
+              <p className="font-montserrat" style={{ fontSize: "12px", color: "var(--text-muted)", padding: "16px 0" }}>
+                {stats ? 'No campaigns yet' : 'Loading…'}
+              </p>
+            )}
+            {recentCampaigns.map((c, i) => (
+              <div key={c.id}>
                 <div
                   style={{
                     padding: "12px 0",
@@ -318,7 +344,7 @@ export default function DashboardPage() {
                       width: "8px",
                       height: "8px",
                       borderRadius: "50%",
-                      background: c.colour,
+                      background: DOT_COLOURS[i % DOT_COLOURS.length],
                       flexShrink: 0,
                     }}
                   />
@@ -336,7 +362,7 @@ export default function DashboardPage() {
                   </p>
                   <StatusPill status={c.status} />
                 </div>
-                {i < RECENT_CAMPAIGNS.length - 1 && (
+                {i < recentCampaigns.length - 1 && (
                   <div style={{ height: "1px", background: "rgba(255,255,255,0.04)" }} />
                 )}
               </div>

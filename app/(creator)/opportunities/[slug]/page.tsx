@@ -36,6 +36,7 @@ interface Campaign {
   likesCount: number;
   commentsCount: number;
   createdAt: string;
+  likedByMe?: boolean;
 }
 
 interface CampaignComment {
@@ -86,7 +87,10 @@ export default function CampaignDetailPage() {
     if (!slug) return;
     fetch(`/api/campaigns/${slug}`)
       .then((r) => r.json())
-      .then((data) => setCampaign(data.campaign ?? null))
+      .then((data) => {
+        setCampaign(data.campaign ?? null);
+        setLiked(!!data.campaign?.likedByMe);
+      })
       .catch(() => setCampaign(null))
       .finally(() => setLoading(false));
 
@@ -112,6 +116,25 @@ export default function CampaignDetailPage() {
       }
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function toggleLike() {
+    if (!campaign) return;
+    // Optimistic update, corrected by the server response
+    const wasLiked = liked;
+    setLiked(!wasLiked);
+    setCampaign((prev) => prev ? { ...prev, likesCount: prev.likesCount + (wasLiked ? -1 : 1) } : prev);
+    try {
+      const res = await fetch(`/api/campaigns/${campaign.id}/like`, { method: "POST" });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setLiked(data.liked);
+      setCampaign((prev) => prev ? { ...prev, likesCount: data.likesCount } : prev);
+    } catch {
+      // Revert on failure
+      setLiked(wasLiked);
+      setCampaign((prev) => prev ? { ...prev, likesCount: prev.likesCount + (wasLiked ? 1 : -1) } : prev);
     }
   }
 
@@ -392,7 +415,7 @@ export default function CampaignDetailPage() {
       {/* ── Engagement row ───────────────────────────────── */}
       <div className="px-5 flex flex-col gap-4">
         <div className="flex items-center gap-4">
-          <button onClick={() => setLiked(!liked)} className="flex items-center gap-1.5" aria-label="Like">
+          <button onClick={toggleLike} className="flex items-center gap-1.5" aria-label="Like">
             <Heart size={18} strokeWidth={1.5} fill={liked ? "var(--accent)" : "none"} style={{ color: liked ? "var(--accent)" : "var(--text-muted)" }} />
             <span className="font-montserrat" style={{ fontSize: "12px", color: liked ? "var(--accent)" : "var(--text-muted)" }}>{campaign.likesCount}</span>
           </button>

@@ -27,7 +27,16 @@ export async function GET(
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
+    // Whether the current viewer has liked this campaign
+    const session = await getActiveSession();
+    const likedByMe = session?.user?.id
+      ? !!(await prisma.like.findUnique({
+          where: { creatorId_postId: { creatorId: session.user.id, postId: post.id } },
+        }))
+      : false;
+
     const campaign = {
+      likedByMe,
       id:                    post.id,
       slug:                  post.slug ?? post.id,
       brandName:             post.brandName ?? "",
