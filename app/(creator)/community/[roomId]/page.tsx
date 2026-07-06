@@ -172,33 +172,36 @@ export default function ChatRoomPage({ params }: { params: { roomId: string } })
         </span>
       </div>
 
-      {/* Pinned message banner — WGY emphasis (gold accent, per brand) */}
+      {/* Pinned message banner — WGY emphasis (gold accent, per brand).
+          Sticky (56px = app header height) with an opaque backing so it
+          stays visible when the page shifts on scroll. */}
       {pinnedMessage && (
-        <div style={{
-          margin: '0 16px 12px',
-          background: 'rgba(155,126,86,0.15)',
-          border: '1px solid rgba(155,126,86,0.3)',
-          borderRadius: 10,
-          padding: '10px 14px',
-          display: 'flex',
-          gap: 10,
-          alignItems: 'flex-start',
-          flexShrink: 0,
-        }}>
-          <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>📌</span>
-          <div>
-            <p style={{ margin: '0 0 3px', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.10em', color: '#9b7e56' }}>
-              PINNED MESSAGE
-            </p>
-            <p style={{ margin: 0, fontFamily: 'Montserrat, sans-serif', fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>
-              {pinnedMessage.body}
-            </p>
+        <div style={{ position: 'sticky', top: 56, zIndex: 30, background: 'var(--bg)', padding: '0 16px 12px', flexShrink: 0 }}>
+          <div style={{
+            background: 'rgba(155,126,86,0.15)',
+            border: '1px solid rgba(155,126,86,0.3)',
+            borderRadius: 10,
+            padding: '10px 14px',
+            display: 'flex',
+            gap: 10,
+            alignItems: 'flex-start',
+          }}>
+            <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>📌</span>
+            <div>
+              <p style={{ margin: '0 0 3px', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.10em', color: '#9b7e56' }}>
+                PINNED MESSAGE
+              </p>
+              <p style={{ margin: 0, fontFamily: 'Montserrat, sans-serif', fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                {pinnedMessage.body}
+              </p>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Messages */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 0' }}>
+      {/* Messages — overscroll contained so hitting the top of the chat
+          doesn't drag the whole page (and the pinned banner) upwards */}
+      <div style={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain', padding: '16px 16px 0' }}>
         {messages.length === 0 && (
           <div style={{ textAlign: 'center', paddingTop: 48 }}>
             <p style={{ color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontSize: 14 }}>
