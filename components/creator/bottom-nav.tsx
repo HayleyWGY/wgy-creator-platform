@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, Briefcase, Users, BookOpen, User, LucideIcon } from "lucide-react";
+import { Home, Briefcase, Users, BookOpen, Info, LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NAV_ITEMS } from "@/lib/constants";
@@ -10,7 +10,7 @@ const NAV_ICONS: Record<string, LucideIcon> = {
   "/opportunities": Briefcase,
   "/community":     Users,
   "/learn":         BookOpen,
-  "/profile":       User,
+  "/about":         Info,
 };
 
 export function BottomNav() {

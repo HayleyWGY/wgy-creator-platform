@@ -31,6 +31,9 @@ model Creator {
   stripeCustomerId  String?
   stripeSubId       String?
   membershipStatus  String         @default("active")
+  // Stamped whenever membershipStatus flips to cancelled (kept on
+  // reactivation so monthly-cancellation analytics retain history)
+  cancelledAt       DateTime?
   membershipType    String         @default("paid")
   isAdmin           Boolean        @default(false)
   isClient          Boolean        @default(false)
@@ -82,6 +85,8 @@ model Post {
   applyLinkUrl  String?
   postType      String    @default("campaign")
   status        String    @default("draft")
+  scheduledAt   DateTime?
+  applyClicks   Int       @default(0)
   publishedAt   DateTime?
   createdAt     DateTime  @default(now())
   likesCount    Int       @default(0)

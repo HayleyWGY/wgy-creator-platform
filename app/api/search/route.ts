@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
       },
       orderBy: { publishedAt: 'desc' },
       take: 8,
-      select: { id: true, title: true, contentType: true },
+      select: { id: true, title: true, contentType: true, section: true },
     }),
   ])
 

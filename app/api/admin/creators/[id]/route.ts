@@ -154,6 +154,12 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     data.dateOfBirth = new Date(data.dateOfBirth as string)
   }
 
+  // Stamp when a member is cancelled — feeds the monthly-cancellations
+  // analytics. Kept on reactivation so history survives.
+  if (data.membershipStatus === 'cancelled') {
+    data.cancelledAt = new Date()
+  }
+
   if (Object.keys(data).length === 0) {
     return NextResponse.json({ error: 'No valid fields' }, { status: 400 })
   }

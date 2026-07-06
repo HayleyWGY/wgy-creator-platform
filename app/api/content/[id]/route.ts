@@ -3,6 +3,8 @@ import { getActiveSession } from "@/lib/session";
 import { sanitizeRichText } from "@/lib/sanitize";
 import { prisma } from "@/lib/prisma";
 import { calculateReadingTime } from "@/lib/reading-time";
+import { contentNotifyTitle } from "@/lib/scheduled-publish";
+import { notifyAllCreators } from "@/lib/notify";
 
 export async function GET(
   _req: NextRequest,
@@ -50,16 +52,31 @@ export async function PATCH(
 
     if (readingTimeMinutes !== undefined) data.readingTimeMinutes = readingTimeMinutes;
 
-    // Set publishedAt when first publishing
+    // Set publishedAt when first publishing (and notify creators once)
+    let firstPublish = false;
     if (body.status === "published") {
       const existing = await prisma.postContent.findUnique({
         where: { id: params.id },
-        select: { publishedAt: true },
+        select: { publishedAt: true, status: true },
       });
       if (!existing?.publishedAt) data.publishedAt = new Date();
+      firstPublish = existing?.status !== "published";
     }
 
     const item = await prisma.postContent.update({ where: { id: params.id }, data });
+
+    if (firstPublish) {
+      const notifyTitle = contentNotifyTitle(item.section);
+      if (notifyTitle) {
+        notifyAllCreators({
+          type: "content",
+          title: notifyTitle,
+          description: item.title,
+          referenceId: item.id,
+        }).catch(err => console.error("[notify content publish]", err));
+      }
+    }
+
     return NextResponse.json(item);
   } catch (err) {
     console.error("[PATCH /api/content/[id]]", err);

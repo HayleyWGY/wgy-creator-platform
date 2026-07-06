@@ -35,6 +35,14 @@ const CONTENT_TYPES = [
   { value: "industry_update", label: "Industry Update" },
 ];
 
+// Where the piece lives on the creator side
+const SECTION_OPTIONS = [
+  { value: "general", label: "Learning Lounge" },
+  { value: "about",   label: "About the App" },
+  { value: "faq",     label: "FAQs" },
+  { value: "updates", label: "Updates" },
+];
+
 const CATEGORY_OPTIONS = [
   { label: "Social Media", value: "social_media" },
   { label: "Content Creation", value: "content_creation" },
@@ -304,14 +312,20 @@ export default function ContentPage() {
                   <td className="px-4 py-3"><TypePill type={item.contentType} /></td>
                   <td className="px-4 py-3"><StatusPill status={item.status} /></td>
                   <td className="px-4 py-3">
-                    <span className="font-montserrat text-white/40" style={{ fontSize: "12px" }}>
-                      {item.publishedAt ? new Date(item.publishedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—"}
-                    </span>
+                    {item.status === "scheduled" && item.scheduledAt ? (
+                      <span className="font-montserrat" style={{ fontSize: "12px", color: "#e4aa55" }}>
+                        {new Date(item.scheduledAt).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                    ) : (
+                      <span className="font-montserrat text-white/40" style={{ fontSize: "12px" }}>
+                        {item.publishedAt ? new Date(item.publishedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2 justify-end">
                       <a
-                        href={`/learn/${item.id}`}
+                        href={["about", "faq", "updates"].includes(item.section) ? `/about/${item.id}` : `/learn/${item.id}`}
                         target="_blank"
                         rel="noreferrer"
                         className="p-1.5 rounded text-white/30 hover:text-white hover:bg-white/10 transition-colors"
@@ -375,16 +389,28 @@ export default function ContentPage() {
                 />
               </div>
 
-              {/* Content Type */}
-              <div>
-                <label className="block font-montserrat font-bold uppercase text-[var(--text-muted)] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Content Type</label>
-                <select
-                  value={form.contentType}
-                  onChange={(e) => setForm((f) => ({ ...f, contentType: e.target.value }))}
-                  className="w-full bg-white/5 border border-white/10 rounded px-3 py-2.5 text-sm text-white focus:outline-none focus:border-white/30"
-                >
-                  {CONTENT_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-                </select>
+              {/* Section + Content Type */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-montserrat font-bold uppercase text-[var(--text-muted)] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Section</label>
+                  <select
+                    value={form.section}
+                    onChange={(e) => setForm((f) => ({ ...f, section: e.target.value }))}
+                    className="w-full bg-white/5 border border-white/10 rounded px-3 py-2.5 text-sm text-white focus:outline-none focus:border-white/30"
+                  >
+                    {SECTION_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-montserrat font-bold uppercase text-[var(--text-muted)] mb-1.5" style={{ fontSize: "9px", letterSpacing: "0.10em" }}>Content Type</label>
+                  <select
+                    value={form.contentType}
+                    onChange={(e) => setForm((f) => ({ ...f, contentType: e.target.value }))}
+                    className="w-full bg-white/5 border border-white/10 rounded px-3 py-2.5 text-sm text-white focus:outline-none focus:border-white/30"
+                  >
+                    {CONTENT_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                  </select>
+                </div>
               </div>
 
               {/* Categories */}

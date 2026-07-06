@@ -117,6 +117,7 @@ export async function DELETE() {
         contactNumber: null,
         gender: null,
         membershipStatus: 'cancelled',
+        cancelledAt: new Date(),
       },
     }),
     // Notifications are personal to the account — remove them outright.

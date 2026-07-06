@@ -13,6 +13,7 @@ interface Campaign {
   likesCount: number;
   commentsCount: number;
   status: string;
+  scheduledAt: string | null;
   createdAt: string;
   sectionName: string;
   sectionSlug: string;
@@ -41,6 +42,16 @@ function StatusPill({ status }: { status: string }) {
         style={{ fontSize: "9px", letterSpacing: "0.10em", border: "1px solid rgba(255,255,255,0.15)", color: "var(--text-muted)", padding: "3px 8px", borderRadius: "20px" }}
       >
         Draft
+      </span>
+    );
+  }
+  if (status === "scheduled") {
+    return (
+      <span
+        className="font-montserrat font-semibold uppercase"
+        style={{ fontSize: "9px", letterSpacing: "0.10em", background: "rgba(155,126,86,0.3)", color: "#e4aa55", padding: "3px 8px", borderRadius: "20px" }}
+      >
+        Scheduled
       </span>
     );
   }
@@ -167,9 +178,10 @@ export default function CampaignsPage() {
   const filtered = campaigns.filter((c) => {
     const matchesTab =
       activeTab === "All" ||
-      (activeTab === "Live"   && c.status === "published") ||
-      (activeTab === "Draft"  && c.status === "draft") ||
-      (activeTab === "Closed" && c.status === "closed");
+      (activeTab === "Live"      && c.status === "published") ||
+      (activeTab === "Scheduled" && c.status === "scheduled") ||
+      (activeTab === "Draft"     && c.status === "draft") ||
+      (activeTab === "Closed"    && c.status === "closed");
     const matchesSearch =
       !search.trim() ||
       c.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -178,10 +190,11 @@ export default function CampaignsPage() {
   });
 
   const counts = {
-    All:    campaigns.length,
-    Live:   campaigns.filter((c) => c.status === "published").length,
-    Draft:  campaigns.filter((c) => c.status === "draft").length,
-    Closed: campaigns.filter((c) => c.status === "closed").length,
+    All:       campaigns.length,
+    Live:      campaigns.filter((c) => c.status === "published").length,
+    Scheduled: campaigns.filter((c) => c.status === "scheduled").length,
+    Draft:     campaigns.filter((c) => c.status === "draft").length,
+    Closed:    campaigns.filter((c) => c.status === "closed").length,
   };
 
   const closingCampaign = closingId ? campaigns.find((c) => c.id === closingId) : null;
@@ -204,7 +217,7 @@ export default function CampaignsPage() {
 
       {/* Status tabs */}
       <div style={{ padding: "24px 32px 0", display: "flex", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-        {(["All", "Live", "Draft", "Closed"] as const).map((tab) => {
+        {(["All", "Live", "Scheduled", "Draft", "Closed"] as const).map((tab) => {
           const active = activeTab === tab;
           return (
             <button
@@ -302,7 +315,14 @@ export default function CampaignsPage() {
 
                 <div><SectionPill section={c.sectionName} /></div>
                 <div><TypePill type={c.campaignType} /></div>
-                <div><StatusPill status={c.status} /></div>
+                <div>
+                  <StatusPill status={c.status} />
+                  {c.status === "scheduled" && c.scheduledAt && (
+                    <p className="font-montserrat font-normal" style={{ fontSize: "10px", color: "#e4aa55", marginTop: "4px" }}>
+                      {new Date(c.scheduledAt).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                    </p>
+                  )}
+                </div>
 
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                   <span className="font-montserrat font-normal" style={{ fontSize: "12px", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px" }}>
@@ -342,13 +362,13 @@ export default function CampaignsPage() {
                       Close
                     </button>
                   )}
-                  {c.status === "draft" && (
+                  {(c.status === "draft" || c.status === "scheduled") && (
                     <button
                       onClick={() => handlePublish(c.id)}
                       className="font-montserrat font-semibold"
                       style={{ fontSize: "11px", color: "#27AE60", background: "none", border: "none", cursor: "pointer", padding: 0 }}
                     >
-                      Publish
+                      {c.status === "scheduled" ? "Publish Now" : "Publish"}
                     </button>
                   )}
                 </div>

@@ -8,9 +8,9 @@ export const ASA_GUIDELINES_URL = 'https://www.asa.org.uk'
 export const NAV_ITEMS = [
   { label: 'Home',          href: '/home' },
   { label: 'Opps',          href: '/opportunities' },
-  { label: 'Community',     href: '/community' },
+  { label: 'Chats',         href: '/community' },
   { label: 'Learn',         href: '/learn' },
-  { label: 'Profile',       href: '/profile' },
+  { label: 'About',         href: '/about' },
 ] as const
 
 // ─── Campaign / Opportunity filters ──────────────────────────────────────────

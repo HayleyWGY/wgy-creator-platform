@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getActiveSession } from "@/lib/session"
 import { notifyAllCreators } from "@/lib/notify";
+import { publishDueScheduled } from "@/lib/scheduled-publish";
 
 function makeSlug(brandName: string, title: string): string {
   return `${brandName}-${title}`
@@ -44,6 +45,9 @@ export async function GET(req: NextRequest) {
   const limit    = parseInt(searchParams.get("limit") ?? "50");
 
   try {
+    // Flip any due scheduled campaigns/content live before reading
+    await publishDueScheduled().catch(() => {});
+
     const where: Record<string, unknown> = {};
 
     if (!adminAll) {
@@ -116,7 +120,9 @@ export async function GET(req: NextRequest) {
       eventLocation:         p.eventLocation,
       likesCount:            p.likesCount,
       commentsCount:         p.commentsCount,
+      applyClicks:           p.applyClicks,
       status:                p.status,
+      scheduledAt:           p.scheduledAt,
       createdAt:             p.createdAt,
       sectionName:           p.section.name,
       sectionSlug:           p.section.slug,
@@ -141,12 +147,16 @@ export async function POST(req: NextRequest) {
       title, brandName, brandDescription, opportunityDescription,
       deliverables, brandWebsite, brandInstagram, brandTikTok,
       applyLinkUrl, spotsRemaining, sectionSlug, campaignType, status,
-      coverImageUrl, brandLogoUrl,
+      coverImageUrl, brandLogoUrl, scheduledAt,
       paymentAmount, paymentTerms, eventDate, eventTime, eventLocation,
     } = body;
 
     if (!title || !brandName || !sectionSlug) {
       return NextResponse.json({ error: "title, brandName, and sectionSlug are required" }, { status: 400 });
+    }
+
+    if (status === "schedule" && (!scheduledAt || new Date(scheduledAt) <= new Date())) {
+      return NextResponse.json({ error: "A future date and time is required to schedule" }, { status: 400 });
     }
 
     const section = await prisma.section.findUnique({ where: { slug: sectionSlug } });
@@ -195,7 +205,8 @@ export async function POST(req: NextRequest) {
         eventDate:              eventDate ? new Date(eventDate) : null,
         eventTime:              eventTime || null,
         eventLocation:          eventLocation || null,
-        status:                 status === "publish" ? "published" : "draft",
+        status:                 status === "publish" ? "published" : status === "schedule" ? "scheduled" : "draft",
+        scheduledAt:            status === "schedule" && scheduledAt ? new Date(scheduledAt) : null,
         publishedAt:            status === "publish" ? new Date() : null,
         slug,
         sectionId:              section.id,

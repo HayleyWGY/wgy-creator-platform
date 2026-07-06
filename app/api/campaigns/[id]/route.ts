@@ -29,9 +29,9 @@ export async function GET(
 
     const session = await getActiveSession();
 
-    // Drafts are only visible to admins; published and closed campaigns
-    // stay browsable for everyone.
-    if (post.status === "draft" && !session?.user?.isAdmin) {
+    // Drafts and scheduled campaigns are only visible to admins;
+    // published and closed campaigns stay browsable for everyone.
+    if ((post.status === "draft" || post.status === "scheduled") && !session?.user?.isAdmin) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
@@ -68,6 +68,7 @@ export async function GET(
       likesCount:            post.likesCount,
       commentsCount:         post.commentsCount,
       status:                post.status,
+      scheduledAt:           post.scheduledAt,
       createdAt:             post.createdAt,
       sectionName:           post.section.name,
       sectionSlug:           post.section.slug,
@@ -98,9 +99,13 @@ export async function PATCH(
       title, brandName, brandDescription, opportunityDescription,
       deliverables, brandWebsite, brandInstagram, brandTikTok,
       applyLinkUrl, spotsRemaining, sectionSlug, campaignType,
-      coverImageUrl, brandLogoUrl,
+      coverImageUrl, brandLogoUrl, scheduledAt,
       paymentAmount, paymentTerms, eventDate, eventTime, eventLocation,
     } = body;
+
+    if (status === "schedule" && (!scheduledAt || new Date(scheduledAt) <= new Date())) {
+      return NextResponse.json({ error: "A future date and time is required to schedule" }, { status: 400 });
+    }
 
     const data: Record<string, unknown> = {};
 
@@ -108,10 +113,14 @@ export async function PATCH(
     if (status === "published" && !title) {
       data.status = "published";
       data.publishedAt = new Date();
+      data.scheduledAt = null;
     } else if (status === "closed" && !title) {
       data.status = "closed";
     } else if (status === "draft" && !title) {
       data.status = "draft";
+    } else if (status === "schedule" && !title) {
+      data.status = "scheduled";
+      data.scheduledAt = new Date(scheduledAt);
     }
 
     // Full field update (from edit form)
@@ -140,8 +149,13 @@ export async function PATCH(
       if (status === "publish") {
         data.status      = "published";
         data.publishedAt = new Date();
+        data.scheduledAt = null;
       } else if (status === "draft") {
         data.status = "draft";
+        data.scheduledAt = null;
+      } else if (status === "schedule") {
+        data.status      = "scheduled";
+        data.scheduledAt = new Date(scheduledAt);
       }
 
       if (sectionSlug) {

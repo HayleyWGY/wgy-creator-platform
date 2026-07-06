@@ -408,8 +408,13 @@ export default function CampaignDetailPage() {
                 rel="noopener noreferrer"
                 onClick={() => {
                   // Fire-and-forget: records their first apply for the
-                  // onboarding checklist; doesn't block the link opening.
-                  fetch("/api/profile/apply-click", { method: "POST" }).catch(() => {});
+                  // onboarding checklist and the campaign's click count;
+                  // doesn't block the link opening.
+                  fetch("/api/profile/apply-click", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ campaignId: campaign.id }),
+                  }).catch(() => {});
                 }}
                 className="w-full flex items-center justify-center font-montserrat uppercase transition-opacity active:opacity-80"
                 style={{ height: "48px", borderRadius: "var(--radius-pill)", background: "var(--pill-bg)", color: "var(--pill-text)", fontSize: "12px", fontWeight: 800, letterSpacing: "0.09em", textDecoration: "none" }}

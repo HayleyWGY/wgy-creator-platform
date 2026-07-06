@@ -3,16 +3,23 @@ import { getActiveSession } from "@/lib/session";
 import { sanitizeRichText } from "@/lib/sanitize";
 import { prisma } from "@/lib/prisma";
 import { calculateReadingTime } from "@/lib/reading-time";
+import { publishDueScheduled, contentNotifyTitle } from "@/lib/scheduled-publish";
+import { notifyAllCreators } from "@/lib/notify";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const status      = searchParams.get("status");
   const contentType = searchParams.get("contentType");
+  const section     = searchParams.get("section");
 
   try {
+    // Flip any due scheduled campaigns/content live before reading
+    await publishDueScheduled().catch(() => {});
+
     const where: Record<string, unknown> = {};
     if (status)      where.status      = status;
     if (contentType) where.contentType = contentType;
+    if (section)     where.section     = section;
 
     const items = await prisma.postContent.findMany({
       where,
@@ -58,6 +65,19 @@ export async function POST(req: NextRequest) {
         readingTimeMinutes,
       },
     });
+
+    // Notify creators when content is published straight away
+    if (item.status === "published") {
+      const notifyTitle = contentNotifyTitle(item.section);
+      if (notifyTitle) {
+        notifyAllCreators({
+          type: "content",
+          title: notifyTitle,
+          description: item.title,
+          referenceId: item.id,
+        }).catch(err => console.error("[notify content publish]", err));
+      }
+    }
 
     return NextResponse.json(item, { status: 201 });
   } catch (err) {

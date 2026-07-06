@@ -154,7 +154,7 @@ function LearnPageInner() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/content?status=published")
+    fetch("/api/content?status=published&section=general")
       .then((r) => r.json())
       .then((data) => { setItems(data); setLoading(false); })
       .catch(() => setLoading(false));

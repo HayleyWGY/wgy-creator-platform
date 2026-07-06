@@ -61,6 +61,15 @@ export default function NotificationsPage() {
       router.push('/messages/wgy')
     } else if (notif.type === 'campaign' && notif.referenceId) {
       router.push(`/opportunities/${notif.referenceId}`)
+    } else if (notif.type === 'content' && notif.referenceId) {
+      // Content lives in Learn or the About hub depending on its section
+      fetch(`/api/content/${notif.referenceId}`)
+        .then(r => (r.ok ? r.json() : null))
+        .then(item => {
+          const hub = ['about', 'faq', 'updates'].includes(item?.section)
+          router.push(hub ? `/about/${notif.referenceId}` : `/learn/${notif.referenceId}`)
+        })
+        .catch(() => router.push(`/learn/${notif.referenceId}`))
     }
   }
 

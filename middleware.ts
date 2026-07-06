@@ -52,6 +52,7 @@ export const config = {
     '/notifications/:path*',
     '/membership/:path*',
     '/search/:path*',
+    '/about/:path*',
     '/admin/:path*',
   ],
 }

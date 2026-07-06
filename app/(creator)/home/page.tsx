@@ -37,11 +37,20 @@ interface LearnItem {
   readingTimeMinutes: number | null;
 }
 
+interface UpdateItem {
+  id: string;
+  title: string;
+  thumbnailUrl: string | null;
+  publishedAt: string | null;
+  readingTimeMinutes: number | null;
+}
+
 export default function HomePage() {
   const { data: session } = useSession();
   const router = useRouter();
   const [campaigns, setCampaigns]       = useState<Campaign[]>([]);
   const [learnItems, setLearnItems]     = useState<LearnItem[]>([]);
+  const [updates, setUpdates]           = useState<UpdateItem[]>([]);
   const [creatorPosts, setCreatorPosts] = useState<CreatorPost[]>([]);
 
   useEffect(() => {
@@ -50,9 +59,14 @@ export default function HomePage() {
       .then(data => setCampaigns(data.campaigns ?? []))
       .catch(() => {});
 
-    fetch("/api/content?status=published")
+    fetch("/api/content?status=published&section=general")
       .then(r => r.json())
       .then((data: LearnItem[]) => setLearnItems(data.slice(0, 3)))
+      .catch(() => {});
+
+    fetch("/api/content?status=published&section=updates")
+      .then(r => r.json())
+      .then((data: UpdateItem[]) => setUpdates(Array.isArray(data) ? data.slice(0, 3) : []))
       .catch(() => {});
 
     fetch("/api/creator-posts?limit=3")
@@ -107,6 +121,37 @@ export default function HomePage() {
               ))}
         </div>
       </div>
+
+      {/* Updates — latest news from the WGY team */}
+      {updates.length > 0 && (
+        <div className="mt-7">
+          <div className="px-5">
+            <Eyebrow style={{ marginBottom: 10 }}>Updates</Eyebrow>
+          </div>
+          <div className="px-5 mb-3">
+            <SectionHeader lead="The latest from" accent="WGY" seeAllHref="/about?tab=updates" />
+          </div>
+          <div className="flex gap-3 overflow-x-auto pl-5 pr-8 pb-1" style={{ scrollbarWidth: "none" }}>
+            {updates.map(u => (
+              <Link key={u.id} href={`/about/${u.id}`} className="flex-none w-[220px] overflow-hidden" style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)", textDecoration: "none" }}>
+                <div className="relative w-full" style={{ height: "100px", background: u.thumbnailUrl ? undefined : "linear-gradient(140deg, var(--img-a), var(--img-b))" }}>
+                  {u.thumbnailUrl && <Image src={u.thumbnailUrl} alt={u.title} fill style={{ objectFit: "cover" }} />}
+                </div>
+                <div style={{ padding: "12px 14px 14px" }}>
+                  <h3 className="font-montserrat leading-snug" style={{ fontSize: "13.5px", fontWeight: 800, color: "var(--text)", margin: 0, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                    {u.title}
+                  </h3>
+                  {u.publishedAt && (
+                    <p className="font-montserrat uppercase mt-1" style={{ fontSize: "10px", fontWeight: 600, letterSpacing: "0.04em", color: "var(--text-muted)", margin: 0 }}>
+                      {getAge(u.publishedAt)}
+                    </p>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Creator Corner */}
       <div className="mt-7">

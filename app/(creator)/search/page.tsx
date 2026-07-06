@@ -17,6 +17,7 @@ interface ContentHit {
   id: string
   title: string
   contentType: string
+  section?: string
 }
 
 export default function SearchPage() {
@@ -117,12 +118,12 @@ export default function SearchPage() {
 
         {content.length > 0 && (
           <div className="mb-6">
-            <p className="eyebrow" style={{ marginBottom: 10 }}>Learning Lounge</p>
+            <p className="eyebrow" style={{ marginBottom: 10 }}>Resources</p>
             <div className="flex flex-col gap-2">
               {content.map(item => (
                 <Link
                   key={item.id}
-                  href={`/learn/${item.id}`}
+                  href={["about", "faq", "updates"].includes(item.section ?? "") ? `/about/${item.id}` : `/learn/${item.id}`}
                   className="flex items-center gap-3 p-3"
                   style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, textDecoration: 'none' }}
                 >

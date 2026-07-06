@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { BottomNav } from "@/components/creator/bottom-nav";
 import { NavHeader } from "@/components/creator/NavHeader";
-import { Search } from "lucide-react";
+import { Search, User } from "lucide-react";
 
 export default function CreatorLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -27,6 +27,10 @@ export default function CreatorLayout({ children }: { children: React.ReactNode 
             <NavHeader />
             <Link href="/search" aria-label="Search">
               <Search size={20} strokeWidth={1.5} style={{ color: "var(--text-muted)" }} />
+            </Link>
+            {/* Profile moved up here so the bottom nav's fifth tab is About */}
+            <Link href="/profile" aria-label="Profile">
+              <User size={20} strokeWidth={1.5} style={{ color: "var(--text-muted)" }} />
             </Link>
           </div>
         </header>

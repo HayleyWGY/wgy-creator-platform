@@ -60,7 +60,8 @@ export default function EditCampaignPage() {
   const [applyLink, setApplyLink] = useState("");
   const [spots, setSpots]         = useState("");
   const [sectionSlug, setSectionSlug] = useState(SECTIONS[0].slug);
-  const [status, setStatus]       = useState<"draft" | "publish">("draft");
+  const [status, setStatus]       = useState<"draft" | "publish" | "schedule">("draft");
+  const [scheduledAt, setScheduledAt] = useState("");
   const [saving, setSaving]       = useState(false);
   const [error, setError]         = useState("");
 
@@ -103,7 +104,8 @@ export default function EditCampaignPage() {
         setApplyLink(campaign.applyLinkUrl ?? "");
         setSpots(campaign.spotsRemaining != null ? String(campaign.spotsRemaining) : "");
         setSectionSlug(campaign.sectionSlug ?? SECTIONS[0].slug);
-        setStatus(campaign.status === "published" ? "publish" : "draft");
+        setStatus(campaign.status === "published" ? "publish" : campaign.status === "scheduled" ? "schedule" : "draft");
+        setScheduledAt(campaign.scheduledAt ? campaign.scheduledAt.slice(0, 16) : "");
         setCoverImageUrl(campaign.coverImageUrl ?? null);
         setBrandLogoUrl(campaign.brandLogoUrl ?? null);
         setPaymentAmount(campaign.paymentAmount ?? "");
@@ -130,8 +132,11 @@ export default function EditCampaignPage() {
     finally { setUploading(false); }
   }
 
-  async function handleSave(saveStatus: "draft" | "publish") {
+  async function handleSave(saveStatus: "draft" | "publish" | "schedule") {
     if (!title.trim() || !brand.trim()) { setError("Campaign title and brand name are required."); return; }
+    if (saveStatus === "schedule" && (!scheduledAt || new Date(scheduledAt) <= new Date())) {
+      setError("Pick a future date and time to schedule this campaign."); return;
+    }
     setError(""); setSaving(true);
     try {
       const res = await fetch(`/api/campaigns/${id}`, {
@@ -148,6 +153,7 @@ export default function EditCampaignPage() {
           applyLinkUrl: applyLink.trim() || null,
           spotsRemaining: spots ? parseInt(spots) : null,
           sectionSlug, campaignType, status: saveStatus,
+          scheduledAt: saveStatus === "schedule" ? scheduledAt : null,
           coverImageUrl, brandLogoUrl,
           paymentAmount: showPayment ? paymentAmount.trim() || null : null,
           paymentTerms: showPayment ? paymentTerms || null : null,
@@ -420,16 +426,23 @@ export default function EditCampaignPage() {
             </Field>
             <Field label="Status">
               <div style={{ background: "var(--surface-2)", borderRadius: "8px", padding: "4px", display: "flex", gap: "4px" }}>
-                {(["draft", "publish"] as const).map((s) => (
+                {(["draft", "publish", "schedule"] as const).map((s) => (
                   <button key={s} onClick={() => setStatus(s)} className="font-montserrat font-semibold"
                     style={{ flex: 1, height: "36px", borderRadius: "6px", border: "none", cursor: "pointer", fontSize: "12px",
                       background: status === s ? "var(--accent)" : "transparent", color: status === s ? "var(--bg)" : "var(--text-muted)",
                       transition: "background 0.15s, color 0.15s", textTransform: "capitalize" }}>
-                    {s === "publish" ? "Published" : "Draft"}
+                    {s === "publish" ? "Published" : s === "schedule" ? "Schedule" : "Draft"}
                   </button>
                 ))}
               </div>
             </Field>
+            {status === "schedule" && (
+              <Field label="Goes Live At">
+                <input type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)}
+                  className="font-montserrat font-normal" style={{ ...inputBase, colorScheme: "dark" }}
+                  onFocus={focusBorder} onBlur={blurBorder} />
+              </Field>
+            )}
           </div>
 
           {/* Preview */}
@@ -460,9 +473,9 @@ export default function EditCampaignPage() {
               style={{ width: "100%", height: "44px", borderRadius: "8px", background: "transparent", border: "1px solid rgba(228,220,209,0.25)", color: "var(--accent)", fontSize: "13px", cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.6 : 1 }}>
               {saving ? "Saving..." : "Save as Draft"}
             </button>
-            <button onClick={() => handleSave("publish")} disabled={saving} className="font-montserrat font-semibold"
+            <button onClick={() => handleSave(status === "draft" ? "publish" : status)} disabled={saving} className="font-montserrat font-semibold"
               style={{ width: "100%", height: "44px", borderRadius: "8px", background: "var(--accent)", border: "none", color: "var(--bg)", fontSize: "13px", cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.6 : 1 }}>
-              {saving ? "Saving..." : "Save & Publish"}
+              {saving ? "Saving..." : status === "schedule" ? "Save & Schedule" : "Save & Publish"}
             </button>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "5px", marginTop: "4px" }}>
               <BellRing size={12} color="var(--text-muted)" strokeWidth={1.5} />

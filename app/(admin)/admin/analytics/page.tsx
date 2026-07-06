@@ -1,141 +1,203 @@
 "use client";
 
-import { useState } from "react";
-import { Heart, MessageCircle } from "lucide-react";
+import { useEffect, useState } from "react";
 
-// TODO Phase 3: Replace with DB queries — analytics aggregations
-const MONTHS = ["Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar","Apr","May"];
-const VALUES = [340,380,390,410,440,480,560,680,730,790,830,879];
-const MIN_V = 340, MAX_V = 879;
+interface MonthPoint { label: string; joined: number; cancelled: number; total: number }
+interface Funnel { total: number; photo: number; socials: number; address: number; saidHi: number; applied: number }
+interface CampaignRow {
+  id: string; title: string; brandName: string | null; status: string;
+  likesCount: number; commentsCount: number; applyClicks: number; engagement: number;
+}
+interface Analytics {
+  months: MonthPoint[];
+  active7: number;
+  active30: number;
+  totalMembers: number;
+  cancelledTotal: number;
+  funnel: Funnel;
+  campaigns: CampaignRow[];
+}
 
-const pts = VALUES.map((v, i) => ({
-  x: 40 + i * (720 / 11),
-  y: 160 - ((v - MIN_V) / (MAX_V - MIN_V)) * 140,
-}));
+const card: React.CSSProperties = {
+  background: "var(--surface)",
+  borderRadius: "12px",
+  border: "1px solid rgba(255,255,255,0.06)",
+  padding: "20px",
+};
 
-const polylinePoints = pts.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
-const areaPath = [
-  `M ${pts[0].x.toFixed(1)},${pts[0].y.toFixed(1)}`,
-  ...pts.slice(1).map((p) => `L ${p.x.toFixed(1)},${p.y.toFixed(1)}`),
-  `L ${pts[11].x.toFixed(1)},160`,
-  `L ${pts[0].x.toFixed(1)},160`,
-  "Z",
-].join(" ");
+function StatTile({ label, value, hint }: { label: string; value: string | number; hint?: string }) {
+  return (
+    <div style={card}>
+      <p className="font-montserrat font-bold uppercase" style={{ fontSize: "9px", letterSpacing: "0.10em", color: "var(--text-muted)" }}>
+        {label}
+      </p>
+      <p className="font-montserrat font-bold" style={{ fontSize: "28px", color: "var(--text)", marginTop: "6px" }}>{value}</p>
+      {hint && (
+        <p className="font-montserrat font-normal" style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "2px" }}>{hint}</p>
+      )}
+    </div>
+  );
+}
 
-const STATS = [
-  { label: "Total Members",        value: "879", trend: "+22 this month",         colour: "var(--text-muted)" },
-  { label: "Monthly Active",       value: "694", trend: "83% of members · ↑3.7%", colour: "#27AE60" },
-  { label: "New This Month",       value: "22",  trend: "↑120% vs last month",    colour: "#27AE60" },
-  { label: "Active Subscriptions", value: "837", trend: "96% retention rate",      colour: "var(--text-muted)" },
-  { label: "Payment Failures",     value: "12",  trend: "1.4% of members",         colour: "var(--text-muted)" },
-  { label: "Cancelled This Month", value: "3",   trend: "Low churn ↓",             colour: "#27AE60" },
-];
+// Simple SVG line chart over 12 monthly values
+function LineChart({ points, colour }: { points: { label: string; value: number }[]; colour: string }) {
+  const W = 760, H = 130, PAD = 10;
+  const max = Math.max(1, ...points.map(p => p.value));
+  const step = (W - PAD * 2) / Math.max(1, points.length - 1);
+  const y = (v: number) => H - PAD - (v / max) * (H - PAD * 2);
+  const path = points.map((p, i) => `${i === 0 ? "M" : "L"}${PAD + i * step},${y(p.value)}`).join(" ");
 
-const TOP_CAMPAIGNS = [
-  { name: "The Inkey List",     likes: 142, comments: 61 },
-  { name: "Pixi Beauty",        likes: 104, comments: 35 },
-  { name: "Monday Haircare",    likes: 94,  comments: 45 },
-  { name: "Maybelline Gifting", likes: 70,  comments: 38 },
-  { name: "Kaleidos Makeup",    likes: 75,  comments: 32 },
-];
+  return (
+    <div>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "auto", display: "block" }}>
+        <path d={path} fill="none" stroke={colour} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+        {points.map((p, i) => (
+          <circle key={i} cx={PAD + i * step} cy={y(p.value)} r={3} fill={colour} />
+        ))}
+      </svg>
+      <div style={{ display: "grid", gridTemplateColumns: `repeat(${points.length}, 1fr)`, marginTop: "6px" }}>
+        {points.map((p, i) => (
+          <div key={i} style={{ textAlign: "center" }}>
+            <p className="font-montserrat font-semibold" style={{ fontSize: "10px", color: "var(--text)" }}>{p.value}</p>
+            <p className="font-montserrat font-normal uppercase" style={{ fontSize: "8px", letterSpacing: "0.06em", color: "var(--text-muted)" }}>{p.label}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
-const TOP_CONTENT = [
-  { name: "10 Ways to Increase Engagement", likes: 41 },
-  { name: "Ultimate Beginners Course",      likes: 33 },
-  { name: "Mastering Brand Negotiations",   likes: 26 },
-  { name: "2026 Creator Checklist",         likes: 18 },
-];
+function FunnelBar({ label, value, total }: { label: string; value: number; total: number }) {
+  const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+  return (
+    <div style={{ marginTop: "12px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+        <span className="font-montserrat font-medium" style={{ fontSize: "12px", color: "var(--text)" }}>{label}</span>
+        <span className="font-montserrat font-normal" style={{ fontSize: "12px", color: "var(--text-muted)" }}>{value} · {pct}%</span>
+      </div>
+      <div style={{ height: "6px", borderRadius: "3px", background: "var(--surface-2)", overflow: "hidden" }}>
+        <div style={{ height: "100%", width: `${pct}%`, background: "var(--accent)", borderRadius: "3px" }} />
+      </div>
+    </div>
+  );
+}
 
 export default function AnalyticsPage() {
-  const [dateRange, setDateRange] = useState("Last 30 days");
+  const [data, setData] = useState<Analytics | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/admin/analytics")
+      .then(r => r.json())
+      .then(d => { if (d.months) setData(d); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
     <div>
       {/* Header */}
-      <div style={{ padding: "32px 32px 0", display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-        <div>
-          <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "var(--text-muted)" }}>Analytics</p>
-          <h1 className="admin-title" style={{ fontSize: "32px", marginTop: "4px" }}>Platform Analytics</h1>
-        </div>
-        <select value={dateRange} onChange={(e) => setDateRange(e.target.value)} className="font-montserrat font-normal"
-          style={{ background: "var(--surface)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "8px", padding: "0 14px", height: "40px", color: "var(--accent)", fontSize: "12px", outline: "none", cursor: "pointer" }}>
-          <option>Last 7 days</option>
-          <option>Last 30 days</option>
-          <option>Last 3 months</option>
-          <option>Last 12 months</option>
-        </select>
-      </div>
-
-      {/* Stat cards */}
-      <div style={{ padding: "24px 32px 0", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
-        {STATS.map((s) => (
-          <div key={s.label} style={{ background: "var(--surface)", borderRadius: "12px", padding: "20px 24px", border: "1px solid rgba(255,255,255,0.06)" }}>
-            <p className="font-montserrat font-bold uppercase" style={{ fontSize: "9px", letterSpacing: "0.12em", color: "var(--text-muted)" }}>{s.label}</p>
-            <p className="admin-title" style={{ fontSize: "40px", lineHeight: 1.1, marginTop: "6px" }}>{s.value}</p>
-            <p className="font-montserrat font-normal" style={{ fontSize: "11px", color: s.colour, marginTop: "6px" }}>{s.trend}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Growth chart */}
-      <div style={{ margin: "24px 32px 0", background: "var(--surface)", borderRadius: "12px", padding: "24px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-          <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "var(--accent)" }}>Member Growth</p>
-          <p className="font-montserrat font-normal" style={{ fontSize: "11px", color: "var(--text-muted)" }}>Last 12 months</p>
-        </div>
-        <svg viewBox="0 0 800 180" width="100%" height="180">
-          <path d={areaPath} fill="rgba(228,220,209,0.08)" />
-          <polyline points={polylinePoints} fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinejoin="round" />
-          {pts.map((p, i) => <circle key={i} cx={p.x.toFixed(1)} cy={p.y.toFixed(1)} r="3" fill="var(--accent)" />)}
-          {MONTHS.map((m, i) => (
-            <text key={m} x={pts[i].x.toFixed(1)} y="175" textAnchor="middle"
-              style={{ fontSize: "9px", fill: "var(--text-muted)", fontFamily: "var(--font-montserrat)" }}>{m}</text>
-          ))}
-        </svg>
-        <p className="font-montserrat font-normal" style={{ fontSize: "12px", color: "var(--text-muted)", textAlign: "center", marginTop: "12px" }}>
-          879 total members · 83% monthly active · +22 new this month
+      <div style={{ padding: "32px 32px 24px" }}>
+        <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "var(--text-muted)" }}>
+          Analytics
         </p>
+        <h1 className="admin-title" style={{ fontSize: "32px", marginTop: "4px" }}>Community Analytics</h1>
       </div>
 
-      {/* Two column */}
-      <div style={{ padding: "24px 32px 32px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-        {/* Most popular campaigns */}
-        <div style={{ background: "var(--surface)", borderRadius: "12px", padding: "20px" }}>
-          <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "var(--accent)", marginBottom: "12px" }}>Most Popular Campaigns</p>
-          {TOP_CAMPAIGNS.map((c, i) => {
-            const total = c.likes + c.comments;
-            return (
-              <div key={c.name} style={{ padding: "10px 0", borderBottom: i < 4 ? "1px solid rgba(255,255,255,0.04)" : "none", display: "flex", alignItems: "center", gap: "10px" }}>
-                <span className="font-montserrat font-semibold" style={{ fontSize: "12px", color: "var(--text-muted)", width: "16px", textAlign: "right", flexShrink: 0 }}>{i + 1}</span>
-                <span className="font-montserrat font-medium" style={{ fontSize: "13px", color: "var(--text)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</span>
-                <div style={{ width: "80px", height: "4px", background: "var(--surface-2)", borderRadius: "2px", flexShrink: 0 }}>
-                  <div style={{ width: `${Math.round((total / 203) * 80)}px`, height: "100%", background: "var(--accent)", borderRadius: "2px" }} />
-                </div>
-                <span className="font-montserrat font-normal" style={{ fontSize: "10px", color: "var(--text-muted)", flexShrink: 0, display: "flex", alignItems: "center", gap: "4px" }}>
-                  <Heart size={9} /> {c.likes} <MessageCircle size={9} /> {c.comments}
-                </span>
-              </div>
-            );
-          })}
-        </div>
+      {loading && (
+        <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "var(--text-muted)", padding: "0 32px" }}>
+          Loading analytics...
+        </p>
+      )}
 
-        {/* Content engagement */}
-        <div style={{ background: "var(--surface)", borderRadius: "12px", padding: "20px" }}>
-          <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "var(--accent)", marginBottom: "12px" }}>Content Engagement</p>
-          {TOP_CONTENT.map((c, i) => (
-            <div key={c.name} style={{ padding: "10px 0", borderBottom: i < 3 ? "1px solid rgba(255,255,255,0.04)" : "none", display: "flex", alignItems: "center", gap: "10px" }}>
-              <span className="font-montserrat font-semibold" style={{ fontSize: "12px", color: "var(--text-muted)", width: "16px", textAlign: "right", flexShrink: 0 }}>{i + 1}</span>
-              <span className="font-montserrat font-medium" style={{ fontSize: "13px", color: "var(--text)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</span>
-              <div style={{ width: "80px", height: "4px", background: "var(--surface-2)", borderRadius: "2px", flexShrink: 0 }}>
-                <div style={{ width: `${Math.round((c.likes / 41) * 80)}px`, height: "100%", background: "var(--accent)", borderRadius: "2px" }} />
-              </div>
-              <span className="font-montserrat font-normal" style={{ fontSize: "10px", color: "var(--text-muted)", flexShrink: 0, display: "flex", alignItems: "center", gap: "4px" }}>
-                <Heart size={9} /> {c.likes}
-              </span>
+      {!loading && !data && (
+        <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "var(--text-muted)", padding: "0 32px" }}>
+          Could not load analytics — please refresh.
+        </p>
+      )}
+
+      {data && (
+        <div style={{ padding: "0 32px 32px", display: "flex", flexDirection: "column", gap: "16px" }}>
+          {/* Stat tiles */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" }}>
+            <StatTile label="Members" value={data.totalMembers} />
+            <StatTile label="Active This Week" value={data.active7} hint="opened the app in the last 7 days" />
+            <StatTile label="Active This Month" value={data.active30} hint="opened the app in the last 30 days" />
+            <StatTile label="Cancellations Tracked" value={data.cancelledTotal} hint="since cancellation tracking began" />
+          </div>
+
+          {/* Growth chart */}
+          <div style={card}>
+            <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.10em", color: "var(--text-muted)", marginBottom: "14px" }}>
+              Member Growth — total members, last 12 months
+            </p>
+            <LineChart points={data.months.map(m => ({ label: m.label, value: m.total }))} colour="var(--accent)" />
+          </div>
+
+          {/* Joins vs cancellations */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+            <div style={card}>
+              <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.10em", color: "var(--text-muted)", marginBottom: "14px" }}>
+                New Members Per Month
+              </p>
+              <LineChart points={data.months.map(m => ({ label: m.label, value: m.joined }))} colour="#27AE60" />
             </div>
-          ))}
+            <div style={card}>
+              <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.10em", color: "var(--text-muted)", marginBottom: "14px" }}>
+                Cancellations Per Month
+              </p>
+              <LineChart points={data.months.map(m => ({ label: m.label, value: m.cancelled }))} colour="#C0392B" />
+              <p className="font-montserrat font-normal" style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "10px" }}>
+                Counts from when cancellation tracking began (Jul 2026) — earlier cancellations have no date recorded.
+              </p>
+            </div>
+          </div>
+
+          {/* Funnel + campaign engagement */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr", gap: "16px", alignItems: "start" }}>
+            <div style={card}>
+              <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.10em", color: "var(--text-muted)" }}>
+                Onboarding Checklist Completion
+              </p>
+              <FunnelBar label="Added a photo" value={data.funnel.photo} total={data.funnel.total} />
+              <FunnelBar label="Added socials" value={data.funnel.socials} total={data.funnel.total} />
+              <FunnelBar label="Added delivery address" value={data.funnel.address} total={data.funnel.total} />
+              <FunnelBar label="Said hi in group chat" value={data.funnel.saidHi} total={data.funnel.total} />
+              <FunnelBar label="Applied to an opportunity" value={data.funnel.applied} total={data.funnel.total} />
+            </div>
+
+            <div style={{ ...card, padding: 0, overflow: "hidden" }}>
+              <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.10em", color: "var(--text-muted)", padding: "20px 20px 12px" }}>
+                Top Campaigns by Engagement
+              </p>
+              <div style={{ display: "grid", gridTemplateColumns: "2.4fr 0.7fr 0.7fr 0.9fr", gap: "8px", padding: "0 20px 8px" }}>
+                {["Campaign", "Likes", "Comments", "Apply Clicks"].map(col => (
+                  <span key={col} className="font-montserrat font-bold uppercase" style={{ fontSize: "9px", letterSpacing: "0.08em", color: "var(--text-muted)" }}>{col}</span>
+                ))}
+              </div>
+              {data.campaigns.length === 0 && (
+                <p className="font-montserrat font-normal" style={{ fontSize: "12px", color: "var(--text-muted)", padding: "8px 20px 20px" }}>
+                  No campaign engagement yet.
+                </p>
+              )}
+              {data.campaigns.map((c, i) => (
+                <div key={c.id} style={{ display: "grid", gridTemplateColumns: "2.4fr 0.7fr 0.7fr 0.9fr", gap: "8px", padding: "10px 20px", borderTop: "1px solid rgba(255,255,255,0.04)", alignItems: "center", background: i % 2 ? "rgba(255,255,255,0.015)" : "transparent" }}>
+                  <div style={{ minWidth: 0 }}>
+                    <p className="font-montserrat font-medium" style={{ fontSize: "12px", color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</p>
+                    <p className="font-montserrat font-normal" style={{ fontSize: "10px", color: "var(--text-muted)" }}>{c.brandName ?? "—"}{c.status === "closed" ? " · closed" : ""}</p>
+                  </div>
+                  <span className="font-montserrat font-normal" style={{ fontSize: "12px", color: "var(--text-muted)" }}>{c.likesCount}</span>
+                  <span className="font-montserrat font-normal" style={{ fontSize: "12px", color: "var(--text-muted)" }}>{c.commentsCount}</span>
+                  <span className="font-montserrat font-normal" style={{ fontSize: "12px", color: "var(--text-muted)" }}>{c.applyClicks}</span>
+                </div>
+              ))}
+              <p className="font-montserrat font-normal" style={{ fontSize: "10px", color: "var(--text-muted)", padding: "10px 20px 16px" }}>
+                Apply clicks counted from Jul 2026 onwards.
+              </p>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
