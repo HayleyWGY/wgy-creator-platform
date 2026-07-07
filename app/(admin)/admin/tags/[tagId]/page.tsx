@@ -61,6 +61,11 @@ export default function TagDetailPage() {
   const [searching, setSearching] = useState(false);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Broadcast DM to everyone with this tag
+  const [broadcast, setBroadcast] = useState("");
+  const [sending, setSending]     = useState(false);
+  const [sendResult, setSendResult] = useState<{ ok: boolean; text: string } | null>(null);
+
   const loadTag = useCallback(async () => {
     try {
       const res = await fetch(`/api/admin/tags/${tagId}`);
@@ -94,6 +99,32 @@ export default function TagDetailPage() {
     }, 300);
     return () => { if (searchTimer.current) clearTimeout(searchTimer.current); };
   }, [query]);
+
+  async function sendBroadcast() {
+    if (!broadcast.trim() || sending || !tag) return;
+    const count = tag.creators.filter(c => c.membershipStatus !== "cancelled").length;
+    if (!confirm(`Send this message as a DM to ${count} creator${count === 1 ? "" : "s"} tagged "${tag.name}"?`)) return;
+    setSending(true);
+    setSendResult(null);
+    try {
+      const res = await fetch(`/api/admin/tags/${tagId}/message`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ body: broadcast.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setSendResult({ ok: false, text: data.error || "Could not send." });
+      } else {
+        setSendResult({ ok: true, text: `Sent to ${data.sent} creator${data.sent === 1 ? "" : "s"}.` });
+        setBroadcast("");
+      }
+    } catch {
+      setSendResult({ ok: false, text: "Network error — please try again." });
+    } finally {
+      setSending(false);
+    }
+  }
 
   async function addCreator(creatorId: string) {
     const res = await fetch(`/api/admin/tags/${tagId}`, {
@@ -186,6 +217,39 @@ export default function TagDetailPage() {
         <p className="font-montserrat font-normal" style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "4px" }}>
           {tag.creators.length} creator{tag.creators.length === 1 ? "" : "s"} with this tag
         </p>
+      </div>
+
+      {/* Broadcast a DM to everyone with this tag */}
+      <div style={{ padding: "0 32px 24px", maxWidth: "620px" }}>
+        <div style={{ background: "var(--surface)", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.06)", padding: "20px" }}>
+          <p className="font-montserrat font-bold uppercase" style={{ fontSize: "10px", letterSpacing: "0.12em", color: "var(--accent)" }}>
+            Message everyone with this tag
+          </p>
+          <p className="font-montserrat font-normal" style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "4px", lineHeight: 1.5 }}>
+            Sends a direct message from WGY to every active creator carrying this tag. It lands in their WGY chat.
+          </p>
+          <textarea
+            value={broadcast}
+            onChange={(e) => setBroadcast(e.target.value)}
+            placeholder="Write your message…"
+            rows={3}
+            className="font-montserrat font-normal"
+            style={{ width: "100%", marginTop: "12px", background: "var(--surface-2)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "8px", padding: "12px 14px", color: "var(--text)", fontSize: "13px", outline: "none", resize: "vertical", lineHeight: 1.5, boxSizing: "border-box" }}
+          />
+          {sendResult && (
+            <p className="font-montserrat font-medium" style={{ fontSize: "12px", color: sendResult.ok ? "#27AE60" : "#F97066", marginTop: "10px" }}>
+              {sendResult.text}
+            </p>
+          )}
+          <button
+            onClick={sendBroadcast}
+            disabled={!broadcast.trim() || sending}
+            className="font-montserrat font-semibold"
+            style={{ marginTop: "12px", height: "40px", padding: "0 18px", background: broadcast.trim() ? "var(--accent)" : "var(--surface-2)", color: broadcast.trim() ? "var(--bg)" : "var(--text-muted)", fontSize: "12px", border: "none", borderRadius: "8px", cursor: broadcast.trim() ? "pointer" : "not-allowed" }}
+          >
+            {sending ? "Sending…" : "Send to tagged creators"}
+          </button>
+        </div>
       </div>
 
       {/* Add creators */}
