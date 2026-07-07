@@ -19,6 +19,7 @@ import {
   Settings,
   LogOut,
   MessageCircle,
+  MessageSquare,
   Heart,
   LucideIcon,
 } from "lucide-react";
@@ -32,6 +33,7 @@ const NAV_ITEMS: { label: string; icon: LucideIcon; href: string }[] = [
   { label: "Push Notifications", icon: Bell,      href: "/admin/notifications" },
   { label: "Creators",   icon: Users,           href: "/admin/creators"   },
   { label: "Tags",       icon: Tag,             href: "/admin/tags"       },
+  { label: "Mass DM",    icon: MessageSquare,   href: "/admin/mass-dm"    },
   { label: "Sequences",  icon: Layers,          href: "/admin/sequences"  },
   { label: "Workflows",  icon: ListOrdered,     href: "/admin/workflows"  },
   { label: "Content",    icon: BookOpen,        href: "/admin/content"    },

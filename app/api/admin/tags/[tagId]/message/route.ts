@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getActiveSession } from '@/lib/session'
 import { rateLimit } from '@/lib/rate-limit'
 import { logAudit } from '@/lib/audit'
+import { sendDmToCreators } from '@/lib/broadcast'
 
 // POST — send a direct message to every (non-cancelled, non-admin) creator
 // carrying this tag. Each creator receives it in their WGY DM thread.
@@ -40,49 +41,15 @@ export async function POST(
     return NextResponse.json({ error: 'No active creators carry this tag' }, { status: 400 })
   }
 
-  // Ensure a DM thread exists for each recipient
-  const existingThreads = await prisma.dmThread.findMany({
-    where: { creatorId: { in: creatorIds } },
-    select: { id: true, creatorId: true },
-  })
-  const haveThread = new Set(existingThreads.map(t => t.creatorId))
-  const missing = creatorIds.filter(id => !haveThread.has(id))
-  if (missing.length > 0) {
-    await prisma.dmThread.createMany({
-      data: missing.map(creatorId => ({ creatorId })),
-      skipDuplicates: true,
-    })
-  }
-
-  const threads = await prisma.dmThread.findMany({
-    where: { creatorId: { in: creatorIds } },
-    select: { id: true },
-  })
-  const threadIds = threads.map(t => t.id)
-
-  const now = new Date()
-  await prisma.$transaction([
-    prisma.dmMessage.createMany({
-      data: threadIds.map(threadId => ({
-        threadId,
-        senderId: session.user.id,
-        body: message,
-      })),
-    }),
-    // Bump threads so they surface at the top of the admin inbox
-    prisma.dmThread.updateMany({
-      where: { id: { in: threadIds } },
-      data: { updatedAt: now },
-    }),
-  ])
+  const sent = await sendDmToCreators(session.user.id, creatorIds, message)
 
   await logAudit({
     actorId: session.user.id,
     action: 'Sent tag broadcast DM',
-    detail: `"${tag.name}" → ${threadIds.length} creators`,
+    detail: `"${tag.name}" → ${sent} creators`,
     targetType: 'tag',
     targetId: tag.id,
   })
 
-  return NextResponse.json({ sent: threadIds.length })
+  return NextResponse.json({ sent })
 }
