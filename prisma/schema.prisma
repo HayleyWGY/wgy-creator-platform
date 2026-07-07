@@ -135,14 +135,24 @@ model CreatorTag {
 }
 
 model Comment {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   postId    String
-  post      Post     @relation(fields: [postId], references: [id])
+  post      Post      @relation(fields: [postId], references: [id])
   authorId  String
-  author    Creator  @relation(fields: [authorId], references: [id])
+  author    Creator   @relation(fields: [authorId], references: [id])
   body      String
-  createdAt DateTime @default(now())
-  isDeleted Boolean  @default(false)
+  parentId  String?
+  parent    Comment?  @relation("CampaignCommentReplies", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CampaignCommentReplies")
+  createdAt DateTime  @default(now())
+  isDeleted Boolean   @default(false)
+}
+
+// Per-admin watermark for the Engagement feed — everything newer than
+// engagementSeenAt counts towards the sidebar badge
+model AdminRead {
+  adminId          String   @id
+  engagementSeenAt DateTime @default(now())
 }
 
 model Like {

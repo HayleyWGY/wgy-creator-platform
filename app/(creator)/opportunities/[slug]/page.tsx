@@ -4,7 +4,7 @@ import {
   Heart, MessageCircle, Bell, Send, ArrowLeft,
   Globe, Music2, Camera, Info, CalendarDays, Clock, MapPin, Trash2,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -51,6 +51,7 @@ interface CampaignComment {
     profileImageUrl: string | null;
     isAdmin: boolean;
   };
+  replies?: CampaignComment[];
 }
 
 function getAge(createdAt: string): string {
@@ -82,6 +83,58 @@ export default function CampaignDetailPage() {
   const [comment, setComment]       = useState("");
   const [comments, setComments]     = useState<CampaignComment[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<{ id: string; name: string } | null>(null);
+  const commentInputRef = useRef<HTMLInputElement>(null);
+
+  function startReply(c: CampaignComment) {
+    setReplyingTo({ id: c.id, name: c.author.isAdmin ? "WGY" : c.author.firstName });
+    commentInputRef.current?.focus();
+  }
+
+  const commentCount = comments.reduce((n, c) => n + 1 + (c.replies?.length ?? 0), 0);
+
+  function CommentRow({ c, isReply }: { c: CampaignComment; isReply?: boolean }) {
+    const canDelete = c.author.id === session?.user?.id || session?.user?.isAdmin;
+    const initials = c.author.isAdmin ? "WG" : `${c.author.firstName[0]}${c.author.lastName[0]}`;
+    return (
+      <div className="flex gap-3">
+        <div className="w-[30px] h-[30px] rounded-full flex items-center justify-center flex-none overflow-hidden" style={{ background: c.author.isAdmin ? "var(--beige)" : "var(--surface-2)", border: "1px solid var(--border)" }}>
+          {c.author.profileImageUrl && !c.author.isAdmin ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={c.author.profileImageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          ) : (
+            <span className="font-montserrat font-bold" style={{ fontSize: "9px", color: c.author.isAdmin ? "#111111" : "var(--text)" }}>{initials}</span>
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="font-montserrat" style={{ fontSize: "12px", fontWeight: 700, color: c.author.isAdmin ? "var(--gold-wgy)" : "var(--text)" }}>
+              {c.author.isAdmin ? "WGY" : `${c.author.firstName} ${c.author.lastName}`}
+            </span>
+            <span className="font-montserrat" style={{ fontSize: "10px", color: "var(--text-muted)" }}>{getAge(c.createdAt)}</span>
+            {canDelete && (
+              <button onClick={() => deleteComment(c.id)} aria-label="Delete comment" style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", color: "var(--text-muted)", opacity: 0.6 }}>
+                <Trash2 size={11} />
+              </button>
+            )}
+          </div>
+          <p className="font-montserrat leading-[1.6]" style={{ fontSize: "12px", fontWeight: 500, color: "var(--text-muted)", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{c.body}</p>
+          {!isReply && (
+            <button onClick={() => startReply(c)} className="font-montserrat" style={{ fontSize: "11px", fontWeight: 600, color: "var(--accent)", background: "none", border: "none", cursor: "pointer", padding: 0, marginTop: 4 }}>
+              Reply
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  function loadComments() {
+    fetch(`/api/campaigns/${slug}/comments`)
+      .then((r) => (r.ok ? r.json() : { comments: [] }))
+      .then((data) => setComments(data.comments || []))
+      .catch(() => {});
+  }
 
   useEffect(() => {
     if (!slug) return;
@@ -94,10 +147,8 @@ export default function CampaignDetailPage() {
       .catch(() => setCampaign(null))
       .finally(() => setLoading(false));
 
-    fetch(`/api/campaigns/${slug}/comments`)
-      .then((r) => (r.ok ? r.json() : { comments: [] }))
-      .then((data) => setComments(data.comments || []))
-      .catch(() => {});
+    loadComments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
   async function submitComment() {
@@ -107,12 +158,12 @@ export default function CampaignDetailPage() {
       const res = await fetch(`/api/campaigns/${campaign.id}/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ body: comment }),
+        body: JSON.stringify({ body: comment, parentId: replyingTo?.id }),
       });
       if (res.ok) {
-        const data = await res.json();
-        setComments((prev) => [...prev, data.comment]);
         setComment("");
+        setReplyingTo(null);
+        loadComments();
       }
     } finally {
       setSubmitting(false);
@@ -450,7 +501,7 @@ export default function CampaignDetailPage() {
         </div>
 
         <p className="font-montserrat" style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)" }}>
-          {comments.length} {comments.length === 1 ? "comment" : "comments"}
+          {commentCount} {commentCount === 1 ? "comment" : "comments"}
         </p>
 
         {comments.length === 0 && (
@@ -460,36 +511,16 @@ export default function CampaignDetailPage() {
         )}
 
         <div className="flex flex-col gap-4">
-          {comments.map((c) => {
-            const canDelete = c.author.id === session?.user?.id || session?.user?.isAdmin;
-            const initials = c.author.isAdmin ? "WG" : `${c.author.firstName[0]}${c.author.lastName[0]}`;
-            return (
-              <div key={c.id} className="flex gap-3">
-                <div className="w-[30px] h-[30px] rounded-full flex items-center justify-center flex-none overflow-hidden" style={{ background: c.author.isAdmin ? "var(--beige)" : "var(--surface-2)", border: "1px solid var(--border)" }}>
-                  {c.author.profileImageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={c.author.profileImageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  ) : (
-                    <span className="font-montserrat font-bold" style={{ fontSize: "9px", color: c.author.isAdmin ? "#111111" : "var(--text)" }}>{initials}</span>
-                  )}
+          {comments.map((c) => (
+            <div key={c.id} className="flex flex-col gap-3">
+              <CommentRow c={c} />
+              {c.replies?.map((r) => (
+                <div key={r.id} className="pl-[42px]">
+                  <CommentRow c={r} isReply />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-montserrat" style={{ fontSize: "12px", fontWeight: 700, color: c.author.isAdmin ? "var(--gold-wgy)" : "var(--text)" }}>
-                      {c.author.isAdmin ? "WGY" : `${c.author.firstName} ${c.author.lastName}`}
-                    </span>
-                    <span className="font-montserrat" style={{ fontSize: "10px", color: "var(--text-muted)" }}>{getAge(c.createdAt)}</span>
-                    {canDelete && (
-                      <button onClick={() => deleteComment(c.id)} aria-label="Delete comment" style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", color: "var(--text-muted)", opacity: 0.6 }}>
-                        <Trash2 size={11} />
-                      </button>
-                    )}
-                  </div>
-                  <p className="font-montserrat leading-[1.6]" style={{ fontSize: "12px", fontWeight: 500, color: "var(--text-muted)", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{c.body}</p>
-                </div>
-              </div>
-            );
-          })}
+              ))}
+            </div>
+          ))}
         </div>
       </div>
 
@@ -510,9 +541,20 @@ export default function CampaignDetailPage() {
 
       {/* ── Sticky comment input ─────────────────────────── */}
       <div
-        className="fixed z-40 flex items-center gap-3 px-5 py-3"
+        className="fixed z-40 flex flex-col gap-2 px-5 py-3"
         style={{ bottom: "80px", background: "var(--surface)", borderTop: "1px solid var(--border)", width: "100%", maxWidth: "390px", left: "50%", transform: "translateX(-50%)" }}
       >
+        {replyingTo && (
+          <div className="flex items-center justify-between">
+            <span className="font-montserrat" style={{ fontSize: "11px", fontWeight: 600, color: "var(--accent)" }}>
+              Replying to {replyingTo.name}
+            </span>
+            <button onClick={() => setReplyingTo(null)} className="font-montserrat" style={{ fontSize: "11px", color: "var(--text-muted)", background: "none", border: "none", cursor: "pointer" }}>
+              Cancel
+            </button>
+          </div>
+        )}
+        <div className="flex items-center gap-3">
         <div className="w-7 h-7 rounded-full flex items-center justify-center flex-none" style={{ background: "var(--beige)" }}>
           <span className="font-montserrat font-semibold" style={{ fontSize: "9px", color: "#111111" }}>
             {session?.user?.firstName?.[0] ?? ""}{session?.user?.lastName?.[0] ?? ""}
@@ -520,11 +562,12 @@ export default function CampaignDetailPage() {
         </div>
         <div className="flex-1 flex items-center gap-2 px-4 py-2" style={{ background: "var(--surface-2)", borderRadius: "var(--radius-pill)" }}>
           <input
+            ref={commentInputRef}
             type="text"
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") submitComment(); }}
-            placeholder="What are your thoughts?"
+            placeholder={replyingTo ? `Reply to ${replyingTo.name}...` : "What are your thoughts?"}
             className="flex-1 bg-transparent outline-none font-montserrat"
             style={{ fontSize: "12px", fontWeight: 500, color: "var(--text)" }}
           />
@@ -536,6 +579,7 @@ export default function CampaignDetailPage() {
           >
             <Send size={14} style={{ color: comment.trim() ? "var(--accent)" : "var(--text-muted)" }} />
           </button>
+        </div>
         </div>
         <style>{`input::placeholder { color: var(--text-muted); }`}</style>
       </div>

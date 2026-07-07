@@ -353,6 +353,13 @@ export default function CampaignsPage() {
                   >
                     View
                   </Link>
+                  <Link
+                    href={`/admin/campaigns/${c.id}/comments`}
+                    className="font-montserrat font-semibold"
+                    style={{ fontSize: "11px", color: "var(--accent)", textDecoration: "none" }}
+                  >
+                    Comments
+                  </Link>
                   {c.status === "published" && (
                     <button
                       onClick={() => setClosingId(c.id)}

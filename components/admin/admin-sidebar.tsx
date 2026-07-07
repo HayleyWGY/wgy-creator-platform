@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   Megaphone,
@@ -19,6 +20,7 @@ import {
   Settings,
   LogOut,
   MessageCircle,
+  Heart,
   LucideIcon,
 } from "lucide-react";
 
@@ -26,6 +28,7 @@ const NAV_ITEMS: { label: string; icon: LucideIcon; href: string }[] = [
   { label: "Dashboard",  icon: LayoutDashboard, href: "/admin/dashboard"  },
   { label: "Campaigns",  icon: Megaphone,       href: "/admin/campaigns"  },
   { label: "Community",  icon: MessageCircle,   href: "/admin/community"  },
+  { label: "Engagement", icon: Heart,           href: "/admin/engagement" },
   { label: "Inbox",      icon: Inbox,           href: "/admin/inbox"      },
   { label: "Push Notifications", icon: Bell,      href: "/admin/notifications" },
   { label: "Creators",   icon: Users,           href: "/admin/creators"   },
@@ -40,6 +43,21 @@ const NAV_ITEMS: { label: string; icon: LucideIcon; href: string }[] = [
 
 export function AdminSidebar() {
   const pathname = usePathname();
+  const [engagementUnread, setEngagementUnread] = useState(0);
+
+  // Poll the engagement unread count for the sidebar badge
+  useEffect(() => {
+    let active = true;
+    const check = () => {
+      fetch("/api/admin/engagement")
+        .then(r => (r.ok ? r.json() : { unreadCount: 0 }))
+        .then(d => { if (active) setEngagementUnread(d.unreadCount || 0); })
+        .catch(() => {});
+    };
+    check();
+    const id = setInterval(check, 30_000);
+    return () => { active = false; clearInterval(id); };
+  }, [pathname]);
 
   function isActive(href: string) {
     if (href === "/admin/dashboard") return pathname === "/admin/dashboard";
@@ -112,6 +130,26 @@ export function AdminSidebar() {
               <span className="font-montserrat font-medium" style={{ fontSize: "13px" }}>
                 {label}
               </span>
+              {href === "/admin/engagement" && engagementUnread > 0 && (
+                <span
+                  className="font-montserrat font-bold"
+                  style={{
+                    marginLeft: "auto",
+                    minWidth: "18px",
+                    height: "18px",
+                    borderRadius: "9px",
+                    background: "var(--accent)",
+                    color: "var(--bg)",
+                    fontSize: "10px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "0 5px",
+                  }}
+                >
+                  {engagementUnread > 99 ? "99+" : engagementUnread}
+                </span>
+              )}
             </Link>
           );
         })}
