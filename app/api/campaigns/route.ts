@@ -40,9 +40,14 @@ const FILTER_TO_SECTION_SLUG: Record<string, string> = {
 };
 
 export async function GET(req: NextRequest) {
+  const session = await getActiveSession();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+  }
+
   const { searchParams } = new URL(req.url);
   const filter   = searchParams.get("filter");
-  const adminAll = searchParams.get("adminAll");
+  const adminAll = searchParams.get("adminAll") && session.user.isAdmin ? searchParams.get("adminAll") : null;
   const limit    = parseInt(searchParams.get("limit") ?? "50");
 
   try {

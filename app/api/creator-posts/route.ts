@@ -11,6 +11,11 @@ const authorSelect = {
 }
 
 export async function GET(req: NextRequest) {
+  const session = await getActiveSession()
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+  }
+
   try {
     const { searchParams } = new URL(req.url)
     const limit  = parseInt(searchParams.get('limit') || '20')

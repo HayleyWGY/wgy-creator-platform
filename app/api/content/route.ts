@@ -8,10 +8,18 @@ import { notifyAllCreators } from "@/lib/notify";
 import { logAudit } from "@/lib/audit";
 
 export async function GET(req: NextRequest) {
+  const session = await getActiveSession();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+  }
+
   const { searchParams } = new URL(req.url);
-  const status      = searchParams.get("status");
-  const contentType = searchParams.get("contentType");
   const section     = searchParams.get("section");
+  const contentType = searchParams.get("contentType");
+  // Non-admins can only request published content
+  const status = session.user.isAdmin
+    ? searchParams.get("status")
+    : "published";
 
   try {
     // Flip any due scheduled campaigns/content live before reading

@@ -37,3 +37,8 @@ next-env.d.ts
 
 /app/generated/prisma
 .env
+
+# Local secret backups and migration artefacts — never commit
+.env.backup*
+.env.*.backup
+backups/

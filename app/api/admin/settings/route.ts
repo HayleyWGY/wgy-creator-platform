@@ -26,7 +26,7 @@ export async function PATCH(req: Request) {
     where: { id: session.user.id },
     select: { id: true, email: true, passwordHash: true },
   })
-  if (!me || !bcrypt.compareSync(currentPassword, me.passwordHash)) {
+  if (!me || !(await bcrypt.compare(currentPassword, me.passwordHash))) {
     return NextResponse.json({ error: 'Current password is incorrect' }, { status: 403 })
   }
 
@@ -42,7 +42,7 @@ export async function PATCH(req: Request) {
     if (newPassword.length < 8) {
       return NextResponse.json({ error: 'New password must be at least 8 characters' }, { status: 400 })
     }
-    data.passwordHash = bcrypt.hashSync(newPassword, 10)
+    data.passwordHash = await bcrypt.hash(newPassword, 10)
     changes.push('password changed')
   }
 

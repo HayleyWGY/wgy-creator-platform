@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { v2 as cloudinary } from "cloudinary";
+import { createClient } from "@supabase/supabase-js";
 import { getActiveSession } from "@/lib/session";
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key:    process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+);
+
+const BUCKET = "wgy-uploads";
 
 export async function POST(req: NextRequest) {
   const session = await getActiveSession();
@@ -22,8 +23,6 @@ export async function POST(req: NextRequest) {
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
-
-    // Server-side validation — client checks are bypassable
     if (!["wgy-campaigns", "wgy-content"].includes(folder)) {
       return NextResponse.json({ error: "Invalid folder" }, { status: 400 });
     }
@@ -34,20 +33,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Image must be under 10MB" }, { status: 400 });
     }
 
+    const ext  = file.name.split(".").pop() ?? "png";
+    const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
     const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
 
-    const result = await new Promise<{ secure_url: string }>((resolve, reject) => {
-      cloudinary.uploader.upload_stream(
-        { folder, resource_type: "image", access_mode: "public", type: "upload" },
-        (err, result) => {
-          if (err || !result) reject(err ?? new Error("Upload failed"));
-          else resolve(result as { secure_url: string });
-        }
-      ).end(buffer);
-    });
+    const { error } = await supabase.storage
+      .from(BUCKET)
+      .upload(path, bytes, { contentType: file.type, upsert: false });
 
-    return NextResponse.json({ url: result.secure_url });
+    if (error) throw new Error(error.message);
+
+    const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${path}`;
+    return NextResponse.json({ url });
   } catch (err) {
     console.error("[POST /api/upload]", err);
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });

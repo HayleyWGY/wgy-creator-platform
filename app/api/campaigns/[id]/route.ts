@@ -18,6 +18,11 @@ export async function GET(
 ) {
   const { id } = await params;
 
+  const session = await getActiveSession();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+  }
+
   try {
     const post = await prisma.post.findFirst({
       where: { OR: [{ slug: id }, { id }] },
@@ -27,8 +32,6 @@ export async function GET(
     if (!post) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-
-    const session = await getActiveSession();
 
     // Drafts and scheduled campaigns are only visible to admins;
     // published and closed campaigns stay browsable for everyone.

@@ -13,6 +13,11 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const session = await getActiveSession()
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+  }
+
   try {
     const post = await prisma.creatorPost.findFirst({
       where: { id: params.id, isDeleted: false },

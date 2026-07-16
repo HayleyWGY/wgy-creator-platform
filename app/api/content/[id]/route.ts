@@ -11,9 +11,20 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const session = await getActiveSession();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+  }
+
   try {
     const item = await prisma.postContent.findUnique({ where: { id: params.id } });
     if (!item) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+    // Drafts and scheduled items are admin-only
+    if (item.status !== "published" && !session.user.isAdmin) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
     return NextResponse.json(item);
   } catch (err) {
     console.error("[GET /api/content/[id]]", err);
