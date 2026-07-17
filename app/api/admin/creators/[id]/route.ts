@@ -3,9 +3,13 @@ import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { logAudit } from '@/lib/audit'
+import { encryptField, decryptField } from '@/lib/field-crypto'
 
-function calcAge(dob: Date | null): number | null {
-  if (!dob) return null
+// dob is the decrypted "YYYY-MM-DD" string
+function calcAge(dobStr: string | null): number | null {
+  if (!dobStr) return null
+  const dob = new Date(dobStr)
+  if (isNaN(dob.getTime())) return null
   const today = new Date()
   let age = today.getFullYear() - dob.getFullYear()
   const m = today.getMonth() - dob.getMonth()
@@ -58,10 +62,15 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
 
   if (!creator) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
+  const dateOfBirth = decryptField(creator.dateOfBirth)
   return NextResponse.json({
     creator: {
       ...creator,
-      age: calcAge(creator.dateOfBirth),
+      dateOfBirth,
+      address: decryptField(creator.address),
+      contactNumber: decryptField(creator.contactNumber),
+      gender: decryptField(creator.gender),
+      age: calcAge(dateOfBirth),
     },
   })
 }
@@ -158,8 +167,19 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     if (!data.email) return NextResponse.json({ error: 'Email cannot be empty' }, { status: 400 })
   }
 
-  if (data.dateOfBirth) {
-    data.dateOfBirth = new Date(data.dateOfBirth as string)
+  // Encrypt the sensitive PII fields before they touch the database.
+  // DOB is normalised to "YYYY-MM-DD" first so age maths stays reliable.
+  if (typeof data.dateOfBirth === 'string' && data.dateOfBirth) {
+    const parsed = new Date(data.dateOfBirth)
+    if (isNaN(parsed.getTime())) {
+      return NextResponse.json({ error: 'Invalid date of birth' }, { status: 400 })
+    }
+    data.dateOfBirth = parsed.toISOString().slice(0, 10)
+  }
+  for (const key of ['dateOfBirth', 'address', 'contactNumber', 'gender'] as const) {
+    if (key in data) {
+      data[key] = data[key] ? encryptField(String(data[key])) : null
+    }
   }
 
   // Stamp when a member is cancelled — feeds the monthly-cancellations

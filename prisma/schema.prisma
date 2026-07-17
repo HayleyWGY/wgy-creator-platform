@@ -24,7 +24,10 @@ model Creator {
   postcode          String?
   country           String?
   contentNiches     String[]       @default([])
-  dateOfBirth       DateTime?
+  // The four fields below are encrypted at rest (AES-256-GCM) via
+  // lib/field-crypto.ts — dateOfBirth is a "YYYY-MM-DD" string inside the
+  // ciphertext, not a native date. Never query or render them raw.
+  dateOfBirth       String?
   address           String?        @db.Text
   contactNumber     String?
   gender            String?
