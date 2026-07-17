@@ -48,7 +48,10 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const filter   = searchParams.get("filter");
   const adminAll = searchParams.get("adminAll") && session.user.isAdmin ? searchParams.get("adminAll") : null;
-  const limit    = parseInt(searchParams.get("limit") ?? "50");
+  // Neither the creator Opportunities page nor the admin campaigns list
+  // paginates — both render the full flat list with client-side filter
+  // tabs, so the default needs to comfortably cover the whole table.
+  const limit    = parseInt(searchParams.get("limit") ?? "2000");
 
   try {
     // Flip any due scheduled campaigns/content live before reading
