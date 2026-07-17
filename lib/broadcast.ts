@@ -1,4 +1,5 @@
 import { prisma } from './prisma'
+import { pingRealtime } from './realtime-server'
 
 // Sends a direct message from an admin to a set of creators. Ensures each
 // creator has a DM thread, inserts the message, and bumps the threads so
@@ -39,6 +40,9 @@ export async function sendDmToCreators(
       data: { updatedAt: new Date() },
     }),
   ])
+
+  // Wake every recipient's open chat plus the admin inbox (batched)
+  pingRealtime([...threadIds.map(id => `dm:${id}`), 'admin-inbox']).catch(() => {})
 
   return threadIds.length
 }

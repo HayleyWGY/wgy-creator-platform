@@ -2,6 +2,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Send, Trash2, Pin } from 'lucide-react'
+import { useRealtimePing } from '@/lib/use-realtime-ping'
 
 interface Author {
   id: string
@@ -61,9 +62,11 @@ export default function AdminRoomPage({ params }: { params: { slug: string } }) 
     } catch {}
   }, [params.slug])
 
+  // Realtime pings drive updates; the interval is a slow safety net.
+  useRealtimePing(`room:${params.slug}`, loadMessages)
   useEffect(() => {
     loadMessages()
-    const id = setInterval(loadMessages, 5000)
+    const id = setInterval(loadMessages, 30000)
     return () => clearInterval(id)
   }, [loadMessages])
 

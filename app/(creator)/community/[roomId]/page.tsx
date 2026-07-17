@@ -1,9 +1,10 @@
 'use client'
-import { useEffect, useRef, useState, FormEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { ArrowLeft, Send, Trash2 } from 'lucide-react'
 import { useChatPoll } from '@/lib/use-chat-poll'
+import { useRealtimePing } from '@/lib/use-realtime-ping'
 import { COMMUNITY_ROOMS } from '@/lib/constants'
 import { ChatBubble } from '@/components/ui/chat-bubble'
 
@@ -77,6 +78,19 @@ export default function ChatRoomPage({ params }: { params: { roomId: string } })
   const roomName = room?.name ?? slug.replace(/-/g, ' ')
   const roomEmoji = room?.emoji ?? '💬'
 
+  const refetch = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/chat/rooms/${slug}/messages`, { cache: 'no-store' })
+      if (!res.ok) return
+      const data = await res.json()
+      setMessages(prev => (prev.length === data.messages.length ? prev : data.messages))
+      setPinnedMessage(data.pinnedMessage || null)
+    } catch {}
+  }, [slug])
+
+  // Realtime is the primary delivery path; the poll is a slow safety net
+  // for when the websocket is blocked or drops.
+  useRealtimePing(`room:${slug}`, refetch)
   useChatPoll<{ messages: ChatMessage[]; pinnedMessage: typeof pinnedMessage }>(
     `/api/chat/rooms/${slug}/messages`,
     (data) => {
@@ -86,7 +100,7 @@ export default function ChatRoomPage({ params }: { params: { roomId: string } })
       })
       setPinnedMessage(data.pinnedMessage || null)
     },
-    3000,
+    30000,
     true,
   )
 

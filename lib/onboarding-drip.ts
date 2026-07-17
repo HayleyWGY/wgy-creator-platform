@@ -1,4 +1,5 @@
 import { prisma } from './prisma'
+import { pingRealtime } from './realtime-server'
 
 const DAY = 24 * 60 * 60 * 1000
 // Only send a step to creators who crossed its day-threshold within this
@@ -75,6 +76,12 @@ export async function runOnboardingDrip(senderAdminId: string) {
     await prisma.onboardingMessageSent.createMany({
       data: recipients.map(r => ({ creatorId: r.id, templateId: step.id })),
     })
+
+    // Wake recipients' open chats and the admin inbox
+    pingRealtime([
+      ...recipients.map(r => `dm:${threadByCreator.get(r.id)!}`),
+      'admin-inbox',
+    ]).catch(() => {})
 
     totalSent += recipients.length
   }

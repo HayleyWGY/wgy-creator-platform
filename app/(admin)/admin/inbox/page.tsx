@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { Send, Pin, MailPlus } from 'lucide-react'
+import { useRealtimePing } from '@/lib/use-realtime-ping'
 
 interface DmThread {
   id: string
@@ -52,18 +53,23 @@ export default function AdminInboxPage() {
     }
   }, [activeThread?.id])
 
-  // Load threads on mount and poll every 5s
+  // Realtime pings drive updates; the intervals below are slow safety
+  // nets for blocked/dropped websockets.
+  useRealtimePing('admin-inbox', loadThreads)
+  useRealtimePing(activeThread?.id ? `dm:${activeThread.id}` : null, loadMessages)
+
+  // Load threads on mount, slow fallback poll
   useEffect(() => {
     loadThreads()
-    const interval = setInterval(loadThreads, 5000)
+    const interval = setInterval(loadThreads, 30000)
     return () => clearInterval(interval)
   }, [loadThreads])
 
-  // Load messages when thread selected and poll every 3s
+  // Load messages when thread selected, slow fallback poll
   useEffect(() => {
     if (!activeThread?.id) return
     loadMessages()
-    const interval = setInterval(loadMessages, 3000)
+    const interval = setInterval(loadMessages, 30000)
     return () => clearInterval(interval)
   }, [activeThread?.id, loadMessages])
 

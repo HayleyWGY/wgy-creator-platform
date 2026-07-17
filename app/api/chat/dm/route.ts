@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getActiveSession } from "@/lib/session"
 import { rateLimit } from '@/lib/rate-limit'
 import { prisma } from '@/lib/prisma'
+import { pingRealtime } from '@/lib/realtime-server'
 
 // GET — return the current creator's DM thread (create if missing)
 export async function GET() {
@@ -79,6 +80,9 @@ export async function POST(req: Request) {
   })
 
   await prisma.dmThread.update({ where: { id: thread.id }, data: { updatedAt: new Date() } })
+
+  // Wake the admin inbox and this thread's open views
+  pingRealtime([`dm:${thread.id}`, 'admin-inbox']).catch(() => {})
 
   return NextResponse.json({ message }, { status: 201 })
 }

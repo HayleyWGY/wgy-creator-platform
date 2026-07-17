@@ -1,9 +1,10 @@
 'use client'
-import { useEffect, useRef, useState, FormEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { ArrowLeft, Send, ImageIcon, Trash2 } from 'lucide-react'
 import { useChatPoll } from '@/lib/use-chat-poll'
+import { useRealtimePing } from '@/lib/use-realtime-ping'
 import { ChatBubble } from '@/components/ui/chat-bubble'
 
 interface MessageSender {
@@ -89,7 +90,20 @@ export default function DMPage() {
       })
   }, [])
 
-  // Poll for new messages
+  const refetch = useCallback(async () => {
+    try {
+      const res = await fetch('/api/chat/dm', { cache: 'no-store' })
+      if (!res.ok) return
+      const data = await res.json()
+      if (!data.thread) return
+      setThread(data.thread)
+      setMessages(prev => (prev.length === data.thread.messages.length ? prev : data.thread.messages))
+    } catch {}
+  }, [])
+
+  // Realtime ping on this thread is the primary delivery path; the poll
+  // below is a slow safety net for blocked/dropped websockets.
+  useRealtimePing(thread ? `dm:${thread.id}` : null, refetch)
   useChatPoll<{ thread: DmThread }>(
     '/api/chat/dm',
     (data) => {
@@ -100,7 +114,7 @@ export default function DMPage() {
         return data.thread.messages
       })
     },
-    3000,
+    30000,
     true,
   )
 

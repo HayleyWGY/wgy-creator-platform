@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getActiveSession } from "@/lib/session"
 import { rateLimit } from '@/lib/rate-limit'
 import { prisma } from '@/lib/prisma'
+import { pingRealtime } from '@/lib/realtime-server'
 
 export async function GET(
   _req: Request,
@@ -72,6 +73,9 @@ export async function POST(
       author: { select: { id: true, firstName: true, lastName: true, profileImageUrl: true, isAdmin: true } },
     },
   })
+
+  // Nudge everyone in the room to refetch — content stays behind this API
+  pingRealtime(`room:${params.slug}`).catch(() => {})
 
   return NextResponse.json({ message }, { status: 201 })
 }

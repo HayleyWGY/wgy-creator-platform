@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { getActiveSession } from "@/lib/session"
 import { NextResponse } from 'next/server'
+import { pingRealtime } from '@/lib/realtime-server'
 
 export async function POST(
   req: Request,
@@ -22,6 +23,8 @@ export async function POST(
       data: { pinnedMessageId: messageId || null },
     })
 
+    pingRealtime(`room:${params.slug}`).catch(() => {})
+
     return NextResponse.json({ success: true })
   } catch {
     return NextResponse.json({ error: 'Failed to pin message' }, { status: 500 })
@@ -42,6 +45,8 @@ export async function DELETE(
       where: { slug: params.slug },
       data: { pinnedMessageId: null },
     })
+
+    pingRealtime(`room:${params.slug}`).catch(() => {})
 
     return NextResponse.json({ success: true })
   } catch {
