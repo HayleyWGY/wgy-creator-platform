@@ -96,7 +96,10 @@ export async function GET(req: NextRequest) {
 
     const posts = await prisma.post.findMany({
       where,
-      orderBy: { createdAt: "desc" },
+      // Sort by the campaign's actual publish date, not when the row was
+      // inserted — otherwise migrated campaigns (all inserted within the
+      // same import run) cluster at the top regardless of how old they are.
+      orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
       take: limit,
       include: { section: { select: { name: true, slug: true } } },
     });

@@ -372,9 +372,11 @@ export default function CampaignDetailPage() {
         <>
           <div className="px-5 flex flex-col gap-3">
             <span className="text-section-label">The Opportunity</span>
-            <p className="font-montserrat leading-[1.7]" style={{ fontSize: "13px", fontWeight: 500, color: "var(--text-muted)" }}>
-              {campaign.opportunityDescription}
-            </p>
+            <div
+              className="rich-content font-montserrat leading-[1.7]"
+              style={{ fontSize: "13px", fontWeight: 500, color: "var(--text-muted)" }}
+              dangerouslySetInnerHTML={{ __html: campaign.opportunityDescription }}
+            />
           </div>
           <Divider />
         </>
