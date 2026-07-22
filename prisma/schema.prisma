@@ -63,6 +63,14 @@ model Creator {
   dmThread            DmThread?
   dmMessagesSent      DmMessage[]         @relation("DmSender")
   auditLogs           AuditLog[]          @relation("AuditActor")
+
+  // Member segmentation at scale: mass-DM audiences, analytics, onboarding
+  // drip and the admin list all filter by membershipStatus + an activity/
+  // date column. Without these each query scans the whole members table.
+  @@index([membershipStatus, lastSeenAt])   // active / inactive segments
+  @@index([membershipStatus, joinedAt])     // new members, onboarding, list order
+  @@index([membershipStatus, firstApplyAt]) // "not applied yet" segment
+  @@index([cancelledAt])                    // cancellation analytics
 }
 
 model Section {
