@@ -44,11 +44,14 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
-        // Email matching is case-insensitive and whitespace-tolerant:
+        // Email matching stays case-insensitive and whitespace-tolerant:
         // "Hayley@…", "HAYLEY@…" and a trailing space all resolve to the
-        // same account.
-        const creator = await prisma.creator.findFirst({
-          where: { email: { equals: credentials.email.trim(), mode: 'insensitive' } },
+        // same account. All emails are stored lowercase (enforced on every
+        // write path), so we lowercase the input and do an exact lookup —
+        // this uses the unique index instead of a full-table sequential
+        // scan (an ILIKE match can't use the index and gets slow at scale).
+        const creator = await prisma.creator.findUnique({
+          where: { email: credentials.email.trim().toLowerCase() },
         })
 
         if (!creator) return null
