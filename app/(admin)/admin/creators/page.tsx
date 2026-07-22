@@ -40,6 +40,7 @@ interface CreatorDetail extends Creator {
   contactNumber: string | null
   gender: string | null
   age: number | null
+  applications?: { id: string; campaignName: string; appliedAt: string }[]
 }
 
 function getAge(dateStr: string) {
@@ -294,6 +295,23 @@ function CreatorPanel({ creatorId, onClose }: { creatorId: string; onClose: () =
                     <span key={n} className="font-montserrat font-semibold uppercase" style={{ fontSize: 9, letterSpacing: '0.08em', background: 'rgba(228,220,209,0.12)', color: 'var(--accent)', padding: '3px 10px', borderRadius: 20 }}>
                       {n}
                     </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Recent campaigns applied to */}
+            {detail.applications && detail.applications.length > 0 && (
+              <div style={{ marginTop: 16 }}>
+                <p className="font-montserrat font-bold uppercase" style={{ fontSize: 10, letterSpacing: '0.10em', color: '#9b7e56', marginBottom: 8 }}>Recent Campaigns Applied To</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {detail.applications.map(a => (
+                    <div key={a.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                      <span className="font-montserrat font-semibold" style={{ fontSize: 12, color: 'var(--accent)' }}>{a.campaignName}</span>
+                      <span className="font-montserrat" style={{ fontSize: 10, color: 'var(--text-muted)', flexShrink: 0 }}>
+                        {new Date(a.appliedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </span>
+                    </div>
                   ))}
                 </div>
               </div>

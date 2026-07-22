@@ -73,3 +73,39 @@ export function verifyHandoffToken(token: string | null | undefined): string | n
   if (!data.cid || !data.exp || data.exp < Math.floor(Date.now() / 1000)) return null
   return data.cid
 }
+
+// ── Application receipt token ─────────────────────────────────────────────
+// Returned in the prefill response and carried invisibly through the portal
+// form. On submit, the portal sends it to /api/record-application so the app
+// can log which campaign the creator applied to. Longer-lived (3h) than the
+// handoff token because filling in a form takes time, and marked with a
+// distinct type so it can't be swapped for a handoff token.
+const RECEIPT_TTL_SECONDS = 3 * 60 * 60
+
+export function mintApplicationReceipt(creatorId: string): string | null {
+  const secret = process.env.APPLY_HANDOFF_SECRET
+  if (!secret) return null
+  const payload = b64url(Buffer.from(JSON.stringify({ cid: creatorId, typ: 'rcpt', exp: Math.floor(Date.now() / 1000) + RECEIPT_TTL_SECONDS })))
+  return `${payload}.${sign(payload, secret)}`
+}
+
+export function verifyApplicationReceipt(token: string | null | undefined): string | null {
+  const secret = process.env.APPLY_HANDOFF_SECRET
+  if (!secret || !token) return null
+
+  const [payload, sig] = token.split('.')
+  if (!payload || !sig) return null
+
+  const a = fromB64url(sig)
+  const b = fromB64url(sign(payload, secret))
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null
+
+  let data: { cid?: string; typ?: string; exp?: number }
+  try {
+    data = JSON.parse(fromB64url(payload).toString('utf8'))
+  } catch {
+    return null
+  }
+  if (data.typ !== 'rcpt' || !data.cid || !data.exp || data.exp < Math.floor(Date.now() / 1000)) return null
+  return data.cid
+}

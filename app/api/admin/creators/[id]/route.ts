@@ -62,6 +62,14 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
 
   if (!creator) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
+  // Recent completed campaign applications, for admin context
+  const applications = await prisma.campaignApplication.findMany({
+    where: { creatorId: params.id },
+    orderBy: { appliedAt: 'desc' },
+    take: 5,
+    select: { id: true, campaignName: true, appliedAt: true },
+  })
+
   const dateOfBirth = decryptField(creator.dateOfBirth)
   return NextResponse.json({
     creator: {
@@ -71,6 +79,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
       contactNumber: decryptField(creator.contactNumber),
       gender: decryptField(creator.gender),
       age: calcAge(dateOfBirth),
+      applications,
     },
   })
 }

@@ -59,6 +59,7 @@ model Creator {
   creatorPostLikes    CreatorPostLike[]
   chatMessages        ChatMessage[]
   chatRoomReads       ChatRoomRead[]
+  applications        CampaignApplication[]
   dmThread            DmThread?
   dmMessagesSent      DmMessage[]         @relation("DmSender")
   auditLogs           AuditLog[]          @relation("AuditActor")
@@ -357,4 +358,20 @@ model AuditLog {
   createdAt  DateTime @default(now())
 
   @@index([createdAt])
+}
+
+// A completed campaign application, recorded when a creator submits the
+// portal application form via the secure handoff (portal calls
+// /api/record-application with a signed receipt token). Campaign details
+// are stored as plain strings from the portal — deliberately decoupled
+// from Post, since portal campaigns aren't the same records as app posts.
+model CampaignApplication {
+  id           String   @id @default(cuid())
+  creatorId    String
+  creator      Creator  @relation(fields: [creatorId], references: [id])
+  campaignName String
+  campaignSlug String?
+  appliedAt    DateTime @default(now())
+
+  @@index([creatorId, appliedAt])
 }

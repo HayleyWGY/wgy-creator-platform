@@ -103,6 +103,7 @@ export default function ProfilePage() {
   const router = useRouter()
   const [profile, setProfile] = useState<CreatorProfile | null>(null)
   const [sensitive, setSensitive] = useState<SensitiveProfile | null>(null)
+  const [applications, setApplications] = useState<Array<{ id: string; campaignName: string; appliedAt: string }>>([])
   const [loading, setLoading] = useState(true)
   const [editOpen, setEditOpen] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -124,9 +125,11 @@ export default function ProfilePage() {
     Promise.all([
       fetch('/api/profile').then(r => r.json()),
       fetch('/api/profile/sensitive').then(r => r.json()),
-    ]).then(([pData, sData]) => {
+      fetch('/api/profile/applications').then(r => r.json()).catch(() => ({ applications: [] })),
+    ]).then(([pData, sData, aData]) => {
       if (pData.creator) setProfile(pData.creator)
       if (sData.creator) setSensitive(sData.creator)
+      if (aData.applications) setApplications(aData.applications)
       setLoading(false)
     }).catch(() => setLoading(false))
   }, [])
@@ -392,6 +395,34 @@ export default function ProfilePage() {
         ) : (
           <p className="font-montserrat" style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)' }}>
             Brands you collaborate with will appear here.
+          </p>
+        )}
+      </div>
+
+      {/* Recent campaigns applied to — logged when the creator submits a
+          campaign application form via the secure portal handoff */}
+      <div className="px-5 mt-6">
+        <p className="eyebrow" style={{ marginBottom: 12 }}>Recent Campaigns Applied To</p>
+        {applications.length ? (
+          <div className="flex flex-col gap-2">
+            {applications.map((a) => (
+              <div
+                key={a.id}
+                className="flex items-center justify-between"
+                style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-card)', padding: '11px 14px' }}
+              >
+                <span className="font-montserrat" style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>
+                  {a.campaignName}
+                </span>
+                <span className="font-montserrat" style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-muted)', flexShrink: 0, marginLeft: 12 }}>
+                  {new Date(a.appliedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="font-montserrat" style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)' }}>
+            Campaigns you apply to will appear here.
           </p>
         )}
       </div>

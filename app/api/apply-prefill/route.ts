@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { verifyHandoffToken } from '@/lib/apply-handoff'
+import { verifyHandoffToken, mintApplicationReceipt } from '@/lib/apply-handoff'
 
 // Called server-to-server BY THE PORTAL to pre-fill an application form.
 // Returns ONLY name, email, and address for the creator named by a valid
@@ -50,7 +50,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Not found' }, { status: 404, headers: corsHeaders() })
   }
 
-  // Exactly the fields the portal form pre-fills — name, email, address only
+  // Exactly the fields the portal form pre-fills — name, email, address only.
+  // The receipt token rides through the form and comes back on submit so we
+  // can log the completed application (see /api/record-application).
   return NextResponse.json(
     {
       prefill: {
@@ -61,6 +63,7 @@ export async function GET(req: NextRequest) {
         city: creator.city ?? '',
         postcode: creator.postcode ?? '',
       },
+      receipt: mintApplicationReceipt(creatorId),
     },
     { headers: corsHeaders() },
   )
