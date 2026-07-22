@@ -1,3 +1,4 @@
+import { revalidateTag } from 'next/cache'
 import { prisma } from './prisma'
 import { notifyAllCreators } from './notify'
 
@@ -69,6 +70,11 @@ export async function publishDueScheduled(force = false) {
       }
     }
   }
+
+  // If anything went live, bust the members' cached lists so the newly
+  // published items appear immediately rather than after the revalidate.
+  if (dueContent.length > 0) revalidateTag('content')
+  if (duePosts.length > 0) revalidateTag('campaigns')
 
   return { posts: duePosts.length, content: dueContent.length }
 }

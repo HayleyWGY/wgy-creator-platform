@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getActiveSession } from "@/lib/session";
 import { notifyAllCreators } from "@/lib/notify";
@@ -171,6 +172,9 @@ export async function PATCH(
     // Capture the previous status so we only notify on the draft→published transition
     const before = await prisma.post.findUnique({ where: { id }, select: { status: true } });
     const post = await prisma.post.update({ where: { id }, data });
+
+    // Bust the members' cached opportunities feed (new/edited/closed status)
+    revalidateTag("campaigns");
 
     if (before?.status !== "published" && post.status === "published") {
       notifyAllCreators({

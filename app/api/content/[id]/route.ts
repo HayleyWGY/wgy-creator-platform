@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { getActiveSession } from "@/lib/session";
 import { sanitizeRichText } from "@/lib/sanitize";
 import { prisma } from "@/lib/prisma";
@@ -77,6 +78,9 @@ export async function PATCH(
 
     const item = await prisma.postContent.update({ where: { id: params.id }, data });
 
+    // Bust the members' cached content list so edits show immediately
+    revalidateTag("content");
+
     if (firstPublish) {
       const notifyTitle = contentNotifyTitle(item.section);
       if (notifyTitle) {
@@ -119,6 +123,7 @@ export async function DELETE(
       select: { title: true, section: true },
     });
     await prisma.postContent.delete({ where: { id: params.id } });
+    revalidateTag("content");
     await logAudit({
       actorId: session.user.id,
       action: "Deleted content",

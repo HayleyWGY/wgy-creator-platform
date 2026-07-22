@@ -1,9 +1,89 @@
 import { NextRequest, NextResponse } from "next/server";
+import { unstable_cache, revalidateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getActiveSession } from "@/lib/session"
 import { notifyAllCreators } from "@/lib/notify";
 import { publishDueScheduled } from "@/lib/scheduled-publish";
 import { logAudit } from "@/lib/audit";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapCampaign(p: any) {
+  return {
+    id:                    p.id,
+    slug:                  p.slug ?? p.id,
+    brandName:             p.brandName ?? "",
+    brandInitials:         (p.brandName ?? "??").slice(0, 2).toUpperCase(),
+    brandLogoUrl:          p.brandLogoUrl,
+    coverImageUrl:         p.coverImageUrl,
+    campaignType:          p.campaignType ?? p.postType,
+    title:                 p.title,
+    brandDescription:      p.brandDescription,
+    brandWebsite:          p.brandWebsite,
+    brandInstagram:        p.brandInstagram,
+    brandTikTok:           p.brandTikTok,
+    opportunityDescription: p.opportunityDescription,
+    deliverables:          p.deliverables as string[] | null,
+    applyLinkUrl:          p.applyLinkUrl ?? "",
+    spotsRemaining:        p.spotsRemaining,
+    paymentAmount:         p.paymentAmount,
+    paymentTerms:          p.paymentTerms,
+    eventDate:             p.eventDate,
+    eventTime:             p.eventTime,
+    eventLocation:         p.eventLocation,
+    likesCount:            p.likesCount,
+    commentsCount:         p.commentsCount,
+    applyClicks:           p.applyClicks,
+    status:                p.status,
+    scheduledAt:           p.scheduledAt,
+    createdAt:             p.createdAt,
+    sectionName:           p.section.name,
+    sectionSlug:           p.section.slug,
+  };
+}
+
+// Cached member-facing (non-admin) campaigns list. The opportunities feed is
+// the most-visited page and is the same for every member, so it's served from
+// cache keyed by (filter, liveOnly) rather than re-queried on every visit.
+// 60s revalidate + the 'campaigns' tag: admin create/edit/status changes call
+// revalidateTag('campaigns') for instant freshness (like/comment counts may
+// be up to 60s stale, which is fine for social-proof numbers).
+const getMemberCampaigns = unstable_cache(
+  async (filter: string | null, liveOnly: boolean) => {
+    const where: Record<string, unknown> = {};
+    where.status = liveOnly ? "published" : { in: ["published", "closed"] };
+
+    if (filter && FILTER_TO_CAMPAIGN_TYPE[filter]) {
+      const filterSection = await prisma.section.findUnique({
+        where: { slug: FILTER_TO_SECTION_SLUG[filter] },
+        select: { id: true },
+      });
+      const orConditions: Record<string, unknown>[] = [
+        { campaignType: FILTER_TO_CAMPAIGN_TYPE[filter] },
+        { postType: FILTER_TO_POST_TYPE[filter] },
+      ];
+      if (filterSection) orConditions.push({ sectionId: filterSection.id });
+      where.OR = orConditions;
+    }
+
+    const opportunitySections = await prisma.section.findMany({
+      where: { group: "OPPORTUNITIES" },
+      select: { id: true },
+    });
+    if (opportunitySections.length > 0) {
+      where.sectionId = { in: opportunitySections.map((s: { id: string }) => s.id) };
+    }
+
+    const posts = await prisma.post.findMany({
+      where,
+      orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
+      take: 2000,
+      include: { section: { select: { name: true, slug: true } } },
+    });
+    return posts.map(mapCampaign);
+  },
+  ["member-campaigns"],
+  { revalidate: 60, tags: ["campaigns"] },
+);
 
 function makeSlug(brandName: string, title: string): string {
   return `${brandName}-${title}`
@@ -48,99 +128,41 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const filter   = searchParams.get("filter");
   const adminAll = searchParams.get("adminAll") && session.user.isAdmin ? searchParams.get("adminAll") : null;
-  // Neither the creator Opportunities page nor the admin campaigns list
-  // paginates — both render the full flat list with client-side filter
-  // tabs, so the default needs to comfortably cover the whole table.
-  const limit    = parseInt(searchParams.get("limit") ?? "2000");
 
   try {
     // Flip any due scheduled campaigns/content live before reading
+    // (self-throttled to once/60s per instance)
     await publishDueScheduled().catch(() => {});
 
-    const where: Record<string, unknown> = {};
-
+    // Members get the cached opportunities feed (same for everyone)
     if (!adminAll) {
-      // Closed campaigns stay browsable so new members can see past
-      // opportunities — only drafts are hidden from creators. The home
-      // rail passes live=1 to show currently-open campaigns only.
-      where.status = searchParams.get("live")
-        ? "published"
-        : { in: ["published", "closed"] };
+      const campaigns = await getMemberCampaigns(filter, !!searchParams.get("live"));
+      return NextResponse.json({ campaigns });
     }
 
+    // Admin: uncached, sees every campaign incl. drafts
+    const where: Record<string, unknown> = {};
     if (filter && FILTER_TO_CAMPAIGN_TYPE[filter]) {
-      // Look up the section ID for this filter type so we can match by sectionId in the OR
       const filterSection = await prisma.section.findUnique({
         where: { slug: FILTER_TO_SECTION_SLUG[filter] },
         select: { id: true },
       });
-
       const orConditions: Record<string, unknown>[] = [
         { campaignType: FILTER_TO_CAMPAIGN_TYPE[filter] },
         { postType: FILTER_TO_POST_TYPE[filter] },
       ];
-      // Also match by section (catches campaigns assigned to section but with wrong/missing type fields)
-      if (filterSection) {
-        orConditions.push({ sectionId: filterSection.id });
-      }
+      if (filterSection) orConditions.push({ sectionId: filterSection.id });
       where.OR = orConditions;
-    }
-
-    if (!adminAll) {
-      const opportunitySections = await prisma.section.findMany({
-        where: { group: "OPPORTUNITIES" },
-        select: { id: true },
-      });
-      // If no sections are tagged OPPORTUNITIES, skip the section constraint entirely
-      if (opportunitySections.length > 0) {
-        where.sectionId = { in: opportunitySections.map((s: { id: string }) => s.id) };
-      }
     }
 
     const posts = await prisma.post.findMany({
       where,
-      // Sort by the campaign's actual publish date, not when the row was
-      // inserted — otherwise migrated campaigns (all inserted within the
-      // same import run) cluster at the top regardless of how old they are.
       orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
-      take: limit,
+      take: 2000,
       include: { section: { select: { name: true, slug: true } } },
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const campaigns = posts.map((p: any) => ({
-      id:                    p.id,
-      slug:                  p.slug ?? p.id,
-      brandName:             p.brandName ?? "",
-      brandInitials:         (p.brandName ?? "??").slice(0, 2).toUpperCase(),
-      brandLogoUrl:          p.brandLogoUrl,
-      coverImageUrl:         p.coverImageUrl,
-      campaignType:          p.campaignType ?? p.postType,
-      title:                 p.title,
-      brandDescription:      p.brandDescription,
-      brandWebsite:          p.brandWebsite,
-      brandInstagram:        p.brandInstagram,
-      brandTikTok:           p.brandTikTok,
-      opportunityDescription: p.opportunityDescription,
-      deliverables:          p.deliverables as string[] | null,
-      applyLinkUrl:          p.applyLinkUrl ?? "",
-      spotsRemaining:        p.spotsRemaining,
-      paymentAmount:         p.paymentAmount,
-      paymentTerms:          p.paymentTerms,
-      eventDate:             p.eventDate,
-      eventTime:             p.eventTime,
-      eventLocation:         p.eventLocation,
-      likesCount:            p.likesCount,
-      commentsCount:         p.commentsCount,
-      applyClicks:           p.applyClicks,
-      status:                p.status,
-      scheduledAt:           p.scheduledAt,
-      createdAt:             p.createdAt,
-      sectionName:           p.section.name,
-      sectionSlug:           p.section.slug,
-    }));
-
-    return NextResponse.json({ campaigns });
+    return NextResponse.json({ campaigns: posts.map(mapCampaign) });
   } catch (err) {
     console.error("[GET /api/campaigns]", err);
     return NextResponse.json({ error: "Failed to load campaigns" }, { status: 500 });
@@ -225,6 +247,9 @@ export async function POST(req: NextRequest) {
         authorId:               admin.id,
       },
     });
+
+    // Bust the members' cached opportunities feed so it shows immediately
+    revalidateTag("campaigns");
 
     // Notify every active creator when a campaign goes live on creation
     if (post.status === "published") {
