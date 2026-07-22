@@ -221,6 +221,37 @@ export default function CampaignDetailPage() {
 
   const showDeliverables = !isEvent && !isAppPartners;
 
+  // Apply click: record it, then open the apply link. If the link points at
+  // our portal and the secure prefill handoff is switched on (post-launch),
+  // route through /api/apply-handoff to attach a short-lived token so the
+  // form pre-fills the creator's name/email/address. Until then this simply
+  // opens the plain link — the feature is dormant.
+  async function handleApply(applyLinkUrl: string) {
+    fetch("/api/profile/apply-click", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ campaignId: campaign?.id }),
+    }).catch(() => {});
+
+    // Open the tab synchronously (in the click gesture) to dodge popup
+    // blockers, then point it at the tokenised URL once we have it.
+    const tab = window.open("", "_blank", "noopener,noreferrer");
+    try {
+      const res = await fetch("/api/apply-handoff", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ applyLinkUrl }),
+      });
+      const data = await res.json().catch(() => ({}));
+      const dest = data?.enabled && data?.url ? data.url : applyLinkUrl;
+      if (tab) tab.location.href = dest;
+      else window.location.href = dest;
+    } catch {
+      if (tab) tab.location.href = applyLinkUrl;
+      else window.location.href = applyLinkUrl;
+    }
+  }
+
   const brandLinks = [
     { label: "Website",   icon: Globe,  url: campaign.brandWebsite   },
     { label: "Instagram", icon: Camera, url: campaign.brandInstagram },
@@ -455,25 +486,13 @@ export default function CampaignDetailPage() {
             </>
           ) : (
             <>
-              <a
-                href={campaign.applyLinkUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => {
-                  // Fire-and-forget: records their first apply for the
-                  // onboarding checklist and the campaign's click count;
-                  // doesn't block the link opening.
-                  fetch("/api/profile/apply-click", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ campaignId: campaign.id }),
-                  }).catch(() => {});
-                }}
+              <button
+                onClick={() => handleApply(campaign.applyLinkUrl)}
                 className="w-full flex items-center justify-center font-montserrat uppercase transition-opacity active:opacity-80"
-                style={{ height: "48px", borderRadius: "var(--radius-pill)", background: "var(--pill-bg)", color: "var(--pill-text)", fontSize: "12px", fontWeight: 800, letterSpacing: "0.09em", textDecoration: "none" }}
+                style={{ height: "48px", borderRadius: "var(--radius-pill)", background: "var(--pill-bg)", color: "var(--pill-text)", fontSize: "12px", fontWeight: 800, letterSpacing: "0.09em", border: "none", cursor: "pointer" }}
               >
                 {isEvent ? "Register for This Event" : "Apply for This Campaign"}
-              </a>
+              </button>
               {campaign.spotsRemaining != null && (
                 <p className="font-montserrat text-center" style={{ fontSize: "11px", fontWeight: 500, color: "var(--text-muted)" }}>
                   {campaign.spotsRemaining} spots remaining
