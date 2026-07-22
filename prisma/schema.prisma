@@ -115,6 +115,11 @@ model Post {
   eventTime              String?
   comments               Comment[]
   likes                  Like[]
+
+  // Campaign lists filter by section + status and order by publish date
+  @@index([status, publishedAt])
+  @@index([sectionId])
+  @@index([authorId])
 }
 
 model Tag {
@@ -136,6 +141,8 @@ model CreatorTag {
   isVisibleToCreator Boolean  @default(true)
 
   @@id([creatorId, tagId])
+  // Broadcasting to everyone with a given tag
+  @@index([tagId])
 }
 
 model Comment {
@@ -150,6 +157,10 @@ model Comment {
   replies   Comment[] @relation("CampaignCommentReplies")
   createdAt DateTime  @default(now())
   isDeleted Boolean   @default(false)
+
+  @@index([postId])
+  @@index([parentId])
+  @@index([authorId])
 }
 
 // Per-admin watermark for the Engagement feed — everything newer than
@@ -167,6 +178,7 @@ model Like {
   createdAt DateTime @default(now())
 
   @@id([creatorId, postId])
+  @@index([postId])
 }
 
 model Notification {
@@ -179,6 +191,10 @@ model Notification {
   referenceId String?
   isRead      Boolean  @default(false)
   createdAt   DateTime @default(now())
+
+  // Fetching a creator's notifications, newest first, and unread counts
+  @@index([creatorId, createdAt])
+  @@index([creatorId, isRead])
 }
 
 model PostContent {
@@ -205,6 +221,10 @@ model PostContent {
   sortOrder            Int       @default(0)
   readingTimeMinutes   Int?
   comments             ContentComment[]
+
+  // Learning Lounge lists filter by section + status
+  @@index([section, status])
+  @@index([status, publishedAt])
 }
 
 model MessageTemplate {
@@ -233,6 +253,10 @@ model CreatorPost {
   isDeleted     Boolean              @default(false)
   comments      CreatorPostComment[]
   likes         CreatorPostLike[]
+
+  // Community feed: newest non-deleted posts
+  @@index([isDeleted, createdAt])
+  @@index([authorId])
 }
 
 model CreatorPostComment {
@@ -247,6 +271,9 @@ model CreatorPostComment {
   replies   CreatorPostComment[] @relation("CommentReplies")
   createdAt DateTime             @default(now())
   isDeleted Boolean              @default(false)
+
+  @@index([postId])
+  @@index([parentId])
 }
 
 model CreatorPostLike {
@@ -296,6 +323,10 @@ model ChatMessage {
   isDeleted    Boolean    @default(false)
   deletedAt    DateTime?
   createdAt    DateTime   @default(now())
+
+  // Loading a room's messages in order
+  @@index([roomId, createdAt])
+  @@index([authorId])
 }
 
 model DmThread {
@@ -320,6 +351,10 @@ model DmMessage {
   isDeleted Boolean   @default(false)
   deletedAt DateTime?
   createdAt DateTime  @default(now())
+
+  // Loading a thread's messages, and admin unread counts
+  @@index([threadId, createdAt])
+  @@index([senderId])
 }
 
 // Comments on Learning Lounge content (blogs, videos, workbooks)
