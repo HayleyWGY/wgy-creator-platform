@@ -42,3 +42,4 @@ next-env.d.ts
 .env.backup*
 .env.*.backup
 backups/
+scripts/output/

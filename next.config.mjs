@@ -50,4 +50,18 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+import { withSentryConfig } from "@sentry/nextjs";
+
+// Sentry build wrapping. Source-map upload only runs when SENTRY_AUTH_TOKEN
+// is present (set at launch); without it the build still succeeds and the
+// SDK simply monitors errors without symbolicated stack traces.
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: true,
+  // Route Sentry's browser requests through our own domain so ad-blockers
+  // don't drop them (and it stays within our CSP)
+  tunnelRoute: "/monitoring",
+  disableLogger: true,
+});
