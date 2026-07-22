@@ -15,7 +15,7 @@ export function NavHeader() {
       try {
         const [dmRes, notifRes] = await Promise.all([
           fetch('/api/chat/dm/unread'),
-          fetch('/api/notifications'),
+          fetch('/api/notifications/unread'),
         ])
         const dmData = await dmRes.json()
         const notifData = await notifRes.json()
