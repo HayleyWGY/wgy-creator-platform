@@ -3,13 +3,26 @@ import { getActiveSession } from "@/lib/session"
 import { rateLimit } from '@/lib/rate-limit'
 import { prisma } from '@/lib/prisma'
 import { pingRealtime } from '@/lib/realtime-server'
+import {
+  parseMessagePageParams,
+  messagePageQuery,
+  toChronologicalPage,
+} from '@/lib/chat-pagination'
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: { slug: string } }
 ) {
   const session = await getActiveSession()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  // Deliberately high: this is an abuse backstop, NOT a throttle.
+  // Realtime triggers a refetch per new message, so a busy room can
+  // legitimately produce ~100+ reads/min per viewer. See notes on
+  // coalescing refetches client-side.
+  if (!(await rateLimit(`room-read:${session.user.id}`, 300, 60_000))) {
+    return NextResponse.json({ error: 'Too many requests — please slow down' }, { status: 429 })
+  }
 
   const room = await prisma.chatRoom.findUnique({
     where: { slug: params.slug },
@@ -23,16 +36,25 @@ export async function GET(
   })
   if (!room) return NextResponse.json({ error: 'Room not found' }, { status: 404 })
 
-  const messages = await prisma.chatMessage.findMany({
+  // Newest-first + reverse. Ordering ascending with `take` returned the
+  // OLDEST N rows, so once a room passed the cap new messages were never
+  // returned. `before` pages further back through history.
+  const { before, limit } = parseMessagePageParams(req.url)
+  const rows = await prisma.chatMessage.findMany({
     where: { roomId: room.id, isDeleted: false },
     include: {
       author: { select: { id: true, firstName: true, lastName: true, profileImageUrl: true, isAdmin: true } },
     },
-    orderBy: { createdAt: 'asc' },
-    take: 100,
+    ...messagePageQuery(limit, before),
   })
+  const { messages, hasMore } = toChronologicalPage(rows, limit)
 
-  return NextResponse.json({ messages, roomId: room.id, pinnedMessage: room.pinnedMessage || null })
+  return NextResponse.json({
+    messages,
+    hasMore,
+    roomId: room.id,
+    pinnedMessage: room.pinnedMessage || null,
+  })
 }
 
 export async function POST(
@@ -42,7 +64,7 @@ export async function POST(
   const session = await getActiveSession()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  if (!rateLimit(`room-send:${session.user.id}`, 20, 60_000)) {
+  if (!(await rateLimit(`room-send:${session.user.id}`, 20, 60_000))) {
     return NextResponse.json({ error: 'Too many requests — please slow down' }, { status: 429 })
   }
 

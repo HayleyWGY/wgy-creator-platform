@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react'
 import { ArrowLeft, Send, Trash2 } from 'lucide-react'
 import { useChatPoll } from '@/lib/use-chat-poll'
 import { useRealtimePing } from '@/lib/use-realtime-ping'
+import { messagesChanged } from '@/lib/chat-pagination'
 import { COMMUNITY_ROOMS } from '@/lib/constants'
 import { ChatBubble } from '@/components/ui/chat-bubble'
 
@@ -83,7 +84,7 @@ export default function ChatRoomPage({ params }: { params: { roomId: string } })
       const res = await fetch(`/api/chat/rooms/${slug}/messages`, { cache: 'no-store' })
       if (!res.ok) return
       const data = await res.json()
-      setMessages(prev => (prev.length === data.messages.length ? prev : data.messages))
+      setMessages(prev => (messagesChanged(prev, data.messages) ? data.messages : prev))
       setPinnedMessage(data.pinnedMessage || null)
     } catch {}
   }, [slug])
@@ -94,10 +95,7 @@ export default function ChatRoomPage({ params }: { params: { roomId: string } })
   useChatPoll<{ messages: ChatMessage[]; pinnedMessage: typeof pinnedMessage }>(
     `/api/chat/rooms/${slug}/messages`,
     (data) => {
-      setMessages(prev => {
-        if (prev.length === data.messages.length) return prev
-        return data.messages
-      })
+      setMessages(prev => (messagesChanged(prev, data.messages) ? data.messages : prev))
       setPinnedMessage(data.pinnedMessage || null)
     },
     30000,
@@ -111,9 +109,16 @@ export default function ChatRoomPage({ params }: { params: { roomId: string } })
 
   // Mark the room read whenever new messages are on screen — keeps the
   // unread badge on the community hub accurate.
+  //
+  // Keyed on the newest message id, NOT messages.length: the list is now a
+  // fixed-size page, so once a room passes the page size the length never
+  // changes and this effect would stop firing — leaving the unread badge
+  // stuck on. Same root cause as the render bug this ticket fixes.
+  const newestMessageId = messages.length ? messages[messages.length - 1].id : null
   useEffect(() => {
+    if (!newestMessageId) return
     fetch(`/api/chat/rooms/${slug}/read`, { method: 'POST' }).catch(() => {})
-  }, [slug, messages.length])
+  }, [slug, newestMessageId])
 
   async function sendMessage(e: FormEvent) {
     e.preventDefault()

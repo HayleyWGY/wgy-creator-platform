@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server'
 import { getActiveSession } from "@/lib/session"
 import { prisma } from '@/lib/prisma'
+import {
+  parseMessagePageParams,
+  messagePageQuery,
+  toChronologicalPage,
+} from '@/lib/chat-pagination'
 
 // GET — fetch messages for a specific thread (admin only)
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: { threadId: string } }
 ) {
   const session = await getActiveSession()
@@ -16,18 +21,23 @@ export async function GET(
     where: { id: params.threadId },
     include: {
       creator: { select: { id: true, firstName: true, lastName: true, profileImageUrl: true, email: true } },
-      messages: {
-        where: { isDeleted: false },
-        include: {
-          sender: { select: { id: true, firstName: true, lastName: true, profileImageUrl: true, isAdmin: true } },
-        },
-        orderBy: { createdAt: 'asc' },
-        take: 100,
-      },
     },
   })
 
   if (!thread) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+  // Newest-first + reverse (see lib/chat-pagination.ts). Previously this
+  // returned the oldest 100, so admins stopped seeing new member messages
+  // once a thread passed the cap.
+  const { before, limit } = parseMessagePageParams(req.url)
+  const rows = await prisma.dmMessage.findMany({
+    where: { threadId: params.threadId, isDeleted: false },
+    include: {
+      sender: { select: { id: true, firstName: true, lastName: true, profileImageUrl: true, isAdmin: true } },
+    },
+    ...messagePageQuery(limit, before),
+  })
+  const { messages, hasMore } = toChronologicalPage(rows, limit)
 
   // Mark creator messages as read
   await prisma.dmMessage.updateMany({
@@ -35,7 +45,7 @@ export async function GET(
     data: { isRead: true },
   })
 
-  return NextResponse.json({ thread })
+  return NextResponse.json({ thread: { ...thread, messages }, hasMore })
 }
 
 // DELETE — soft-delete a DM message (admin only)

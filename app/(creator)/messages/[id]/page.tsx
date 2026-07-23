@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react'
 import { ArrowLeft, Send, ImageIcon, Trash2 } from 'lucide-react'
 import { useChatPoll } from '@/lib/use-chat-poll'
 import { useRealtimePing } from '@/lib/use-realtime-ping'
+import { messagesChanged } from '@/lib/chat-pagination'
 import { ChatBubble } from '@/components/ui/chat-bubble'
 
 interface MessageSender {
@@ -97,7 +98,7 @@ export default function DMPage() {
       const data = await res.json()
       if (!data.thread) return
       setThread(data.thread)
-      setMessages(prev => (prev.length === data.thread.messages.length ? prev : data.thread.messages))
+      setMessages(prev => (messagesChanged(prev, data.thread.messages) ? data.thread.messages : prev))
     } catch {}
   }, [])
 
@@ -109,10 +110,7 @@ export default function DMPage() {
     (data) => {
       if (!data.thread) return
       setThread(data.thread)
-      setMessages(prev => {
-        if (prev.length === data.thread.messages.length) return prev
-        return data.thread.messages
-      })
+      setMessages(prev => (messagesChanged(prev, data.thread.messages) ? data.thread.messages : prev))
     },
     30000,
     true,

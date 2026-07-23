@@ -3,40 +3,26 @@ import { getActiveSession } from "@/lib/session"
 import { rateLimit } from '@/lib/rate-limit'
 import { prisma } from '@/lib/prisma'
 import { pingRealtime } from '@/lib/realtime-server'
+import {
+  parseMessagePageParams,
+  messagePageQuery,
+  toChronologicalPage,
+} from '@/lib/chat-pagination'
 
 // GET — return the current creator's DM thread (create if missing)
-export async function GET() {
+export async function GET(req: Request) {
   const session = await getActiveSession()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  // Find-or-create the thread WITHOUT messages, then page them separately.
+  // The messages query was previously duplicated across both branches — two
+  // copies of the same query is how they drift apart.
   let thread = await prisma.dmThread.findUnique({
     where: { creatorId: session.user.id },
-    include: {
-      messages: {
-        where: { isDeleted: false },
-        include: {
-          sender: { select: { id: true, firstName: true, lastName: true, profileImageUrl: true, isAdmin: true } },
-        },
-        orderBy: { createdAt: 'asc' },
-        take: 100,
-      },
-    },
   })
 
   if (!thread) {
-    thread = await prisma.dmThread.create({
-      data: { creatorId: session.user.id },
-      include: {
-        messages: {
-          where: { isDeleted: false },
-          include: {
-            sender: { select: { id: true, firstName: true, lastName: true, profileImageUrl: true, isAdmin: true } },
-          },
-          orderBy: { createdAt: 'asc' },
-          take: 100,
-        },
-      },
-    })
+    thread = await prisma.dmThread.create({ data: { creatorId: session.user.id } })
   } else {
     // Mark all admin messages as read
     await prisma.dmMessage.updateMany({
@@ -45,7 +31,18 @@ export async function GET() {
     })
   }
 
-  return NextResponse.json({ thread })
+  // Newest-first + reverse (see lib/chat-pagination.ts for why).
+  const { before, limit } = parseMessagePageParams(req.url)
+  const rows = await prisma.dmMessage.findMany({
+    where: { threadId: thread.id, isDeleted: false },
+    include: {
+      sender: { select: { id: true, firstName: true, lastName: true, profileImageUrl: true, isAdmin: true } },
+    },
+    ...messagePageQuery(limit, before),
+  })
+  const { messages, hasMore } = toChronologicalPage(rows, limit)
+
+  return NextResponse.json({ thread: { ...thread, messages }, hasMore })
 }
 
 // POST — creator sends a message in their own thread
@@ -53,7 +50,7 @@ export async function POST(req: Request) {
   const session = await getActiveSession()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  if (!rateLimit(`dm-send:${session.user.id}`, 20, 60_000)) {
+  if (!(await rateLimit(`dm-send:${session.user.id}`, 20, 60_000))) {
     return NextResponse.json({ error: 'Too many requests — please slow down' }, { status: 429 })
   }
 
