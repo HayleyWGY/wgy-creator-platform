@@ -57,13 +57,21 @@ export const authOptions: NextAuthOptions = {
         //  - by email: many sources against one account. Complements the
         //    existing DB-backed lockout (5 failures -> 15 min) below, which
         //    only counts failures that reached the password check.
-        // Both fail CLOSED: if Redis is unreachable, refuse rather than leave
-        // authentication unthrottled.
+        //
+        // These FAIL OPEN: if Redis is unreachable or misconfigured, allow the
+        // login and report to Sentry rather than block. A members' platform
+        // must never be fully lockout-able by a Redis hiccup — a wrong
+        // credential once took the whole app down this way. Brute-force
+        // protection does NOT disappear when Redis is down: the per-account DB
+        // lockout below is independent of Redis. What's lost during an outage
+        // is only the IP-level pre-bcrypt throttle, which Sentry surfaces so it
+        // gets fixed fast. (When Redis IS working, genuine limit breaches are
+        // still enforced — fail-open only changes the error case.)
         const emailKey = credentials.email.trim().toLowerCase()
         const ip = getClientIp(req)
-        const withinIpLimit = await rateLimit(`login-ip:${ip}`, 20, 15 * 60_000, { failClosed: true })
+        const withinIpLimit = await rateLimit(`login-ip:${ip}`, 20, 15 * 60_000)
         if (!withinIpLimit) throw new Error('rate-limited')
-        const withinEmailLimit = await rateLimit(`login-email:${emailKey}`, 10, 15 * 60_000, { failClosed: true })
+        const withinEmailLimit = await rateLimit(`login-email:${emailKey}`, 10, 15 * 60_000)
         if (!withinEmailLimit) throw new Error('rate-limited')
 
         // Email matching stays case-insensitive and whitespace-tolerant:
