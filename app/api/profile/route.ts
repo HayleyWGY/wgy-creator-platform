@@ -2,6 +2,7 @@ import { getActiveSession } from "@/lib/session"
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
 import { NextResponse } from 'next/server'
+import { rateLimit } from '@/lib/rate-limit'
 
 const SAFE_SELECT = {
   id: true,
@@ -54,6 +55,10 @@ export async function GET() {
 export async function PATCH(req: Request) {
   const session = await getActiveSession()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  if (!(await rateLimit(`profile-update:${session.user.id}`, 20, 60_000))) {
+    return NextResponse.json({ error: 'Too many requests — please slow down' }, { status: 429 })
+  }
 
   const body = await req.json()
   const data: Record<string, unknown> = {}

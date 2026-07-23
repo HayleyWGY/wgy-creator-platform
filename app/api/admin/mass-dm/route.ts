@@ -60,7 +60,7 @@ export async function POST(req: Request) {
   if (!session?.user?.id || !session.user.isAdmin) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-  if (!rateLimit(`mass-dm:${session.user.id}`, 5, 60_000)) {
+  if (!(await rateLimit(`mass-dm:${session.user.id}`, 5, 60_000, { failClosed: true }))) {
     return NextResponse.json({ error: 'Too many requests — please slow down' }, { status: 429 })
   }
 

@@ -2,6 +2,7 @@ import { type NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
+import { rateLimit, getClientIp } from '@/lib/rate-limit'
 
 // 60s in-memory cache of live membership status/role, per server instance.
 // Keeps revocation near-immediate (≤60s) without a DB read on every request.
@@ -39,10 +40,31 @@ export const authOptions: NextAuthOptions = {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.email || !credentials?.password) {
           return null
         }
+
+        // Brute-force / credential-stuffing throttle. Runs BEFORE the account
+        // lookup and before bcrypt.compare — bcrypt is deliberately expensive,
+        // so an unthrottled login endpoint is a cheap CPU-exhaustion vector
+        // even when no password is ever guessed.
+        //
+        // Two keys, because they catch different attacks:
+        //  - by IP: one source spraying many different accounts. Deliberately
+        //    loose, since offices and mobile CGNAT share an IP among many
+        //    legitimate members.
+        //  - by email: many sources against one account. Complements the
+        //    existing DB-backed lockout (5 failures -> 15 min) below, which
+        //    only counts failures that reached the password check.
+        // Both fail CLOSED: if Redis is unreachable, refuse rather than leave
+        // authentication unthrottled.
+        const emailKey = credentials.email.trim().toLowerCase()
+        const ip = getClientIp(req)
+        const withinIpLimit = await rateLimit(`login-ip:${ip}`, 20, 15 * 60_000, { failClosed: true })
+        if (!withinIpLimit) throw new Error('rate-limited')
+        const withinEmailLimit = await rateLimit(`login-email:${emailKey}`, 10, 15 * 60_000, { failClosed: true })
+        if (!withinEmailLimit) throw new Error('rate-limited')
 
         // Email matching stays case-insensitive and whitespace-tolerant:
         // "Hayley@…", "HAYLEY@…" and a trailing space all resolve to the

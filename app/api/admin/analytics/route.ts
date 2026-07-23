@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getActiveSession } from '@/lib/session'
+import { rateLimit } from '@/lib/rate-limit'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,6 +12,11 @@ export async function GET() {
   const session = await getActiveSession()
   if (!session?.user?.id || !session.user.isAdmin) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  // This query loads every member row; keep it off a tight loop.
+  if (!(await rateLimit(`admin-analytics:${session.user.id}`, 30, 60_000))) {
+    return NextResponse.json({ error: 'Too many requests — please slow down' }, { status: 429 })
   }
 
   const now = new Date()

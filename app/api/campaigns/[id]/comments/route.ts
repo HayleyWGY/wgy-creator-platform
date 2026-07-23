@@ -60,7 +60,7 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
     }
 
-    if (!rateLimit(`campaign-comment:${session.user.id}`, 10, 60_000)) {
+    if (!(await rateLimit(`campaign-comment:${session.user.id}`, 10, 60_000))) {
       return NextResponse.json({ error: 'Too many requests — please slow down' }, { status: 429 })
     }
 

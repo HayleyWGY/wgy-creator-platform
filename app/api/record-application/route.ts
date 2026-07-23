@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyApplicationReceipt } from '@/lib/apply-handoff'
+import { rateLimit, getClientIp } from '@/lib/rate-limit'
 
 // Called server-to-server BY THE PORTAL after a creator successfully submits
 // an application form they reached via the secure handoff. The signed
@@ -27,6 +28,13 @@ export async function OPTIONS() {
 }
 
 export async function POST(req: NextRequest) {
+  // No session on this route (it's authenticated by a signed receipt),
+  // so key by IP. Runs before receipt verification so invalid-token
+  // spam is throttled too.
+  if (!(await rateLimit(`record-application:${getClientIp(req)}`, 10, 60_000))) {
+    return NextResponse.json({ error: 'Too many requests — please slow down' }, { status: 429, headers: corsHeaders() })
+  }
+
   const { receipt, campaign_name, campaign_slug } = await req.json().catch(() => ({}))
 
   const creatorId = verifyApplicationReceipt(receipt)

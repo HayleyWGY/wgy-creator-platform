@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
   }
-  if (!rateLimit(`upload:${session.user.id}`, 10, 60_000)) {
+  if (!(await rateLimit(`upload:${session.user.id}`, 10, 60_000))) {
     return NextResponse.json({ error: 'Too many requests — please slow down' }, { status: 429 })
   }
 

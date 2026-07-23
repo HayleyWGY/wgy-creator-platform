@@ -25,6 +25,8 @@
     "@tiptap/pm": "^3.23.4",
     "@tiptap/react": "^3.23.4",
     "@tiptap/starter-kit": "^3.23.4",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.38.0",
     "@vercel/blob": "^2.3.3",
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",

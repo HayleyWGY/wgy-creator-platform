@@ -1,6 +1,7 @@
 import { getActiveSession } from "@/lib/session"
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
+import { rateLimit } from '@/lib/rate-limit'
 import { encryptField, decryptField } from '@/lib/field-crypto'
 
 const SENSITIVE_FIELDS = new Set(['dateOfBirth', 'address', 'contactNumber', 'gender'])
@@ -28,6 +29,10 @@ export async function GET() {
 export async function PATCH(req: Request) {
   const session = await getActiveSession()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  if (!(await rateLimit(`profile-sensitive-update:${session.user.id}`, 20, 60_000))) {
+    return NextResponse.json({ error: 'Too many requests — please slow down' }, { status: 429 })
+  }
 
   const body = await req.json()
   const data: Record<string, string | null> = {}

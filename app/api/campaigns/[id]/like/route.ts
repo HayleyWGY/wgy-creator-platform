@@ -14,7 +14,7 @@ export async function POST(
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
   }
 
-  if (!rateLimit(`campaign-like:${session.user.id}`, 30, 60_000)) {
+  if (!(await rateLimit(`campaign-like:${session.user.id}`, 30, 60_000))) {
     return NextResponse.json({ error: 'Too many requests — please slow down' }, { status: 429 })
   }
 

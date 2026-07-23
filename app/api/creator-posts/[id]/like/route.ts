@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getActiveSession } from "@/lib/session"
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function POST(
   _req: NextRequest,
@@ -10,6 +11,11 @@ export async function POST(
     const session = await getActiveSession()
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+    }
+
+    // Matches the campaign-like limit for consistency
+    if (!(await rateLimit(`post-like:${session.user.id}`, 30, 60_000))) {
+      return NextResponse.json({ error: 'Too many requests — please slow down' }, { status: 429 })
     }
 
     const existing = await prisma.creatorPostLike.findUnique({

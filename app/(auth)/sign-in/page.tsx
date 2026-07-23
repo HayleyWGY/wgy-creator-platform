@@ -35,6 +35,10 @@ export default function SignInPage() {
       setError(
         result.error === "locked"
           ? "Too many failed attempts. Your account is locked for 15 minutes."
+          : result.error === "rate-limited"
+          // Thrown by the login throttle in lib/auth.ts. Without this case a
+          // throttled member would be told their password is wrong.
+          ? "Too many sign-in attempts. Please wait a few minutes and try again."
           : "Invalid email or password. Please try again."
       );
       setLoading(false);

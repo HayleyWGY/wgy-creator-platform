@@ -16,7 +16,7 @@ export async function POST(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   // Tight limit — this fans out to many creators
-  if (!rateLimit(`tag-broadcast:${session.user.id}`, 5, 60_000)) {
+  if (!(await rateLimit(`tag-broadcast:${session.user.id}`, 5, 60_000, { failClosed: true }))) {
     return NextResponse.json({ error: 'Too many requests — please slow down' }, { status: 429 })
   }
 

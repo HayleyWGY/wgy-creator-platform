@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
     }
 
-    if (!rateLimit(`post-create:${session.user.id}`, 5, 60_000)) {
+    if (!(await rateLimit(`post-create:${session.user.id}`, 5, 60_000))) {
       return NextResponse.json({ error: 'Too many requests — please slow down' }, { status: 429 })
     }
 
