@@ -81,18 +81,28 @@ export async function rateLimit(
   const { failClosed = false } = options
   const limiter = getLimiter(limit, windowMs)
 
-  // Not configured. In production that's a misconfiguration and must apply
-  // the route's failure policy; locally it just disables limiting so dev
-  // doesn't require Redis.
+  // NOT CONFIGURED (no credentials at all) — always allow, and shout.
+  //
+  // This deliberately ignores failClosed. A missing env var is a deployment
+  // mistake, not an attack, and it is uniform: applying failClosed here locks
+  // every user out of the product until someone notices. That is exactly what
+  // happened on the first deploy of this module — Vercel only injects env
+  // vars into deployments created after they are set, so the running build
+  // had no credentials and refused every sign-in, including the owner's.
+  //
+  // A misconfiguration must degrade to "unthrottled and loudly reported",
+  // never to "nobody can log in". The genuine outage case — configured but
+  // unreachable — still honours failClosed in the catch below.
   if (!limiter) {
-    const isProd = process.env.NODE_ENV === 'production'
     if (!warnedUnconfigured) {
       warnedUnconfigured = true
-      const msg = 'Rate limiting is not configured (UPSTASH_REDIS_REST_URL/TOKEN missing)'
+      const msg = 'Rate limiting DISABLED — UPSTASH_REDIS_REST_URL/TOKEN missing. Requests are unthrottled.'
       console.error(`[rate-limit] ${msg}`)
-      if (isProd) Sentry.captureMessage(`[rate-limit] ${msg}`, 'error')
+      if (process.env.NODE_ENV === 'production') {
+        Sentry.captureMessage(`[rate-limit] ${msg}`, 'error')
+      }
     }
-    return isProd ? !failClosed : true
+    return true
   }
 
   try {

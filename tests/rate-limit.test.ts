@@ -89,3 +89,23 @@ describe('getClientIp', () => {
     expect(getClientIp(new Request('https://example.com'))).toBe('unknown-ip')
   })
 })
+
+describe('unconfigured (no Redis credentials)', () => {
+  it('ALLOWS even when failClosed is set — a missing env var must never lock everyone out', async () => {
+    const url = process.env.UPSTASH_REDIS_REST_URL
+    const token = process.env.UPSTASH_REDIS_REST_TOKEN
+    delete process.env.UPSTASH_REDIS_REST_URL
+    delete process.env.UPSTASH_REDIS_REST_TOKEN
+    try {
+      vi.resetModules()
+      const { rateLimit } = await import('@/lib/rate-limit')
+      // This is the login configuration. Before the fix it returned false,
+      // which refused every sign-in in production.
+      expect(await rateLimit('test:unconfigured', 1, 60_000, { failClosed: true })).toBe(true)
+    } finally {
+      if (url) process.env.UPSTASH_REDIS_REST_URL = url
+      if (token) process.env.UPSTASH_REDIS_REST_TOKEN = token
+      vi.resetModules()
+    }
+  })
+})
