@@ -32,9 +32,8 @@ export default function NewPostPage() {
     try {
       const formData = new FormData()
       formData.append('file', file)
-      formData.append('bucket', 'creator-posts')
 
-      const res = await fetch('/api/upload-supabase', { method: 'POST', body: formData })
+      const res = await fetch('/api/upload-image', { method: 'POST', body: formData })
       if (!res.ok) {
         const data = await res.json()
         throw new Error(data.error || 'Upload failed')

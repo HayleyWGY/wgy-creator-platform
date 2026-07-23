@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getActiveSession } from "@/lib/session"
 import { rateLimit } from '@/lib/rate-limit'
+import { validateImageUpload, buildUploadPath } from '@/lib/upload-validation'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -9,8 +10,12 @@ const supabase = createClient(
 )
 
 const BUCKET = 'wgy-uploads'
+const PREFIX = 'creator-posts'
 
-// Creator post image uploads — any authenticated creator, rate-limited
+// Single image-upload endpoint for creators — used by community posts and DM
+// attachments. Consolidated from the former upload-image/upload-supabase pair,
+// keeping the stricter validation of the two (MIME allowlist, extension
+// derived from the MIME type, never the client filename).
 export async function POST(req: NextRequest) {
   const session = await getActiveSession()
   if (!session?.user?.id) {
@@ -22,30 +27,32 @@ export async function POST(req: NextRequest) {
 
   try {
     const formData = await req.formData()
-    const file = formData.get('file') as File | null
+    const file = formData.get('file')
 
-    if (!file) {
+    if (!(file instanceof File)) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
-    if (!file.type.startsWith('image/')) {
-      return NextResponse.json({ error: 'File must be an image' }, { status: 400 })
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      return NextResponse.json({ error: 'Image must be under 5MB' }, { status: 400 })
+
+    const check = validateImageUpload(file.type, file.size)
+    if (!check.ok) {
+      return NextResponse.json({ error: check.error }, { status: 400 })
     }
 
-    const ext  = file.name.split('.').pop() ?? 'png'
-    const path = `creator-posts/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-    const bytes = await file.arrayBuffer()
+    const path = buildUploadPath(PREFIX, check.ext)
+    const bytes = Buffer.from(await file.arrayBuffer())
 
     const { error } = await supabase.storage
       .from(BUCKET)
       .upload(path, bytes, { contentType: file.type, upsert: false })
 
-    if (error) throw new Error(error.message)
+    if (error) {
+      // Log internally; never leak storage internals to the client.
+      console.error('[POST /api/upload-image] storage error:', error)
+      return NextResponse.json({ error: 'Upload failed' }, { status: 500 })
+    }
 
-    const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${path}`
-    return NextResponse.json({ url })
+    const { data } = supabase.storage.from(BUCKET).getPublicUrl(path)
+    return NextResponse.json({ url: data.publicUrl })
   } catch (err) {
     console.error('[POST /api/upload-image]', err)
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 })
