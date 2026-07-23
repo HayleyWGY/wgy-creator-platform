@@ -35,6 +35,7 @@
 
 const fs = require('fs')
 const path = require('path')
+const sanitizeHtml = require('sanitize-html')
 const { PrismaClient } = require('@prisma/client')
 const { PrismaPg } = require('@prisma/adapter-pg')
 const { createClient } = require('@supabase/supabase-js')
@@ -153,16 +154,20 @@ function calculateReadingTime(html) {
   return Math.max(1, Math.round(words / 200))
 }
 
-// ── Same HTML sanitisation the admin content API uses — strips anything
-// that isn't safe rich text (scripts, event handlers, etc.) ───────────────
+// Allowlist sanitisation, matching lib/sanitize.ts and import-campaigns.js.
+//
+// This previously used a denylist of regexes (strip <script>, <style> and
+// on*="..."). That was bypassable: the handler pattern required QUOTED
+// values, so `<img src=x onerror=alert(1)>` and `<svg onload=alert(1)>`
+// passed straight through into PostContent.body, which is rendered with
+// dangerouslySetInnerHTML. Never denylist HTML — allowlist it.
 function sanitizeRichText(html) {
-  // Mirrors lib/sanitize.ts's allowlist approach closely enough for a
-  // one-off import: strip <script>/<style> blocks and on*="" handlers.
-  return html
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
-    .replace(/<style[\s\S]*?<\/style>/gi, '')
-    .replace(/\son\w+="[^"]*"/gi, '')
-    .replace(/\son\w+='[^']*'/gi, '')
+  return sanitizeHtml(html, {
+    allowedTags: ['p', 'br', 'h2', 'h3', 'strong', 'b', 'em', 'i', 'u', 's', 'ul', 'ol', 'li', 'a', 'img', 'blockquote', 'hr'],
+    allowedAttributes: { a: ['href', 'target', 'rel'], img: ['src', 'alt', 'width', 'height'] },
+    allowedSchemes: ['https', 'http', 'mailto'],
+    transformTags: { a: sanitizeHtml.simpleTransform('a', { rel: 'noopener noreferrer' }) },
+  })
 }
 
 ;(async () => {

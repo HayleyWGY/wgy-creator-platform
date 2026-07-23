@@ -43,3 +43,7 @@ next-env.d.ts
 .env.*.backup
 backups/
 scripts/output/
+
+# Local audit/planning documents — never commit (public repo)
+FIX-PLAN.md
+SECURITY-AUDIT-*.md
