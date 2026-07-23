@@ -5,6 +5,7 @@ import { getActiveSession } from "@/lib/session"
 import { notifyAllCreators } from "@/lib/notify";
 import { publishDueScheduled } from "@/lib/scheduled-publish";
 import { logAudit } from "@/lib/audit";
+import { sanitizeRichText } from "@/lib/sanitize";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapCampaign(p: any) {
@@ -185,6 +186,13 @@ export async function POST(req: NextRequest) {
       paymentAmount, paymentTerms, eventDate, eventTime, eventLocation,
     } = body;
 
+    // opportunityDescription is rendered as HTML on the campaign page
+    // (dangerouslySetInnerHTML), so it MUST be sanitised before storage —
+    // otherwise a compromised admin could persist XSS to every member.
+    const safeDescription = opportunityDescription
+      ? sanitizeRichText(opportunityDescription)
+      : null;
+
     if (!title || !brandName || !sectionSlug) {
       return NextResponse.json({ error: "title, brandName, and sectionSlug are required" }, { status: 400 });
     }
@@ -220,10 +228,10 @@ export async function POST(req: NextRequest) {
     const post = await prisma.post.create({
       data: {
         title,
-        body:                   opportunityDescription ?? "",
+        body:                   safeDescription ?? "",
         brandName,
         brandDescription:       brandDescription ?? null,
-        opportunityDescription: opportunityDescription ?? null,
+        opportunityDescription: safeDescription,
         deliverables:           deliverables ?? null,
         brandWebsite:           brandWebsite || null,
         brandInstagram:         brandInstagram || null,

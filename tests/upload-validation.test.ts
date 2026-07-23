@@ -3,6 +3,7 @@ import {
   validateImageUpload,
   buildUploadPath,
   MAX_IMAGE_BYTES,
+  MAX_ADMIN_IMAGE_BYTES,
 } from '@/lib/upload-validation'
 
 describe('validateImageUpload', () => {
@@ -43,6 +44,29 @@ describe('validateImageUpload', () => {
   it('rejects zero-size / missing size', () => {
     expect(validateImageUpload('image/png', 0).ok).toBe(false)
     expect(validateImageUpload('image/png', null).ok).toBe(false)
+  })
+
+  // The admin upload route allows larger banners but must apply the SAME
+  // type allowlist — it previously accepted any image/*, including SVG.
+  describe('admin limit', () => {
+    it('allows up to 10MB when the admin limit is passed', () => {
+      expect(validateImageUpload('image/png', 8 * 1024 * 1024, MAX_ADMIN_IMAGE_BYTES).ok).toBe(true)
+      expect(validateImageUpload('image/png', MAX_ADMIN_IMAGE_BYTES, MAX_ADMIN_IMAGE_BYTES).ok).toBe(true)
+    })
+
+    it('still rejects over the admin limit, with the right message', () => {
+      const res = validateImageUpload('image/png', MAX_ADMIN_IMAGE_BYTES + 1, MAX_ADMIN_IMAGE_BYTES)
+      expect(res.ok).toBe(false)
+      if (!res.ok) expect(res.error).toMatch(/10MB/)
+    })
+
+    it('rejects SVG even at the admin limit (the C2 regression)', () => {
+      expect(validateImageUpload('image/svg+xml', 1000, MAX_ADMIN_IMAGE_BYTES).ok).toBe(false)
+    })
+
+    it('defaults to the smaller creator limit when no max is given', () => {
+      expect(validateImageUpload('image/png', MAX_IMAGE_BYTES + 1).ok).toBe(false)
+    })
   })
 })
 

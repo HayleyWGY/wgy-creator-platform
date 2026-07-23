@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getActiveSession } from "@/lib/session";
+import {
+  validateImageUpload,
+  buildUploadPath,
+  MAX_ADMIN_IMAGE_BYTES,
+} from "@/lib/upload-validation";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -20,28 +25,34 @@ export async function POST(req: NextRequest) {
     const file = formData.get("file") as File | null;
     const folder = (formData.get("folder") as string) ?? "wgy-campaigns";
 
-    if (!file) {
+    if (!(file instanceof File)) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
     if (!["wgy-campaigns", "wgy-content"].includes(folder)) {
       return NextResponse.json({ error: "Invalid folder" }, { status: 400 });
     }
-    if (!file.type.startsWith("image/")) {
-      return NextResponse.json({ error: "File must be an image" }, { status: 400 });
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      return NextResponse.json({ error: "Image must be under 10MB" }, { status: 400 });
+
+    // Same strict validation as the creator upload route: MIME allowlist
+    // (rejects SVG, which can carry scripts and is served from a public
+    // bucket) and the extension derived from the validated type rather than
+    // the client-supplied filename.
+    const check = validateImageUpload(file.type, file.size, MAX_ADMIN_IMAGE_BYTES);
+    if (!check.ok) {
+      return NextResponse.json({ error: check.error }, { status: 400 });
     }
 
-    const ext  = file.name.split(".").pop() ?? "png";
-    const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const bytes = await file.arrayBuffer();
+    const path = buildUploadPath(folder, check.ext);
+    const bytes = Buffer.from(await file.arrayBuffer());
 
     const { error } = await supabase.storage
       .from(BUCKET)
       .upload(path, bytes, { contentType: file.type, upsert: false });
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      // Log internally; never leak storage internals to the client.
+      console.error("[POST /api/upload] storage error:", error);
+      return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+    }
 
     const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${path}`;
     return NextResponse.json({ url });

@@ -21,16 +21,21 @@ export const ALLOWED_IMAGE_TYPES: Record<string, string> = {
   'image/gif': 'gif',
 }
 
-export const MAX_IMAGE_BYTES = 5 * 1024 * 1024 // 5MB — matches client-side limit
+export const MAX_IMAGE_BYTES = 5 * 1024 * 1024 // 5MB — creator uploads
+export const MAX_ADMIN_IMAGE_BYTES = 10 * 1024 * 1024 // 10MB — admin banners
 
 export type UploadValidationResult =
   | { ok: true; ext: string }
   | { ok: false; error: string }
 
-/** Validates an uploaded image's MIME type and size. */
+/**
+ * Validates an uploaded image's MIME type and size. maxBytes defaults to the
+ * creator limit; admin routes pass the larger allowance.
+ */
 export function validateImageUpload(
   type: string | undefined | null,
   size: number | undefined | null,
+  maxBytes: number = MAX_IMAGE_BYTES,
 ): UploadValidationResult {
   const ext = type ? ALLOWED_IMAGE_TYPES[type] : undefined
   if (!ext) {
@@ -39,8 +44,9 @@ export function validateImageUpload(
   if (typeof size !== 'number' || size <= 0) {
     return { ok: false, error: 'No file provided' }
   }
-  if (size > MAX_IMAGE_BYTES) {
-    return { ok: false, error: 'Image must be under 5MB' }
+  if (size > maxBytes) {
+    const mb = Math.round(maxBytes / (1024 * 1024))
+    return { ok: false, error: `Image must be under ${mb}MB` }
   }
   return { ok: true, ext }
 }

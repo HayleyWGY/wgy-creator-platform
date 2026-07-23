@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getActiveSession } from "@/lib/session";
 import { notifyAllCreators } from "@/lib/notify";
 import { logAudit } from "@/lib/audit";
+import { sanitizeRichText } from "@/lib/sanitize";
 
 const POST_TYPE_LABEL: Record<string, string> = {
   "pr-gifted":    "PR / Gifted",
@@ -130,11 +131,17 @@ export async function PATCH(
 
     // Full field update (from edit form)
     if (title) {
+      // opportunityDescription is rendered as HTML on the campaign page, so
+      // sanitise before storage (see the create route for the same guard).
+      const safeDescription = opportunityDescription
+        ? sanitizeRichText(opportunityDescription)
+        : null;
+
       data.title                 = title;
-      data.body                  = opportunityDescription ?? "";
+      data.body                  = safeDescription ?? "";
       data.brandName             = brandName ?? null;
       data.brandDescription      = brandDescription ?? null;
-      data.opportunityDescription = opportunityDescription ?? null;
+      data.opportunityDescription = safeDescription;
       data.deliverables          = deliverables ?? null;
       data.brandWebsite          = brandWebsite || null;
       data.brandInstagram        = brandInstagram || null;

