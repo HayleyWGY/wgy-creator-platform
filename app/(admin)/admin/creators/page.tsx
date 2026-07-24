@@ -125,6 +125,11 @@ function CreatorPanel({ creatorId, onClose }: { creatorId: string; onClose: () =
   const [reinstateForm, setReinstateForm] = useState({ email: '', firstName: '', lastName: '' })
   const [reinstateResult, setReinstateResult] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  // Changing a member's email and reinstating an account are both re-
+  // authenticated server-side. Collected per action, never retained.
+  const [emailPassword, setEmailPassword] = useState('')
+  const [reinstatePassword, setReinstatePassword] = useState('')
+  const [reinstateError, setReinstateError] = useState('')
 
   function loadDetail() {
     fetch(`/api/admin/creators/${creatorId}`)
@@ -149,7 +154,7 @@ function CreatorPanel({ creatorId, onClose }: { creatorId: string; onClose: () =
       const res = await fetch(`/api/admin/creators/${creatorId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: emailValue }),
+        body: JSON.stringify({ email: emailValue, currentPassword: emailPassword }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -157,6 +162,7 @@ function CreatorPanel({ creatorId, onClose }: { creatorId: string; onClose: () =
         return
       }
       setEditingEmail(false)
+      setEmailPassword('')
       loadDetail()
     } finally {
       setBusy(false)
@@ -204,14 +210,16 @@ function CreatorPanel({ creatorId, onClose }: { creatorId: string; onClose: () =
       const res = await fetch(`/api/admin/creators/${creatorId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reinstate: reinstateForm }),
+        body: JSON.stringify({ reinstate: reinstateForm, currentPassword: reinstatePassword }),
       })
       const data = await res.json()
       if (!res.ok) {
-        alert(data.error || 'Failed to reinstate account')
+        setReinstateError(data.error || 'Failed to reinstate account')
         return
       }
-      setReinstateResult(data.tempPassword)
+      setReinstateError('')
+      setReinstatePassword('')
+      setReinstateResult(data.setupUrl)
       loadDetail()
     } finally {
       setBusy(false)
@@ -256,8 +264,20 @@ function CreatorPanel({ creatorId, onClose }: { creatorId: string; onClose: () =
                       onKeyDown={e => { if (e.key === 'Enter') saveEmail() }}
                       style={{ flex: 1, minWidth: 160, background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 6, padding: '6px 10px', color: 'var(--text)', fontSize: 12, fontFamily: 'Montserrat, sans-serif', outline: 'none' }}
                     />
-                    <button onClick={saveEmail} disabled={busy} className="font-montserrat font-semibold" style={{ fontSize: 11, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer' }}>Save</button>
-                    <button onClick={() => { setEditingEmail(false); setEmailError('') }} className="font-montserrat" style={{ fontSize: 11, color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>Cancel</button>
+                    <input
+                      type="password"
+                      value={emailPassword}
+                      onChange={e => setEmailPassword(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') saveEmail() }}
+                      placeholder="Your password"
+                      autoComplete="current-password"
+                      style={{ flex: 1, minWidth: 140, background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 6, padding: '6px 10px', color: 'var(--text)', fontSize: 12, fontFamily: 'Montserrat, sans-serif', outline: 'none' }}
+                    />
+                    <button onClick={saveEmail} disabled={busy || !emailPassword} className="font-montserrat font-semibold" style={{ fontSize: 11, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', opacity: !emailPassword ? 0.5 : 1 }}>Save</button>
+                    <button onClick={() => { setEditingEmail(false); setEmailError(''); setEmailPassword('') }} className="font-montserrat" style={{ fontSize: 11, color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>Cancel</button>
+                    <p className="font-montserrat" style={{ fontSize: 10, color: 'var(--text-muted)', width: '100%', lineHeight: 1.4 }}>
+                      Changing a member&apos;s email needs your password — the address receives account-recovery links. They&apos;ll be notified at their old address.
+                    </p>
                   </div>
                 ) : (
                   <p className="font-montserrat font-normal" style={{ fontSize: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -397,15 +417,15 @@ function CreatorPanel({ creatorId, onClose }: { creatorId: string; onClose: () =
                 </p>
                 <p className="font-montserrat" style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: 12 }}>
                   This account was deleted by the creator — personal details were erased and cannot be recovered.
-                  Re-enter their email and name to reactivate; a temporary password will be generated for you to pass on.
+                  Re-enter their email and name to reactivate; you&apos;ll get a one-time setup link to pass on so they can choose their own password.
                 </p>
                 {reinstateResult ? (
                   <div style={{ background: 'var(--surface-2)', borderRadius: 8, padding: 12 }}>
                     <p className="font-montserrat font-semibold" style={{ fontSize: 12, color: 'var(--text)' }}>Account reinstated ✓</p>
                     <p className="font-montserrat" style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
-                      Temporary password (share securely — shown once):
+                      Send them this setup link (expires in 24 hours, works once):
                     </p>
-                    <p className="font-montserrat font-bold" style={{ fontSize: 14, color: 'var(--accent)', marginTop: 4, userSelect: 'all' }}>{reinstateResult}</p>
+                    <p className="font-montserrat" style={{ fontSize: 11, color: 'var(--text)', marginTop: 4, userSelect: 'all', wordBreak: 'break-all', lineHeight: 1.5 }}>{reinstateResult}</p>
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -429,14 +449,25 @@ function CreatorPanel({ creatorId, onClose }: { creatorId: string; onClose: () =
                         style={{ flex: 1, background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 6, padding: '7px 10px', color: 'var(--text)', fontSize: 12, fontFamily: 'Montserrat, sans-serif', outline: 'none' }}
                       />
                     </div>
+                    <input
+                      type="password"
+                      value={reinstatePassword}
+                      onChange={e => setReinstatePassword(e.target.value)}
+                      placeholder="Your password"
+                      autoComplete="current-password"
+                      style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 6, padding: '7px 10px', color: 'var(--text)', fontSize: 12, fontFamily: 'Montserrat, sans-serif', outline: 'none' }}
+                    />
                     <button
                       onClick={reinstate}
-                      disabled={busy || !reinstateForm.email.trim() || !reinstateForm.firstName.trim() || !reinstateForm.lastName.trim()}
+                      disabled={busy || !reinstateForm.email.trim() || !reinstateForm.firstName.trim() || !reinstateForm.lastName.trim() || !reinstatePassword}
                       className="font-montserrat font-semibold"
-                      style={{ height: 36, background: 'var(--pill-bg)', color: 'var(--pill-text)', border: 'none', borderRadius: 6, fontSize: 12, cursor: 'pointer', opacity: (!reinstateForm.email.trim() || !reinstateForm.firstName.trim() || !reinstateForm.lastName.trim()) ? 0.5 : 1 }}
+                      style={{ height: 36, background: 'var(--pill-bg)', color: 'var(--pill-text)', border: 'none', borderRadius: 6, fontSize: 12, cursor: 'pointer', opacity: (!reinstateForm.email.trim() || !reinstateForm.firstName.trim() || !reinstateForm.lastName.trim() || !reinstatePassword) ? 0.5 : 1 }}
                     >
                       {busy ? 'Reinstating…' : 'Reinstate Account'}
                     </button>
+                    {reinstateError && (
+                      <p className="font-montserrat" style={{ fontSize: 11, color: '#C0392B' }}>{reinstateError}</p>
+                    )}
                   </div>
                 )}
               </div>
