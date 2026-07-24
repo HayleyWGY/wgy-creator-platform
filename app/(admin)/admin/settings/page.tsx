@@ -166,7 +166,18 @@ function AdminTeamSection() {
   const [lastName, setLastName] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [tempPassword, setTempPassword] = useState<string | null>(null);
+  // A single-use setup link, shown once. Replaces the old temporary password:
+  // the link expires in 24h, burns on use, and never becomes a credential.
+  const [setupUrl, setSetupUrl] = useState<string | null>(null);
+  const [reissued, setReissued] = useState(false);
+  const [copied, setCopied] = useState(false);
+  // Granting/revoking admin rights is re-authenticated server-side, so the
+  // caller's own password is collected per action and never retained.
+  const [addPassword, setAddPassword] = useState("");
+  const [removing, setRemoving] = useState<Admin | null>(null);
+  const [removePassword, setRemovePassword] = useState("");
+  const [removeError, setRemoveError] = useState<string | null>(null);
+  const [removeBusy, setRemoveBusy] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -185,20 +196,21 @@ function AdminTeamSection() {
     if (!email.trim() || saving) return;
     setSaving(true);
     setError(null);
-    setTempPassword(null);
+    setSetupUrl(null);
+    setCopied(false);
     try {
       const res = await fetch("/api/admin/admins", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, firstName, lastName }),
+        body: JSON.stringify({ email, firstName, lastName, currentPassword: addPassword }),
       });
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || "Something went wrong.");
       } else {
-        if (data.tempPassword) setTempPassword(data.tempPassword);
-        setEmail(""); setFirstName(""); setLastName("");
-        if (!data.tempPassword) setShowAdd(false);
+        if (data.setupUrl) { setSetupUrl(data.setupUrl); setReissued(!!data.reissued); }
+        setEmail(""); setFirstName(""); setLastName(""); setAddPassword("");
+        if (!data.setupUrl) setShowAdd(false);
         load();
       }
     } catch {
@@ -208,17 +220,31 @@ function AdminTeamSection() {
     }
   }
 
-  async function handleRemove(admin: Admin) {
-    const ok = confirm(`Remove admin access for ${admin.firstName} ${admin.lastName}? They will become a regular account.`);
-    if (!ok) return;
-    const res = await fetch("/api/admin/admins", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ adminId: admin.id }),
-    });
-    const data = await res.json();
-    if (!res.ok) alert(data.error || "Could not remove admin access.");
-    load();
+  // Uses an inline masked field rather than window.prompt(), which would
+  // render the password in clear text.
+  async function handleRemove() {
+    if (!removing || removeBusy) return;
+    setRemoveBusy(true);
+    setRemoveError(null);
+    try {
+      const res = await fetch("/api/admin/admins", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ adminId: removing.id, currentPassword: removePassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setRemoveError(data.error || "Could not remove admin access.");
+      } else {
+        setRemoving(null);
+        setRemovePassword("");
+        load();
+      }
+    } catch {
+      setRemoveError("Network error — please try again.");
+    } finally {
+      setRemoveBusy(false);
+    }
   }
 
   return (
@@ -226,7 +252,7 @@ function AdminTeamSection() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <SectionTitle>Admin Team</SectionTitle>
         <button
-          onClick={() => { setShowAdd(!showAdd); setError(null); setTempPassword(null); }}
+          onClick={() => { setShowAdd(!showAdd); setError(null); setSetupUrl(null); setCopied(false); }}
           className="font-montserrat font-semibold"
           style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "1px solid rgba(228,220,209,0.25)", color: "var(--accent)", fontSize: "11px", padding: "8px 14px", borderRadius: "8px", cursor: "pointer" }}
         >
@@ -238,7 +264,7 @@ function AdminTeamSection() {
       {showAdd && (
         <div style={{ background: "var(--surface-2)", borderRadius: "10px", padding: "16px", marginBottom: "16px" }}>
           <p className="font-montserrat font-normal" style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "12px", lineHeight: 1.5 }}>
-            If the email matches an existing member they&apos;ll be promoted to admin. Otherwise a new admin account is created and you&apos;ll get a temporary password to pass on.
+            If the email matches an existing member they&apos;ll be promoted to admin. Otherwise a new admin account is created and you&apos;ll get a one-time setup link to pass on — they choose their own password, and the link expires in 24 hours.
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr auto", gap: "10px", alignItems: "end" }}>
             <div>
@@ -255,20 +281,54 @@ function AdminTeamSection() {
             </div>
             <button
               onClick={handleAdd}
-              disabled={!email.trim() || saving}
+              disabled={!email.trim() || !addPassword || saving}
               className="font-montserrat font-semibold"
-              style={{ height: "44px", padding: "0 18px", background: "var(--accent)", color: "var(--bg)", fontSize: "12px", border: "none", borderRadius: "8px", cursor: "pointer", opacity: saving ? 0.6 : 1 }}
+              style={{ height: "44px", padding: "0 18px", background: "var(--accent)", color: "var(--bg)", fontSize: "12px", border: "none", borderRadius: "8px", cursor: "pointer", opacity: !email.trim() || !addPassword || saving ? 0.6 : 1 }}
             >
               {saving ? "Adding..." : "Add"}
             </button>
           </div>
+          <div style={{ marginTop: "10px", maxWidth: "320px" }}>
+            <FieldLabel>Confirm With Your Password</FieldLabel>
+            <input
+              type="password"
+              value={addPassword}
+              onChange={(e) => setAddPassword(e.target.value)}
+              placeholder="Your current password"
+              autoComplete="current-password"
+              className="font-montserrat font-normal"
+              style={inputStyle}
+            />
+            <p className="font-montserrat font-normal" style={{ fontSize: "10px", color: "var(--text-muted)", marginTop: "6px", lineHeight: 1.5 }}>
+              Granting admin access requires your password, so a stolen browser session alone can&apos;t create admins.
+            </p>
+          </div>
           {error && <p className="font-montserrat font-medium" style={{ fontSize: "12px", color: "#F97066", marginTop: "10px" }}>{error}</p>}
-          {tempPassword && (
+          {setupUrl && (
             <div style={{ marginTop: "12px", background: "rgba(39,174,96,0.12)", border: "1px solid rgba(39,174,96,0.3)", borderRadius: "8px", padding: "12px 14px" }}>
-              <p className="font-montserrat font-medium" style={{ fontSize: "12px", color: "#27AE60" }}>
-                Admin account created. Temporary password (shown once):{" "}
-                <span className="font-montserrat font-bold" style={{ userSelect: "all", color: "var(--text)" }}>{tempPassword}</span>
+              <p className="font-montserrat font-medium" style={{ fontSize: "12px", color: "#27AE60", marginBottom: "8px" }}>
+                {reissued
+                  ? "New setup link issued — any previous link no longer works."
+                  : "Admin account created. Send them this one-time setup link:"}
               </p>
+              <p
+                className="font-montserrat"
+                style={{ fontSize: "11px", color: "var(--text)", userSelect: "all", wordBreak: "break-all", background: "var(--surface-2)", borderRadius: "6px", padding: "8px 10px", lineHeight: 1.5 }}
+              >
+                {setupUrl}
+              </p>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "8px" }}>
+                <button
+                  onClick={() => { navigator.clipboard?.writeText(setupUrl).then(() => setCopied(true)).catch(() => {}); }}
+                  className="font-montserrat font-semibold"
+                  style={{ fontSize: "11px", color: "var(--accent)", background: "none", border: "1px solid rgba(228,220,209,0.25)", borderRadius: "6px", padding: "6px 12px", cursor: "pointer" }}
+                >
+                  {copied ? "Copied" : "Copy link"}
+                </button>
+                <span className="font-montserrat font-normal" style={{ fontSize: "10px", color: "var(--text-muted)" }}>
+                  Expires in 24 hours · works once · they set their own password
+                </span>
+              </div>
             </div>
           )}
         </div>
@@ -293,7 +353,7 @@ function AdminTeamSection() {
             </div>
             {admin.id !== meId && (
               <button
-                onClick={() => handleRemove(admin)}
+                onClick={() => { setRemoving(admin); setRemovePassword(""); setRemoveError(null); }}
                 className="font-montserrat font-semibold"
                 style={{ fontSize: "11px", color: "#C0392B", background: "none", border: "none", cursor: "pointer", flexShrink: 0 }}
               >
@@ -303,6 +363,44 @@ function AdminTeamSection() {
           </div>
         ))}
       </div>
+
+      {removing && (
+        <div style={{ marginTop: "16px", background: "rgba(192,57,43,0.08)", border: "1px solid rgba(192,57,43,0.3)", borderRadius: "10px", padding: "16px" }}>
+          <p className="font-montserrat font-semibold" style={{ fontSize: "12px", color: "var(--text)", marginBottom: "4px" }}>
+            Remove admin access for {removing.firstName} {removing.lastName}?
+          </p>
+          <p className="font-montserrat font-normal" style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "12px", lineHeight: 1.5 }}>
+            They&apos;ll become a regular account. Confirm with your own password.
+          </p>
+          <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+            <input
+              type="password"
+              value={removePassword}
+              onChange={(e) => setRemovePassword(e.target.value)}
+              placeholder="Your current password"
+              autoComplete="current-password"
+              className="font-montserrat font-normal"
+              style={{ ...inputStyle, maxWidth: "260px" }}
+            />
+            <button
+              onClick={handleRemove}
+              disabled={!removePassword || removeBusy}
+              className="font-montserrat font-semibold"
+              style={{ height: "44px", padding: "0 18px", background: "#C0392B", color: "#fff", fontSize: "12px", border: "none", borderRadius: "8px", cursor: "pointer", opacity: !removePassword || removeBusy ? 0.6 : 1 }}
+            >
+              {removeBusy ? "Removing..." : "Confirm Remove"}
+            </button>
+            <button
+              onClick={() => { setRemoving(null); setRemovePassword(""); setRemoveError(null); }}
+              className="font-montserrat font-semibold"
+              style={{ height: "44px", padding: "0 14px", background: "none", color: "var(--text-muted)", fontSize: "12px", border: "1px solid rgba(228,220,209,0.25)", borderRadius: "8px", cursor: "pointer" }}
+            >
+              Cancel
+            </button>
+          </div>
+          {removeError && <p className="font-montserrat font-medium" style={{ fontSize: "12px", color: "#F97066", marginTop: "10px" }}>{removeError}</p>}
+        </div>
+      )}
     </div>
   );
 }

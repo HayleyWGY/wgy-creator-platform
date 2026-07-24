@@ -7,47 +7,51 @@ datasource db {
 }
 
 model Creator {
-  id                String         @id @default(cuid())
-  email             String         @unique
-  passwordHash      String
-  firstName         String
-  lastName          String
-  bio               String?
-  profileImageUrl   String?
-  instagramHandle   String?
-  tiktokHandle      String?
-  youtubeUrl        String?
-  otherSocialLinks  Json?
-  addressLine1      String?
-  addressLine2      String?
-  city              String?
-  postcode          String?
-  country           String?
-  contentNiches     String[]       @default([])
+  id                  String                @id @default(cuid())
+  email               String                @unique
+  passwordHash        String
+  firstName           String
+  lastName            String
+  bio                 String?
+  profileImageUrl     String?
+  instagramHandle     String?
+  tiktokHandle        String?
+  youtubeUrl          String?
+  otherSocialLinks    Json?
+  addressLine1        String?
+  addressLine2        String?
+  city                String?
+  postcode            String?
+  country             String?
+  contentNiches       String[]              @default([])
   // The four fields below are encrypted at rest (AES-256-GCM) via
   // lib/field-crypto.ts — dateOfBirth is a "YYYY-MM-DD" string inside the
   // ciphertext, not a native date. Never query or render them raw.
-  dateOfBirth       String?
-  address           String?        @db.Text
-  contactNumber     String?
-  gender            String?
-  stripeCustomerId  String?
-  stripeSubId       String?
-  membershipStatus  String         @default("active")
+  dateOfBirth         String?
+  address             String?               @db.Text
+  contactNumber       String?
+  gender              String?
+  stripeCustomerId    String?
+  stripeSubId         String?
+  membershipStatus    String                @default("active")
   // Stamped whenever membershipStatus flips to cancelled (kept on
   // reactivation so monthly-cancellation analytics retain history)
-  cancelledAt       DateTime?
-  membershipType    String         @default("paid")
-  isAdmin           Boolean        @default(false)
-  isClient          Boolean        @default(false)
-  joinedAt          DateTime       @default(now())
-  lastSeenAt        DateTime       @default(now())
+  cancelledAt         DateTime?
+  membershipType      String                @default("paid")
+  isAdmin             Boolean               @default(false)
+  isClient            Boolean               @default(false)
+  joinedAt            DateTime              @default(now())
+  lastSeenAt          DateTime              @default(now())
   // Set the first time the creator taps Apply on any opportunity —
   // powers the "apply to your first opportunity" checklist item
   firstApplyAt        DateTime?
   // Login brute-force protection — see lib/auth.ts authorize()
-  failedLoginAttempts Int          @default(0)
+  failedLoginAttempts Int                   @default(0)
   lockedUntil         DateTime?
+  // Null means the account has never had a password chosen BY ITS OWNER: it
+  // was created by an admin with an unusable random hash and is waiting on a
+  // setup link. lastSeenAt cannot express this — it defaults to now().
+  passwordSetAt       DateTime?
   tags                CreatorTag[]
   posts               Post[]
   comments            Comment[]
@@ -61,16 +65,17 @@ model Creator {
   chatRoomReads       ChatRoomRead[]
   applications        CampaignApplication[]
   dmThread            DmThread?
-  dmMessagesSent      DmMessage[]         @relation("DmSender")
-  auditLogs           AuditLog[]          @relation("AuditActor")
+  dmMessagesSent      DmMessage[]           @relation("DmSender")
+  auditLogs           AuditLog[]            @relation("AuditActor")
+  accountTokens       AccountToken[]
 
   // Member segmentation at scale: mass-DM audiences, analytics, onboarding
   // drip and the admin list all filter by membershipStatus + an activity/
   // date column. Without these each query scans the whole members table.
-  @@index([membershipStatus, lastSeenAt])   // active / inactive segments
-  @@index([membershipStatus, joinedAt])     // new members, onboarding, list order
+  @@index([membershipStatus, lastSeenAt]) // active / inactive segments
+  @@index([membershipStatus, joinedAt]) // new members, onboarding, list order
   @@index([membershipStatus, firstApplyAt]) // "not applied yet" segment
-  @@index([cancelledAt])                    // cancellation analytics
+  @@index([cancelledAt]) // cancellation analytics
 }
 
 model Section {
@@ -86,24 +91,24 @@ model Section {
 }
 
 model Post {
-  id            String    @id @default(cuid())
-  sectionId     String
-  section       Section   @relation(fields: [sectionId], references: [id])
-  authorId      String
-  author        Creator   @relation(fields: [authorId], references: [id])
-  title         String
-  body          String
-  coverImageUrl String?
-  brandName     String?
-  applyLinkUrl  String?
-  postType      String    @default("campaign")
-  status        String    @default("draft")
-  scheduledAt   DateTime?
-  applyClicks   Int       @default(0)
-  publishedAt   DateTime?
-  createdAt     DateTime  @default(now())
-  likesCount    Int       @default(0)
-  commentsCount Int       @default(0)
+  id                     String    @id @default(cuid())
+  sectionId              String
+  section                Section   @relation(fields: [sectionId], references: [id])
+  authorId               String
+  author                 Creator   @relation(fields: [authorId], references: [id])
+  title                  String
+  body                   String
+  coverImageUrl          String?
+  brandName              String?
+  applyLinkUrl           String?
+  postType               String    @default("campaign")
+  status                 String    @default("draft")
+  scheduledAt            DateTime?
+  applyClicks            Int       @default(0)
+  publishedAt            DateTime?
+  createdAt              DateTime  @default(now())
+  likesCount             Int       @default(0)
+  commentsCount          Int       @default(0)
   isPinned               Boolean   @default(false)
   eventDate              DateTime?
   eventLocation          String?
@@ -206,29 +211,29 @@ model Notification {
 }
 
 model PostContent {
-  id                   String    @id @default(cuid())
-  title                String
-  contentType          String
-  body                 String?
-  pdfUrl               String?
-  editableTemplateUrl  String?
-  videoEmbedUrl        String?
-  videoTranscript      String?
-  thumbnailUrl         String?
-  bannerImageUrl       String?
-  section              String
-  categories           String[]
-  status               String    @default("draft")
-  scheduledAt          DateTime?
-  publishedAt          DateTime?
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
-  authorId             String
-  likesCount           Int       @default(0)
-  commentsCount        Int       @default(0)
-  sortOrder            Int       @default(0)
-  readingTimeMinutes   Int?
-  comments             ContentComment[]
+  id                  String           @id @default(cuid())
+  title               String
+  contentType         String
+  body                String?
+  pdfUrl              String?
+  editableTemplateUrl String?
+  videoEmbedUrl       String?
+  videoTranscript     String?
+  thumbnailUrl        String?
+  bannerImageUrl      String?
+  section             String
+  categories          String[]
+  status              String           @default("draft")
+  scheduledAt         DateTime?
+  publishedAt         DateTime?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+  authorId            String
+  likesCount          Int              @default(0)
+  commentsCount       Int              @default(0)
+  sortOrder           Int              @default(0)
+  readingTimeMinutes  Int?
+  comments            ContentComment[]
 
   // Learning Lounge lists filter by section + status
   @@index([section, status])
@@ -236,15 +241,15 @@ model PostContent {
 }
 
 model MessageTemplate {
-  id           String    @id @default(cuid())
+  id           String                  @id @default(cuid())
   sequenceName String
   dayOffset    Int
   subject      String
   body         String
-  isActive     Boolean   @default(true)
-  sortOrder    Int       @default(0)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  isActive     Boolean                 @default(true)
+  sortOrder    Int                     @default(0)
+  createdAt    DateTime                @default(now())
+  updatedAt    DateTime                @updatedAt
   sentLogs     OnboardingMessageSent[]
 }
 
@@ -305,18 +310,18 @@ model OnboardingMessageSent {
 }
 
 model ChatRoom {
-  id              String        @id @default(cuid())
-  slug            String        @unique
+  id              String         @id @default(cuid())
+  slug            String         @unique
   name            String
   emoji           String
   description     String
-  isActive        Boolean       @default(true)
-  sortOrder       Int           @default(0)
+  isActive        Boolean        @default(true)
+  sortOrder       Int            @default(0)
   pinnedMessageId String?
-  pinnedMessage   ChatMessage?  @relation("PinnedMessage", fields: [pinnedMessageId], references: [id])
-  messages        ChatMessage[] @relation("RoomMessages")
+  pinnedMessage   ChatMessage?   @relation("PinnedMessage", fields: [pinnedMessageId], references: [id])
+  messages        ChatMessage[]  @relation("RoomMessages")
   reads           ChatRoomRead[]
-  createdAt       DateTime      @default(now())
+  createdAt       DateTime       @default(now())
 }
 
 model ChatMessage {
@@ -417,4 +422,24 @@ model CampaignApplication {
   appliedAt    DateTime @default(now())
 
   @@index([creatorId, appliedAt])
+}
+
+/// Single-use, expiring tokens for account actions that must work without an
+/// existing password: admin invite setup and (later) password reset.
+///
+/// Only a SHA-256 hash of the token is stored, so a database leak yields
+/// nothing usable — the raw value exists only in the link handed to the
+/// recipient. Rows are kept after use rather than deleted, so the audit trail
+/// shows when a link was redeemed.
+model AccountToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  purpose   String // 'admin_setup' | 'password_reset'
+  creatorId String
+  creator   Creator   @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([creatorId, purpose])
 }
