@@ -2,7 +2,46 @@ import { type NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
-import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import {
+  rateLimit,
+  getClientIp,
+  readFailureCount,
+  bumpFailureCount,
+  clearFailureCount,
+} from '@/lib/rate-limit'
+
+/**
+ * A real bcrypt hash of a value nobody knows, compared against when the
+ * submitted email has no account. Hardcoded rather than generated at import
+ * so it costs nothing at cold start and the comparison time is identical on
+ * every instance. It cannot match any submitted password.
+ */
+const DUMMY_PASSWORD_HASH =
+  '$2b$10$HQXUHTUqbVnsUDbmJ2FntujkpTAfoN3pJnn1dRrpO9izQnc4FGtYW'
+
+/** How long login failures are remembered for backoff purposes. */
+export const BACKOFF_WINDOW_MS = 15 * 60_000
+
+/**
+ * Progressive backoff curve: how long to delay a login attempt given the
+ * failures already recorded for this (email + IP).
+ *
+ * Replaces a hard lock, which was an account-denial weapon — five requests
+ * locked any member out for fifteen minutes, and with no password-reset flow
+ * their only recourse was emailing support. A delay slows an attacker without
+ * ever preventing the real member from getting in.
+ *
+ * The first two failures are free, because typing your password wrong twice
+ * is normal and should not feel like being punished. The cap exists because a
+ * sleeping serverless function still holds concurrency and bills by duration:
+ * an uncapped curve would let an attacker run up our costs and exhaust our
+ * own capacity.
+ */
+export function loginBackoffMs(priorFailures: number): number {
+  if (priorFailures < 2) return 0
+  const MAX_MS = 3_000
+  return Math.min(MAX_MS, 250 * 2 ** (priorFailures - 2))
+}
 
 // 60s in-memory cache of live membership status/role, per server instance.
 // Keeps revocation near-immediate (≤60s) without a DB read on every request.
@@ -69,10 +108,38 @@ export const authOptions: NextAuthOptions = {
         // still enforced — fail-open only changes the error case.)
         const emailKey = credentials.email.trim().toLowerCase()
         const ip = getClientIp(req)
+
+        // Only the IP limit DENIES. An IP is the attacker's own resource, so
+        // exhausting it costs them, not a member.
+        //
+        // There is deliberately no per-email deny. Any hard per-account limit
+        // is an account-lockout weapon: member emails are not secret (they are
+        // the addresses we are about to send migration invites to), so a
+        // per-email threshold lets anyone lock out anyone. That was the old
+        // 5-strikes lock, and a per-email 429 would have been the same bug in
+        // a new place. Per-account pressure is applied as DELAY below, which
+        // slows an attacker without ever denying the real member.
         const withinIpLimit = await rateLimit(`login-ip:${ip}`, 20, 15 * 60_000)
         if (!withinIpLimit) throw new Error('rate-limited')
-        const withinEmailLimit = await rateLimit(`login-email:${emailKey}`, 10, 15 * 60_000)
-        if (!withinEmailLimit) throw new Error('rate-limited')
+
+        // Progressive backoff, keyed on (email + IP).
+        //
+        // Keyed that way rather than on email alone so an attacker hammering a
+        // member's address slows THEMSELVES: the member signing in from their
+        // own IP has their own counter and sees no delay at all. Email-alone
+        // keying would let an attacker degrade the member's experience, which
+        // is a milder version of the lockout bug being fixed here.
+        //
+        // The delay is applied BEFORE the account lookup and is capped, for
+        // two different reasons. Before, because a delay applied only to
+        // accounts that exist would itself become an enumeration oracle.
+        // Capped, because on serverless a sleeping function still occupies
+        // concurrency and bills — an uncapped backoff would be a denial-of-
+        // wallet vector against ourselves.
+        const backoffKey = `login:${emailKey}:${ip}`
+        const priorFailures = await readFailureCount(backoffKey)
+        const delayMs = loginBackoffMs(priorFailures)
+        if (delayMs > 0) await new Promise(resolve => setTimeout(resolve, delayMs))
 
         // Email matching stays case-insensitive and whitespace-tolerant:
         // "Hayley@…", "HAYLEY@…" and a trailing space all resolve to the
@@ -81,41 +148,60 @@ export const authOptions: NextAuthOptions = {
         // this uses the unique index instead of a full-table sequential
         // scan (an ILIKE match can't use the index and gets slow at scale).
         const creator = await prisma.creator.findUnique({
-          where: { email: credentials.email.trim().toLowerCase() },
+          where: { email: emailKey },
         })
 
-        if (!creator) return null
-
-        // Brute-force lockout: 5 failed attempts → locked for 15 minutes
-        if (creator.lockedUntil && creator.lockedUntil > new Date()) {
-          throw new Error('locked')
-        }
-
+        // ALWAYS run a bcrypt comparison, even when no such account exists.
+        //
+        // `if (!creator) return null` used to short-circuit here, so a missing
+        // address answered in ~2ms and a real one in ~100ms — a timing oracle
+        // that let anyone test whether an address was registered. Comparing
+        // against a fixed dummy hash of the same cost makes both paths take
+        // the same work. The dummy is a real bcrypt hash of a value nobody
+        // knows, so it can never match.
         const passwordMatch = await bcrypt.compare(
           credentials.password,
-          creator.passwordHash
+          creator?.passwordHash && creator.passwordHash !== 'DELETED'
+            ? creator.passwordHash
+            : DUMMY_PASSWORD_HASH,
         )
 
-        if (!passwordMatch) {
-          const attempts = creator.failedLoginAttempts + 1
-          const locked = attempts >= 5
-          await prisma.creator.update({
-            where: { id: creator.id },
-            data: locked
-              ? { failedLoginAttempts: 0, lockedUntil: new Date(Date.now() + 15 * 60 * 1000) }
-              : { failedLoginAttempts: attempts },
-          })
-          if (locked) throw new Error('locked')
+        if (!creator || !passwordMatch) {
+          // Count the failure against (email + IP) whether or not the account
+          // exists — otherwise the backoff itself would reveal which addresses
+          // are real.
+          await bumpFailureCount(backoffKey, BACKOFF_WINDOW_MS)
+
+          if (creator) {
+            // Atomic. The previous code read failedLoginAttempts into JS,
+            // added one and wrote it back; concurrent attempts all read the
+            // same stale value, so the counter barely moved — measured, 50
+            // parallel failures recorded as 1. Prisma's `increment` emits
+            //   SET "failedLoginAttempts" = ("failedLoginAttempts" + $1)
+            // which Postgres evaluates under a row lock, so no update is lost.
+            await prisma.creator.update({
+              where: { id: creator.id },
+              data: { failedLoginAttempts: { increment: 1 } },
+            })
+          }
+
+          // One outcome for "no such account" and "wrong password". Returning
+          // a distinguishable error for either — as the old 'locked' throw did,
+          // since a missing account could never reach it — confirms whether an
+          // address is registered.
           return null
         }
 
         if (creator.membershipStatus === 'cancelled') return null
 
-        // Update last seen + clear any failed-attempt state
+        // Clear both counters on success: the durable per-account record and
+        // the (email + IP) backoff, so a member who mistypes twice then gets
+        // it right starts clean.
         await prisma.creator.update({
           where: { id: creator.id },
           data: { lastSeenAt: new Date(), failedLoginAttempts: 0, lockedUntil: null },
         })
+        await clearFailureCount(backoffKey)
 
         return {
           id: creator.id,

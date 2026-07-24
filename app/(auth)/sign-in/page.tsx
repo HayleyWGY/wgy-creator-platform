@@ -33,12 +33,17 @@ export default function SignInPage() {
 
     if (result?.error) {
       setError(
-        result.error === "locked"
-          ? "Too many failed attempts. Your account is locked for 15 minutes."
-          : result.error === "rate-limited"
-          // Thrown by the login throttle in lib/auth.ts. Without this case a
-          // throttled member would be told their password is wrong.
-          ? "Too many sign-in attempts. Please wait a few minutes and try again."
+        // 'rate-limited' comes from the per-IP throttle in lib/auth.ts. Without
+        // this case a throttled member would be told their password is wrong.
+        //
+        // There is deliberately no "your account is locked" case any more.
+        // Accounts are no longer locked — repeated failures slow the response
+        // instead — and the old message doubled as an enumeration oracle: only
+        // a REGISTERED address could ever produce it, so five wrong guesses
+        // confirmed whether someone was a member. Wrong password and unknown
+        // address now give the identical message below.
+        result.error === "rate-limited"
+          ? "Too many sign-in attempts from this network. Please wait a few minutes and try again."
           : "Invalid email or password. Please try again."
       );
       setLoading(false);

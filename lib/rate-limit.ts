@@ -168,3 +168,54 @@ export function getClientIp(source: HeaderSource): string {
   }
   return readHeader(source, 'x-real-ip')?.trim() || 'unknown-ip'
 }
+
+/**
+ * Failure counters for progressive login backoff.
+ *
+ * Separate from rateLimit() because backoff needs the COUNT, not a verdict —
+ * the count picks a delay rather than a yes/no. Kept in Redis so the delay is
+ * consistent across serverless instances, exactly like the limiter.
+ *
+ * All three fail open (0 / silent no-op) when Redis is unavailable. A login
+ * that cannot compute its backoff should proceed without one, not break.
+ */
+
+export async function bumpFailureCount(key: string, windowMs: number): Promise<number> {
+  const client = getRedis()
+  if (!client) return 0
+  try {
+    const namespaced = `${KEY_PREFIX}:fail:${key}`
+    const count = await client.incr(namespaced)
+    // Refresh the window on every failure, so a sustained attack keeps the
+    // delay high rather than letting it lapse mid-run.
+    await client.expire(namespaced, Math.ceil(windowMs / 1000))
+    return count
+  } catch (err) {
+    console.error('[rate-limit] bumpFailureCount failed:', err)
+    Sentry.captureException(err, { tags: { subsystem: 'rate-limit' } })
+    return 0
+  }
+}
+
+export async function readFailureCount(key: string): Promise<number> {
+  const client = getRedis()
+  if (!client) return 0
+  try {
+    const value = await client.get<number | string | null>(`${KEY_PREFIX}:fail:${key}`)
+    const n = typeof value === 'string' ? parseInt(value, 10) : value
+    return typeof n === 'number' && Number.isFinite(n) ? n : 0
+  } catch (err) {
+    console.error('[rate-limit] readFailureCount failed:', err)
+    return 0
+  }
+}
+
+export async function clearFailureCount(key: string): Promise<void> {
+  const client = getRedis()
+  if (!client) return
+  try {
+    await client.del(`${KEY_PREFIX}:fail:${key}`)
+  } catch (err) {
+    console.error('[rate-limit] clearFailureCount failed:', err)
+  }
+}
