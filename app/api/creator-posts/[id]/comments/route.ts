@@ -15,6 +15,14 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Community content is members-only. Without this the endpoint returned
+    // comment bodies plus each author's id, name and profile image to anyone
+    // holding a post id and no cookie at all.
+    const session = await getActiveSession()
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+    }
+
     const comments = await prisma.creatorPostComment.findMany({
       where: { postId: params.id, isDeleted: false, parentId: null },
       include: {
