@@ -9,6 +9,9 @@ export default defineConfig({
     environment: 'node',
     include: ['tests/**/*.test.ts'],
     setupFiles: ['tests/setup.ts'],
+    // Vitest runs teardown via a globalSetup file's named `teardown` export
+    // (`globalTeardown` is Jest's option and is silently ignored here).
+    globalSetup: ['tests/global-setup.ts'],
     // Run test FILES one at a time.
     //
     // Several suites hit the real Postgres, each opening its own pooled

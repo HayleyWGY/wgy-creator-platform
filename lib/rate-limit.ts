@@ -44,6 +44,19 @@ function getRedis(): Redis | null {
 // blocked state, so it can't wrongly allow anyone.
 const ephemeralCache = new Map<string, number>()
 
+/**
+ * Key namespace. Overridable so the test suite can share one Upstash database
+ * with production without their keys ever meeting — the free tier allows only
+ * one database, so separate instances are not an option.
+ *
+ * A distinct prefix is what actually matters here. The danger was never
+ * shared storage (a handful of test keys is nothing); it was COLLISION — a
+ * test writing `login-ip:<a real address>` would throttle a real member out
+ * of their own account. Different prefixes make that impossible, because no
+ * test key can ever name the same slot as a production one.
+ */
+const KEY_PREFIX = process.env.UPSTASH_RATELIMIT_PREFIX || 'wgy-rl'
+
 // One Ratelimit instance per (limit, window) pair — cheap to reuse.
 const limiters = new Map<string, Ratelimit>()
 function getLimiter(limit: number, windowMs: number): Ratelimit | null {
@@ -57,7 +70,7 @@ function getLimiter(limit: number, windowMs: number): Ratelimit | null {
     limiter = new Ratelimit({
       redis: client,
       limiter: Ratelimit.slidingWindow(limit, `${seconds} s`),
-      prefix: 'wgy-rl',
+      prefix: KEY_PREFIX,
       analytics: false,
       ephemeralCache,
     })

@@ -15,33 +15,30 @@ if (fs.existsSync(envPath)) {
 }
 
 /**
- * Keep the test suite off the production Redis.
+ * Keep test keys away from production keys.
  *
- * The rate-limit suites exercise the real limiter, which means they write
- * real counter keys. Pointed at the production database those keys sit
- * alongside live login counters. Harmless so far, but a test run that CAN
- * touch production state will eventually break it — a stray `login-ip:` key
- * for a real address would throttle a real member out of their account.
+ * The rate-limit suites exercise the real limiter, so they write real counter
+ * keys. The Upstash free tier allows only ONE database, so a separate test
+ * instance isn't available — instead the tests take their own key namespace
+ * in the same database.
  *
- * If a dedicated test database is configured, redirect the limiter to it.
- * If it is NOT configured, blank the production credentials instead: the
- * suites use `describe.skipIf(!hasRedis)`, so they skip. Falling back to
- * production would defeat the point of separating them, and a skipped test
- * is a much better outcome than one quietly writing to the live database.
+ * That addresses the real hazard. Sharing storage was never the problem: a
+ * handful of test keys is nothing against the quota. The problem was
+ * COLLISION — a test writing `login-ip:<a real address>` would throttle a
+ * real member out of their own account. Under a separate prefix no test key
+ * can ever name the same slot as a production one, so the two cannot
+ * interfere no matter what a test does.
+ *
+ * A dedicated test database is still honoured if one is ever configured
+ * (paid tier, or a second free account), in which case the prefix separation
+ * is simply belt-and-braces.
  */
+process.env.UPSTASH_RATELIMIT_PREFIX = 'wgy-rl-test'
+
 const TEST_REDIS_URL = process.env.UPSTASH_REDIS_REST_URL_TEST
 const TEST_REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN_TEST
 
 if (TEST_REDIS_URL && TEST_REDIS_TOKEN) {
   process.env.UPSTASH_REDIS_REST_URL = TEST_REDIS_URL
   process.env.UPSTASH_REDIS_REST_TOKEN = TEST_REDIS_TOKEN
-} else {
-  delete process.env.UPSTASH_REDIS_REST_URL
-  delete process.env.UPSTASH_REDIS_REST_TOKEN
-  if (!process.env.CI) {
-    console.warn(
-      '[tests] No UPSTASH_REDIS_REST_URL_TEST set — Redis suites will SKIP.\n' +
-        '        They deliberately do NOT fall back to the production database.',
-    )
-  }
 }
