@@ -34,6 +34,7 @@
  */
 
 const fs = require('fs')
+const crypto = require('crypto')
 const path = require('path')
 const sanitizeHtml = require('sanitize-html')
 const { PrismaClient } = require('@prisma/client')
@@ -130,7 +131,7 @@ async function reHostImage(sourceUrl, supabase) {
     const ext = contentType.includes('png') ? 'png' : contentType.includes('webp') ? 'webp' : 'jpg'
     const bytes = Buffer.from(await res.arrayBuffer())
 
-    const storagePath = `learning-lounge-import/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+    const storagePath = `learning-lounge-import/${Date.now()}-${crypto.randomUUID()}.${ext}`
     const { error } = await supabase.storage.from(BUCKET).upload(storagePath, bytes, {
       contentType,
       upsert: false,

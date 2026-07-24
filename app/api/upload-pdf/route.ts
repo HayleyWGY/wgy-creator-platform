@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "node:crypto";
 import { put } from "@vercel/blob";
 import { getActiveSession } from "@/lib/session";
 
@@ -24,8 +25,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "PDF must be under 20MB" }, { status: 400 });
     }
 
-    // Safe server-generated name — never trust the client filename
-    const safeName = `wgy-content/${Date.now()}-${Math.random().toString(36).slice(2)}.pdf`;
+    // Safe server-generated name — never trust the client filename.
+    // CSPRNG, not Math.random(): the blob is stored with public access, so a
+    // guessable name is the difference between "unlisted" and "readable by
+    // anyone". See the note in lib/upload-validation.ts buildUploadPath.
+    const safeName = `wgy-content/${Date.now()}-${crypto.randomUUID()}.pdf`;
     const blob = await put(safeName, file, {
       access: "public",
       contentType: "application/pdf",

@@ -81,13 +81,54 @@ describe('buildUploadPath', () => {
     const path = buildUploadPath('creator-posts', 'png')
     expect(path).not.toContain('..')
     expect(path).not.toContain('evil')
-    // Only the generated segment plus extension
-    expect(path).toMatch(/^creator-posts\/\d+-[a-z0-9]+\.png$/)
+    // Path traversal and nesting are impossible: exactly one separator, the
+    // one this function puts between prefix and filename.
+    expect(path.split('/').length).toBe(2)
   })
 
   it('generates a unique path each call', () => {
     const a = buildUploadPath('creator-posts', 'png')
     const b = buildUploadPath('creator-posts', 'png')
     expect(a).not.toBe(b)
+  })
+
+  /**
+   * These assert the SECURITY property rather than the string shape.
+   *
+   * The bucket is public, so the URL is the only access control — a
+   * predictable path means a readable file. The previous implementation used
+   * Math.random(), whose xorshift128+ state is recoverable from observed
+   * outputs; a test pinning the old `\d+-[a-z0-9]+` format would have passed
+   * against that weak generator, so it proved nothing worth proving.
+   */
+  it('random segment carries real entropy (UUIDv4 from the CSPRNG)', () => {
+    const filename = buildUploadPath('creator-posts', 'png').split('/')[1]
+    const random = filename.replace(/^\d+-/, '').replace(/\.png$/, '')
+
+    // v4 UUID: 122 random bits. Version nibble 4, variant nibble 8/9/a/b.
+    expect(random).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+    )
+  })
+
+  it('does not repeat across many calls', () => {
+    const n = 2000
+    const seen = new Set<string>()
+    for (let i = 0; i < n; i++) {
+      seen.add(buildUploadPath('creator-posts', 'png').split('/')[1].replace(/^\d+-/, ''))
+    }
+    // Math.random() within a single tick often produced near-neighbours; a
+    // CSPRNG must not collide at all at this scale.
+    expect(seen.size).toBe(n)
+  })
+
+  it('keeps the extension the validator chose, never one from the random part', () => {
+    for (const ext of ['jpg', 'png', 'webp', 'gif']) {
+      const path = buildUploadPath('admin-uploads', ext)
+      expect(path.endsWith(`.${ext}`)).toBe(true)
+      // Exactly one dot — the extension separator. A random segment
+      // containing a dot could otherwise smuggle a second extension.
+      expect(path.split('.').length).toBe(2)
+    }
   })
 })

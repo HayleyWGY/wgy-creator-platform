@@ -14,6 +14,8 @@
  *    destination path is always built server-side.
  */
 
+import crypto from 'node:crypto'
+
 export const ALLOWED_IMAGE_TYPES: Record<string, string> = {
   'image/jpeg': 'jpg',
   'image/png': 'png',
@@ -54,8 +56,21 @@ export function validateImageUpload(
 /**
  * Builds the server-side storage path. The filename is generated here —
  * nothing from the client's filename is used.
+ *
+ * The random segment MUST come from a CSPRNG. The storage bucket is public,
+ * so an object's URL is the only thing protecting it: anyone who can guess a
+ * path can read the file. This previously used Math.random(), which V8
+ * implements as xorshift128+ — its internal state is recoverable from a
+ * modest run of observed outputs, and every subsequent value is then
+ * predictable. Upload URLs are routinely visible (profile images, post
+ * attachments), so an attacker had ample samples to work from.
+ *
+ * randomUUID() gives 122 bits from the platform CSPRNG. The Date.now()
+ * prefix is kept purely for operational legibility (sorting, lifecycle
+ * rules); it neither adds to nor subtracts from the unguessability, which
+ * rests entirely on the UUID.
  */
 export function buildUploadPath(prefix: string, ext: string): string {
-  const unique = `${Date.now()}-${Math.random().toString(36).slice(2)}`
+  const unique = `${Date.now()}-${crypto.randomUUID()}`
   return `${prefix}/${unique}.${ext}`
 }
