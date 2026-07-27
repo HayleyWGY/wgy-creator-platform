@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getActiveSession } from '@/lib/session'
+import { parsePage } from '@/lib/pagination'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,7 +13,9 @@ export async function GET(req: Request) {
   }
 
   const { searchParams } = new URL(req.url)
-  const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10))
+  // `Math.max(1, parseInt('abc'))` is NaN, not 1 — a bad page param threw an
+  // unhandled 500. parsePage collapses every invalid value to page 1.
+  const page = parsePage(searchParams.get('page'))
   const pageSize = 50
 
   const [entries, total] = await Promise.all([

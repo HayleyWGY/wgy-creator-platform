@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getActiveSession } from "@/lib/session"
 import { rateLimit } from '@/lib/rate-limit'
+import { clampLimit } from '@/lib/pagination'
+
+// Feed page size: default 20, hard cap 50. The cap is the DoS fix — an
+// unbounded `take` combined with the (previously unbounded) likes include
+// let one request pull hundreds of thousands of rows through a max:1 pool.
+const POSTS_DEFAULT_LIMIT = 20
+const POSTS_MAX_LIMIT = 50
 
 const authorSelect = {
   id: true,
@@ -18,7 +25,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const { searchParams } = new URL(req.url)
-    const limit  = parseInt(searchParams.get('limit') || '20')
+    const limit  = clampLimit(searchParams.get('limit'), { def: POSTS_DEFAULT_LIMIT, max: POSTS_MAX_LIMIT })
     const cursor = searchParams.get('cursor') || undefined
 
     const posts = await prisma.creatorPost.findMany({
@@ -31,14 +38,27 @@ export async function GET(req: NextRequest) {
           orderBy: { createdAt: 'asc' },
           take: 10,
         },
-        likes: { select: { creatorId: true } },
+        // The like COUNT comes from the scalar likesCount column (maintained
+        // by the like route), so no _count is needed. This bounded lookup
+        // returns at most one row — the caller's own like, if any — to drive
+        // the filled-heart state. It replaces `likes: { select: creatorId }`,
+        // which pulled EVERY like row for EVERY post: 800 rows for an
+        // 800-like post, unbounded and never even read by the client.
+        likes: { where: { creatorId: session.user.id }, select: { creatorId: true } },
       },
       orderBy: { createdAt: 'desc' },
       take: limit,
       ...(cursor && { skip: 1, cursor: { id: cursor } }),
     })
 
-    return NextResponse.json({ posts })
+    // Collapse the one-or-zero-row likes lookup into a boolean and drop the
+    // array, so the response carries `likedByMe` instead of raw like rows.
+    const shaped = posts.map(({ likes, ...post }) => ({
+      ...post,
+      likedByMe: likes.length > 0,
+    }))
+
+    return NextResponse.json({ posts: shaped })
   } catch (error) {
     console.error('[GET /api/creator-posts]', error)
     return NextResponse.json({ error: 'Failed to fetch posts' }, { status: 500 })

@@ -1,6 +1,7 @@
 import { getActiveSession } from "@/lib/session"
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
+import { parsePage } from '@/lib/pagination'
 
 export async function GET(req: Request) {
   const session = await getActiveSession()
@@ -11,7 +12,9 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
   const search = searchParams.get('q') || ''
   const statusFilter = searchParams.get('status') || ''
-  const page = parseInt(searchParams.get('page') || '1', 10)
+  // parsePage collapses missing/NaN/negative to page 1 — `?page=abc` used to
+  // become NaN, reaching `skip: NaN` and throwing an unhandled 500.
+  const page = parsePage(searchParams.get('page'))
   const pageSize = 20
 
   const where: Record<string, unknown> = {

@@ -23,12 +23,21 @@ export async function GET(
       where: { id: params.id, isDeleted: false },
       include: {
         author: { select: authorSelect },
+        // Bounded. This was unbounded — every comment on the post — and is
+        // also dead weight: the detail page fetches comments from the
+        // dedicated /comments endpoint (which paginates), not from here. The
+        // cap stops one popular post being a DoS while leaving the field for
+        // any caller that does read it.
         comments: {
           where: { isDeleted: false },
           include: { author: { select: authorSelect } },
           orderBy: { createdAt: 'asc' },
+          take: 10,
         },
-        likes: { select: { creatorId: true } },
+        // Bounded per-user lookup for filled-heart state; the count comes from
+        // the likesCount scalar. Was `likes: { select: creatorId }` — every
+        // like row for the post.
+        likes: { where: { creatorId: session.user.id }, select: { creatorId: true } },
       },
     })
 
@@ -36,7 +45,8 @@ export async function GET(
       return NextResponse.json({ error: 'Post not found' }, { status: 404 })
     }
 
-    return NextResponse.json({ post })
+    const { likes, ...rest } = post
+    return NextResponse.json({ post: { ...rest, likedByMe: likes.length > 0 } })
   } catch (error) {
     console.error('[GET /api/creator-posts/[id]]', error)
     return NextResponse.json({ error: 'Failed to fetch post' }, { status: 500 })

@@ -10,6 +10,9 @@ export interface CreatorPost {
   likesCount: number
   commentsCount: number
   createdAt: string
+  // Whether the viewer has liked this post. Optional so older callers that
+  // don't yet supply it still typecheck; absent is treated as not-liked.
+  likedByMe?: boolean
   author: {
     id: string
     firstName: string
@@ -26,7 +29,10 @@ interface CreatorPostCardProps {
 
 export function CreatorPostCard({ post, onDeleted, truncate = true }: CreatorPostCardProps) {
   const router = useRouter()
-  const [liked, setLiked] = useState(false)
+  // Seed from the server's per-viewer flag so a filled heart survives reload.
+  // Previously this was always false, so your own likes looked un-liked until
+  // you clicked again (which then double-toggled the count).
+  const [liked, setLiked] = useState(post.likedByMe ?? false)
   const [likesCount, setLikesCount] = useState(post.likesCount)
 
   const initials = `${post.author.firstName[0]}${post.author.lastName[0]}`
