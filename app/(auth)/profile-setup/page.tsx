@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { Camera } from "lucide-react";
 import { WgyButton } from "@/components/ui/wgy-button";
@@ -10,6 +11,16 @@ const MAX_BIO = 160;
 
 export default function ProfileSetupPage() {
   const router = useRouter();
+  const { update: updateSession } = useSession();
+
+  // Mark onboarding done (durable, server-side), flip the session token so the
+  // middleware gate stops redirecting, THEN leave for the app. The order
+  // matters: navigating before the token flips would bounce straight back here.
+  async function finishOnboarding() {
+    await fetch("/api/onboarding/complete", { method: "POST" }).catch(() => {});
+    await updateSession({ onboarded: true }).catch(() => {});
+    router.push("/home");
+  }
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -117,7 +128,7 @@ export default function ProfileSetupPage() {
         setError(data.error || "Couldn't save your profile. Please try again.");
         return;
       }
-      router.push("/home");
+      await finishOnboarding();
     } catch {
       setError("Couldn't save your profile. Please check your connection.");
     } finally {
@@ -369,7 +380,7 @@ export default function ProfileSetupPage() {
             the account), so skipping straight to the app is fine. */}
         <button
           type="button"
-          onClick={() => router.push("/home")}
+          onClick={finishOnboarding}
           disabled={saving || uploading}
           className="w-full text-center font-montserrat font-normal"
           style={{ fontSize: "12px", color: "var(--text-muted)" }}

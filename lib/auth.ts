@@ -210,18 +210,20 @@ export const authOptions: NextAuthOptions = {
           lastName: creator.lastName,
           isAdmin: creator.isAdmin,
           membershipStatus: creator.membershipStatus,
+          onboarded: creator.onboardedAt !== null,
         }
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id
         token.firstName = user.firstName
         token.lastName = user.lastName
         token.isAdmin = user.isAdmin
         token.membershipStatus = user.membershipStatus
+        token.onboarded = user.onboarded
       } else if (token.id) {
         // Live status check with a 60s in-memory cache: cancelling a member
         // (or demoting an admin) takes effect within a minute regardless of
@@ -230,6 +232,15 @@ export const authOptions: NextAuthOptions = {
         const live = await getLiveStatus(token.id as string)
         token.membershipStatus = live.status
         token.isAdmin = live.isAdmin
+      }
+      // Completing/skipping onboarding calls update({ onboarded: true }). This
+      // flips the token immediately so the middleware gate stops redirecting,
+      // without waiting on a fresh login. `onboarded` is monotonic (never goes
+      // back to false), so this can only ever set it true — no way to un-gate
+      // someone who should be gated. The DB is stamped by the same action, so
+      // a later fresh login stays consistent.
+      if (trigger === 'update' && (session as { onboarded?: boolean } | null)?.onboarded) {
+        token.onboarded = true
       }
       return token
     },
@@ -240,6 +251,7 @@ export const authOptions: NextAuthOptions = {
         session.user.lastName = token.lastName as string
         session.user.isAdmin = token.isAdmin as boolean
         session.user.membershipStatus = token.membershipStatus as string
+        session.user.onboarded = token.onboarded as boolean
       }
       return session
     },

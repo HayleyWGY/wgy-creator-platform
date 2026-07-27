@@ -32,6 +32,22 @@ export default withAuth(
       return NextResponse.redirect(new URL('/payment-failed', req.url))
     }
 
+    // First-run onboarding gate: a member who has never completed or skipped
+    // profile-setup is routed there before the app.
+    //
+    // Strict `=== false`, deliberately. Tokens issued before this field
+    // existed have `onboarded === undefined` and must PASS THROUGH — a member
+    // already signed in during the deploy must not be trapped in a redirect.
+    // Only a fresh login sets the flag explicitly (true for the backfilled
+    // existing accounts, false only for genuinely un-onboarded members). This
+    // is the same fail-open discipline the rate limiter learned the hard way.
+    //
+    // Admins are exempt (they have no creator onboarding). /profile-setup is
+    // not in the matcher below, so it is never gated against itself — no loop.
+    if (token && !token.isAdmin && token.onboarded === false) {
+      return NextResponse.redirect(new URL('/profile-setup', req.url))
+    }
+
     return NextResponse.next()
   },
   {

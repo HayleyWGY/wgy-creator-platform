@@ -9,6 +9,7 @@ declare module 'next-auth' {
       lastName: string
       isAdmin: boolean
       membershipStatus: string
+      onboarded: boolean
     }
   }
   interface User {
@@ -18,6 +19,7 @@ declare module 'next-auth' {
     lastName: string
     isAdmin: boolean
     membershipStatus: string
+    onboarded: boolean
   }
 }
 
@@ -28,5 +30,6 @@ declare module 'next-auth/jwt' {
     lastName: string
     isAdmin: boolean
     membershipStatus: string
+    onboarded: boolean
   }
 }

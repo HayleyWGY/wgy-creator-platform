@@ -52,6 +52,10 @@ model Creator {
   // was created by an admin with an unusable random hash and is waiting on a
   // setup link. lastSeenAt cannot express this — it defaults to now().
   passwordSetAt       DateTime?
+  // Stamped the first time the member completes OR skips the profile-setup
+  // onboarding gate. Null = they have never finished it, so middleware routes
+  // them to /profile-setup before the app. Monotonic: once set, never cleared.
+  onboardedAt         DateTime?
   tags                CreatorTag[]
   posts               Post[]
   comments            Comment[]
