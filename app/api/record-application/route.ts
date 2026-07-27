@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
-import { verifyApplicationReceipt } from '@/lib/apply-handoff'
+import { verifyApplicationReceipt, RECEIPT_TTL_SECONDS } from '@/lib/apply-handoff'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 
 // Called server-to-server BY THE PORTAL after a creator successfully submits
@@ -37,9 +38,17 @@ export async function POST(req: NextRequest) {
 
   const { receipt, campaign_name, campaign_slug } = await req.json().catch(() => ({}))
 
-  const creatorId = verifyApplicationReceipt(receipt)
-  if (!creatorId) {
+  const claims = verifyApplicationReceipt(receipt)
+  if (!claims) {
     return NextResponse.json({ error: 'Invalid or expired receipt' }, { status: 404, headers: corsHeaders() })
+  }
+  const { creatorId, jti } = claims
+
+  // Rate-limit by the creator INSIDE the receipt, not just the source IP. The
+  // abuse this stops — a creator looping their own receipt to spam rows — comes
+  // from one member and can rotate IPs, so the IP limit above is not enough.
+  if (!(await rateLimit(`record-application-cid:${creatorId}`, 10, 60_000))) {
+    return NextResponse.json({ error: 'Too many requests — please slow down' }, { status: 429, headers: corsHeaders() })
   }
 
   const name = typeof campaign_name === 'string' ? campaign_name.trim().slice(0, 200) : ''
@@ -48,21 +57,46 @@ export async function POST(req: NextRequest) {
   }
   const slug = typeof campaign_slug === 'string' && campaign_slug.trim() ? campaign_slug.trim().slice(0, 200) : null
 
-  // Guard against a double-submit logging the same campaign twice in quick
-  // succession — treat a same-campaign application within the last hour as a
-  // duplicate rather than a new row.
-  const recentDuplicate = await prisma.campaignApplication.findFirst({
-    where: {
-      creatorId,
-      campaignName: name,
-      appliedAt: { gt: new Date(Date.now() - 60 * 60 * 1000) },
-    },
-    select: { id: true },
-  })
-  if (!recentDuplicate) {
-    await prisma.campaignApplication.create({
-      data: { creatorId, campaignName: name, campaignSlug: slug },
+  // Best-effort purge of dead single-use rows (receipt already expired, so it
+  // can no longer be replayed regardless). Kept out of the redemption
+  // transaction and probabilistic so it isn't a write on every request.
+  if (Math.random() < 0.05) {
+    prisma.redeemedReceipt.deleteMany({ where: { expiresAt: { lt: new Date() } } }).catch(() => {})
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      // Single-use: claim the receipt's jti. The unique PK makes a replay of
+      // the same receipt collide here (P2002), which we surface as a 409. This
+      // is what closes the loop: a creator reading their own receipt out of the
+      // form can submit it exactly once.
+      await tx.redeemedReceipt.create({
+        data: { jti, expiresAt: new Date(Date.now() + RECEIPT_TTL_SECONDS * 1000) },
+      })
+
+      // De-duplicate on campaignSlug, not free-text campaignName — varying the
+      // name by a character used to defeat this entirely. Only a stable slug
+      // identifies the same campaign. Falls back to name when the portal sends
+      // no slug (older payloads).
+      const dupWhere = slug
+        ? { creatorId, campaignSlug: slug, appliedAt: { gt: new Date(Date.now() - 60 * 60 * 1000) } }
+        : { creatorId, campaignName: name, appliedAt: { gt: new Date(Date.now() - 60 * 60 * 1000) } }
+      const recentDuplicate = await tx.campaignApplication.findFirst({ where: dupWhere, select: { id: true } })
+
+      if (!recentDuplicate) {
+        await tx.campaignApplication.create({
+          data: { creatorId, campaignName: name, campaignSlug: slug },
+        })
+      }
     })
+  } catch (err) {
+    // A replayed receipt (jti already redeemed) is a unique-constraint
+    // violation. Reject it — the original submission was already logged, so
+    // nothing is lost, and no new row is written.
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+      return NextResponse.json({ error: 'This application has already been recorded' }, { status: 409, headers: corsHeaders() })
+    }
+    throw err
   }
 
   return NextResponse.json({ ok: true }, { headers: corsHeaders() })

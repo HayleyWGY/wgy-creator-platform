@@ -26,6 +26,16 @@ import crypto from 'crypto'
 
 const TTL_SECONDS = 5 * 60
 
+// Every token carries a positive `typ`. BOTH verifiers require their own type
+// rather than relying on the ABSENCE of a field — otherwise a token of one
+// kind (which merely lacks the other's marker) sails through. That was the
+// bug: verifyHandoffToken had no typ check, so a receipt (3h TTL, sitting
+// readable in the portal form) could be replayed as a handoff token to
+// re-fetch a member's full name/email/address and mint a fresh receipt,
+// indefinitely.
+const TYP_HANDOFF = 'hoff'
+const TYP_RECEIPT = 'rcpt'
+
 function b64url(buf: Buffer): string {
   return buf.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
@@ -44,7 +54,7 @@ export function mintHandoffToken(creatorId: string): string | null {
   const secret = process.env.APPLY_HANDOFF_SECRET
   if (!secret) return null
 
-  const payload = b64url(Buffer.from(JSON.stringify({ cid: creatorId, exp: Math.floor(Date.now() / 1000) + TTL_SECONDS })))
+  const payload = b64url(Buffer.from(JSON.stringify({ cid: creatorId, typ: TYP_HANDOFF, exp: Math.floor(Date.now() / 1000) + TTL_SECONDS })))
   return `${payload}.${sign(payload, secret)}`
 }
 
@@ -64,32 +74,60 @@ export function verifyHandoffToken(token: string | null | undefined): string | n
   const b = fromB64url(expected)
   if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null
 
-  let data: { cid?: string; exp?: number }
+  let data: { cid?: string; typ?: string; exp?: number }
   try {
     data = JSON.parse(fromB64url(payload).toString('utf8'))
   } catch {
     return null
   }
-  if (!data.cid || !data.exp || data.exp < Math.floor(Date.now() / 1000)) return null
+  // Require typ === 'hoff' POSITIVELY. A receipt (typ 'rcpt') therefore cannot
+  // be swapped in here even though its signature is valid and it has a cid and
+  // an unexpired exp.
+  if (data.typ !== TYP_HANDOFF || !data.cid || !data.exp || data.exp < Math.floor(Date.now() / 1000)) return null
   return data.cid
 }
 
 // ── Application receipt token ─────────────────────────────────────────────
 // Returned in the prefill response and carried invisibly through the portal
 // form. On submit, the portal sends it to /api/record-application so the app
-// can log which campaign the creator applied to. Longer-lived (3h) than the
-// handoff token because filling in a form takes time, and marked with a
-// distinct type so it can't be swapped for a handoff token.
-const RECEIPT_TTL_SECONDS = 3 * 60 * 60
+// can log which campaign the creator applied to.
+//
+// TTL is 15 minutes: the receipt only has to survive one form submission, so
+// there is no reason to leave a 3-hour replay window open (it was 3h). Paired
+// with single-use redemption (record-application records the jti and rejects
+// re-use), the effective replay window after submit is zero.
+//
+// Each receipt carries a random `jti` so two receipts minted for the same
+// creator in the same second are still distinct — the jti is what
+// record-application stores to enforce single use.
+export const RECEIPT_TTL_SECONDS = 15 * 60
+
+export interface ReceiptClaims {
+  creatorId: string
+  /** Unique token id — the key record-application stores for single-use. */
+  jti: string
+}
 
 export function mintApplicationReceipt(creatorId: string): string | null {
   const secret = process.env.APPLY_HANDOFF_SECRET
   if (!secret) return null
-  const payload = b64url(Buffer.from(JSON.stringify({ cid: creatorId, typ: 'rcpt', exp: Math.floor(Date.now() / 1000) + RECEIPT_TTL_SECONDS })))
+  const jti = b64url(crypto.randomBytes(16))
+  const payload = b64url(Buffer.from(JSON.stringify({
+    cid: creatorId,
+    typ: TYP_RECEIPT,
+    jti,
+    exp: Math.floor(Date.now() / 1000) + RECEIPT_TTL_SECONDS,
+  })))
   return `${payload}.${sign(payload, secret)}`
 }
 
-export function verifyApplicationReceipt(token: string | null | undefined): string | null {
+/**
+ * Verify a receipt. Returns its claims (creator id + jti) or null.
+ *
+ * Requires typ === 'rcpt' POSITIVELY, mirroring verifyHandoffToken — a handoff
+ * token can never be redeemed as a receipt, and vice versa.
+ */
+export function verifyApplicationReceipt(token: string | null | undefined): ReceiptClaims | null {
   const secret = process.env.APPLY_HANDOFF_SECRET
   if (!secret || !token) return null
 
@@ -100,12 +138,14 @@ export function verifyApplicationReceipt(token: string | null | undefined): stri
   const b = fromB64url(sign(payload, secret))
   if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null
 
-  let data: { cid?: string; typ?: string; exp?: number }
+  let data: { cid?: string; typ?: string; jti?: string; exp?: number }
   try {
     data = JSON.parse(fromB64url(payload).toString('utf8'))
   } catch {
     return null
   }
-  if (data.typ !== 'rcpt' || !data.cid || !data.exp || data.exp < Math.floor(Date.now() / 1000)) return null
-  return data.cid
+  if (data.typ !== TYP_RECEIPT || !data.cid || !data.jti || !data.exp || data.exp < Math.floor(Date.now() / 1000)) {
+    return null
+  }
+  return { creatorId: data.cid, jti: data.jti }
 }

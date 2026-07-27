@@ -49,18 +49,30 @@ describe('apply-handoff tokens (secure app→portal prefill)', () => {
     expect(verifyApplicationReceipt(handoff)).toBeNull()
   })
 
-  it('mints and verifies an application receipt', () => {
+  it('mints and verifies an application receipt (returns creator id + jti)', () => {
     const receipt = mintApplicationReceipt('creator-123')
     expect(receipt).not.toBeNull()
-    expect(verifyApplicationReceipt(receipt)).toBe('creator-123')
+    const claims = verifyApplicationReceipt(receipt)
+    expect(claims?.creatorId).toBe('creator-123')
+    expect(claims?.jti).toBeTruthy()
   })
 
-  it('does not accept a receipt as a handoff token (both directions guarded)', () => {
+  it('mints a distinct jti per receipt (single-use keys never collide)', () => {
+    const a = verifyApplicationReceipt(mintApplicationReceipt('creator-123'))
+    const b = verifyApplicationReceipt(mintApplicationReceipt('creator-123'))
+    expect(a?.jti).not.toBe(b?.jti)
+  })
+
+  it('does not accept a receipt as a handoff token (BOTH directions guarded)', () => {
+    // THE REAL GUARD. This is what the previous test only CLAIMED to check —
+    // its assertion actually called verifyApplicationReceipt again. Against the
+    // pre-fix code (verifyHandoffToken had no typ check) this line returns
+    // 'creator-123' and the test fails, which is the point.
     const receipt = mintApplicationReceipt('creator-123')!
-    // verifyHandoffToken has no typ check, but a receipt still verifies its
-    // signature — this documents that receipts carry the typ marker so the
-    // receipt path stays distinct. The critical guard is the receipt verifier
-    // rejecting handoff tokens, covered above.
-    expect(verifyApplicationReceipt(receipt)).toBe('creator-123')
+    expect(verifyHandoffToken(receipt)).toBeNull()
+
+    // And the reverse, so neither verifier relies on the absence of a field.
+    const handoff = mintHandoffToken('creator-123')!
+    expect(verifyApplicationReceipt(handoff)).toBeNull()
   })
 })

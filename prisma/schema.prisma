@@ -428,6 +428,21 @@ model CampaignApplication {
   @@index([creatorId, appliedAt])
 }
 
+/// Single-use enforcement for application receipts (see lib/apply-handoff.ts).
+/// record-application inserts the receipt's jti here as it redeems it; the
+/// unique primary key makes a replay of the same receipt a constraint
+/// violation, which the route turns into a rejection. Durable rather than
+/// Redis-backed on purpose: single-use is a security control and must not
+/// fail open during a cache outage. Rows past expiresAt are dead (the receipt
+/// itself has expired) and are purged opportunistically.
+model RedeemedReceipt {
+  jti        String   @id
+  expiresAt  DateTime
+  redeemedAt DateTime @default(now())
+
+  @@index([expiresAt])
+}
+
 /// Single-use, expiring tokens for account actions that must work without an
 /// existing password: admin invite setup and (later) password reset.
 ///
