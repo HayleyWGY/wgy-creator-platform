@@ -2,6 +2,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { Send, Pin, MailPlus } from 'lucide-react'
 import { useRealtimePing } from '@/lib/use-realtime-ping'
+import { CHAT_POLL_INTERVAL_MS } from '@/lib/use-chat-poll'
 
 interface DmThread {
   id: string
@@ -53,15 +54,15 @@ export default function AdminInboxPage() {
     }
   }, [activeThread?.id])
 
-  // Realtime pings drive updates; the intervals below are slow safety
-  // nets for blocked/dropped websockets.
+  // Polling (the intervals below) is the primary freshness mechanism; the
+  // Realtime pings are an accelerant when the websocket layer is delivering.
   useRealtimePing('admin-inbox', loadThreads)
   useRealtimePing(activeThread?.id ? `dm:${activeThread.id}` : null, loadMessages)
 
   // Load threads on mount, slow fallback poll
   useEffect(() => {
     loadThreads()
-    const interval = setInterval(loadThreads, 30000)
+    const interval = setInterval(loadThreads, CHAT_POLL_INTERVAL_MS)
     return () => clearInterval(interval)
   }, [loadThreads])
 
@@ -69,7 +70,7 @@ export default function AdminInboxPage() {
   useEffect(() => {
     if (!activeThread?.id) return
     loadMessages()
-    const interval = setInterval(loadMessages, 30000)
+    const interval = setInterval(loadMessages, CHAT_POLL_INTERVAL_MS)
     return () => clearInterval(interval)
   }, [activeThread?.id, loadMessages])
 

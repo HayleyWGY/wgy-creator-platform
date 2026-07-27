@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { ArrowLeft, Send, Trash2 } from 'lucide-react'
-import { useChatPoll } from '@/lib/use-chat-poll'
+import { useChatPoll, CHAT_POLL_INTERVAL_MS } from '@/lib/use-chat-poll'
 import { useRealtimePing } from '@/lib/use-realtime-ping'
 import { messagesChanged } from '@/lib/chat-pagination'
 import { COMMUNITY_ROOMS } from '@/lib/constants'
@@ -98,7 +98,7 @@ export default function ChatRoomPage({ params }: { params: { roomId: string } })
       setMessages(prev => (messagesChanged(prev, data.messages) ? data.messages : prev))
       setPinnedMessage(data.pinnedMessage || null)
     },
-    30000,
+    CHAT_POLL_INTERVAL_MS,
     true,
   )
 

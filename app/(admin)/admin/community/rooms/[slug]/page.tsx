@@ -3,6 +3,7 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Send, Trash2, Pin } from 'lucide-react'
 import { useRealtimePing } from '@/lib/use-realtime-ping'
+import { CHAT_POLL_INTERVAL_MS } from '@/lib/use-chat-poll'
 
 interface Author {
   id: string
@@ -62,11 +63,12 @@ export default function AdminRoomPage({ params }: { params: { slug: string } }) 
     } catch {}
   }, [params.slug])
 
-  // Realtime pings drive updates; the interval is a slow safety net.
+  // Polling (the interval below) is the primary freshness mechanism; the
+  // Realtime ping is an accelerant when the websocket layer is delivering.
   useRealtimePing(`room:${params.slug}`, loadMessages)
   useEffect(() => {
     loadMessages()
-    const id = setInterval(loadMessages, 30000)
+    const id = setInterval(loadMessages, CHAT_POLL_INTERVAL_MS)
     return () => clearInterval(id)
   }, [loadMessages])
 

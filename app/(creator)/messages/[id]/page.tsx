@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { ArrowLeft, Send, ImageIcon, Trash2 } from 'lucide-react'
-import { useChatPoll } from '@/lib/use-chat-poll'
+import { useChatPoll, CHAT_POLL_INTERVAL_MS } from '@/lib/use-chat-poll'
 import { useRealtimePing } from '@/lib/use-realtime-ping'
 import { messagesChanged } from '@/lib/chat-pagination'
 import { ChatBubble } from '@/components/ui/chat-bubble'
@@ -112,7 +112,7 @@ export default function DMPage() {
       setThread(data.thread)
       setMessages(prev => (messagesChanged(prev, data.thread.messages) ? data.thread.messages : prev))
     },
-    30000,
+    CHAT_POLL_INTERVAL_MS,
     true,
   )
 
