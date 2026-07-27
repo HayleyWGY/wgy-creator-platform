@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Camera } from "lucide-react";
 import { WgyButton } from "@/components/ui/wgy-button";
@@ -8,6 +9,8 @@ import { WgyButton } from "@/components/ui/wgy-button";
 const MAX_BIO = 160;
 
 export default function ProfileSetupPage() {
+  const router = useRouter();
+
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [bio, setBio] = useState("");
@@ -15,25 +18,111 @@ export default function ProfileSetupPage() {
   const [tiktok, setTiktok] = useState("");
   const [youtube, setYoutube] = useState("");
   const [errors, setErrors] = useState({ firstName: false, lastName: false });
+
+  // Local object-URL for instant preview; the saved server URL is separate.
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+  // This page needs a session — every save hits an authenticated endpoint.
+  // Prefill from the existing account so a member isn't retyping the name
+  // they were created with; bounce to sign-in if there's no session.
+  useEffect(() => {
+    let active = true;
+    fetch("/api/profile")
+      .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+      .then((data) => {
+        if (!active || !data.creator) return;
+        const c = data.creator;
+        setFirstName(c.firstName ?? "");
+        setLastName(c.lastName ?? "");
+        setBio(c.bio ?? "");
+        setInstagram(c.instagramHandle ?? "");
+        setTiktok(c.tiktokHandle ?? "");
+        setYoutube(c.youtubeUrl ?? "");
+        setAvatarUrl(c.profileImageUrl ?? null);
+        setAvatarPreview(c.profileImageUrl ?? null);
+      })
+      .catch(() => {
+        if (active) router.replace("/sign-in");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [router]);
+
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setAvatarPreview(url);
+    if (!file) return;
+
+    // Show the local preview immediately, then upload for real. The old code
+    // only ever did this preview and never uploaded, so the photo was lost.
+    setAvatarPreview(URL.createObjectURL(file));
+    setUploading(true);
+    setError(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/profile/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        setAvatarUrl(data.url);
+      } else {
+        setError(data.error || "Photo upload failed. Please try again.");
+        setAvatarPreview(avatarUrl); // revert to whatever was saved before
+      }
+    } catch {
+      setError("Photo upload failed. Please check your connection.");
+      setAvatarPreview(avatarUrl);
+    } finally {
+      setUploading(false);
     }
   }
 
-  function handleContinue() {
+  async function handleContinue() {
     const newErrors = {
       firstName: !firstName.trim(),
       lastName: !lastName.trim(),
     };
     setErrors(newErrors);
     if (newErrors.firstName || newErrors.lastName) return;
-    // TODO Phase 2: Save to database, navigate to address setup (step 2)
+    if (saving || uploading) return;
+
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          bio: bio.trim() || null,
+          instagramHandle: instagram.trim() || null,
+          tiktokHandle: tiktok.trim() || null,
+          youtubeUrl: youtube.trim() || null,
+          profileImageUrl: avatarUrl,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || "Couldn't save your profile. Please try again.");
+        return;
+      }
+      router.push("/home");
+    } catch {
+      setError("Couldn't save your profile. Please check your connection.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   const inputStyle = (hasError: boolean): React.CSSProperties => ({
@@ -52,17 +141,28 @@ export default function ProfileSetupPage() {
 
   const labelStyle: React.CSSProperties = { fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em", color: "var(--accent)" };
 
+  // Hold the render until the session/prefill check resolves, so an
+  // unauthenticated visitor is redirected rather than shown a blank form.
+  if (loading) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: "var(--bg)", maxWidth: "390px", margin: "0 auto" }}
+      >
+        <span className="wgy-logo" role="img" aria-label="WGY" style={{ height: "40px", width: "96px", display: "block", opacity: 0.5 }} />
+      </div>
+    );
+  }
+
   return (
     <div
       className="min-h-screen flex flex-col"
       style={{ background: "var(--bg)", maxWidth: "390px", margin: "0 auto" }}
     >
-      {/* Progress dots */}
-      <div className="flex items-center justify-center gap-2 pt-5">
-        <span className="rounded-full" style={{ width: "8px", height: "8px", background: "var(--accent)" }} />
-        <span className="rounded-full" style={{ width: "8px", height: "8px", background: "var(--surface-2)" }} />
-        <span className="rounded-full" style={{ width: "8px", height: "8px", background: "var(--surface-2)" }} />
-      </div>
+      {/* Single-step onboarding — the multi-dot progress indicator was
+          removed because the "step 2 / step 3" pages it promised were never
+          built. Continue and Skip both land on /home. */}
+      <div className="pt-5" />
 
       {/* Logo (theme-aware via CSS mask) */}
       <div className="flex justify-center" style={{ marginTop: "16px" }}>
@@ -248,15 +348,29 @@ export default function ProfileSetupPage() {
           />
         </div>
 
+        {error && (
+          <p className="font-montserrat" style={{ fontSize: "12px", fontWeight: 500, color: "var(--error)", textAlign: "center" }}>
+            {error}
+          </p>
+        )}
+
         {/* Continue */}
-        <WgyButton variant="primary" fullWidth onClick={handleContinue} style={{ marginTop: "8px" }}>
-          Continue
+        <WgyButton
+          variant="primary"
+          fullWidth
+          onClick={handleContinue}
+          disabled={saving || uploading}
+          style={{ marginTop: "8px", opacity: saving || uploading ? 0.6 : 1 }}
+        >
+          {saving ? "Saving…" : uploading ? "Uploading photo…" : "Continue"}
         </WgyButton>
 
-        {/* Skip */}
-        {/* TODO Phase 2: Navigate to /home */}
+        {/* Skip — profile fields are all optional except name (prefilled from
+            the account), so skipping straight to the app is fine. */}
         <button
           type="button"
+          onClick={() => router.push("/home")}
+          disabled={saving || uploading}
           className="w-full text-center font-montserrat font-normal"
           style={{ fontSize: "12px", color: "var(--text-muted)" }}
         >
