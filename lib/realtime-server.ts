@@ -7,13 +7,22 @@
  *
  * Deliberately NO message content goes over Realtime: clients subscribe
  * with the public anon key, so broadcasts must never carry anything
- * sensitive. A ping only reveals "activity happened on this topic", and
- * topics use unguessable cuids.
+ * sensitive. A ping only reveals "activity happened on this topic" — never
+ * who, or what was said.
  *
- * Topics:
- *   room:{slug}     — community chat room activity
- *   dm:{threadId}   — a DM thread's activity
- *   admin-inbox     — any DM activity (drives the admin inbox list)
+ * Topic guessability is NOT the security boundary — Supabase Realtime config
+ * is (only the service role may broadcast; only authenticated users may
+ * subscribe). That matters because the topics are NOT all unguessable:
+ *   room:{slug}     — community chat room. slug is a PUBLIC constant
+ *                     (lib/constants.ts), so this topic is fully guessable.
+ *   dm:{threadId}   — a DM thread. threadId is a cuid, so hard to guess, but
+ *                     not relied upon as a secret.
+ *   admin-inbox     — any DM activity (drives the admin inbox). A fixed,
+ *                     fully-guessable literal.
+ * Knowing a topic only lets an authorised subscriber learn that activity
+ * happened; the content still comes through the NextAuth-gated API. The
+ * client also throttles pings, so a flood on a known topic cannot amplify
+ * into a refetch storm (see makePingThrottle in use-realtime-ping.ts).
  *
  * Fire-and-forget: a Realtime outage must never fail a send, so errors are
  * swallowed after a console.warn. Clients fall back to slow polling anyway.
