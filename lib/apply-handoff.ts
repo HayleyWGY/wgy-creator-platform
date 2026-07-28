@@ -87,6 +87,29 @@ export function verifyHandoffToken(token: string | null | undefined): string | n
   return data.cid
 }
 
+/**
+ * True only if `candidate` has the SAME ORIGIN as `base` (scheme + host +
+ * port), comparing PARSED origins — never string prefixes.
+ *
+ * `startsWith(base)` was the bug: with base https://portal.wegotyouagency.com,
+ * https://portal.wegotyouagency.com.attacker.example/apply passes a prefix
+ * test, so the handoff route would append a member's token to a lookalike
+ * host that then redeems it for their PII. Origin comparison rejects that, a
+ * different subdomain, and a different scheme/port; a malformed URL throws and
+ * is treated as not-matching. The path and query are intentionally ignored —
+ * the portal has many apply paths on the one origin.
+ */
+export function isSameOrigin(candidate: string, base: string): boolean {
+  let a: URL, b: URL
+  try {
+    a = new URL(candidate)
+    b = new URL(base)
+  } catch {
+    return false
+  }
+  return a.origin === b.origin
+}
+
 // ── Application receipt token ─────────────────────────────────────────────
 // Returned in the prefill response and carried invisibly through the portal
 // form. On submit, the portal sends it to /api/record-application so the app

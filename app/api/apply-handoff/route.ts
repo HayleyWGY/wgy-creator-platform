@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getActiveSession } from '@/lib/session'
-import { mintHandoffToken } from '@/lib/apply-handoff'
+import { mintHandoffToken, isSameOrigin } from '@/lib/apply-handoff'
 
 // Called by the logged-in creator's browser when they tap Apply on a
 // campaign whose apply link points at the portal. Mints a short-lived
@@ -23,8 +23,10 @@ export async function POST(req: NextRequest) {
   const { applyLinkUrl } = await req.json().catch(() => ({ applyLinkUrl: '' }))
 
   // Only ever hand off to our own portal — never append a token to an
-  // arbitrary external link.
-  if (typeof applyLinkUrl !== 'string' || !applyLinkUrl.startsWith(portalUrl)) {
+  // arbitrary external link. Compare PARSED ORIGINS, not string prefixes: a
+  // prefix test let a lookalike host (portal.wegotyouagency.com.attacker.tld)
+  // through and leaked the member's token to it.
+  if (typeof applyLinkUrl !== 'string' || !isSameOrigin(applyLinkUrl, portalUrl)) {
     return NextResponse.json({ enabled: false })
   }
 

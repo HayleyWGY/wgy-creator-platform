@@ -4,6 +4,7 @@ import {
   verifyHandoffToken,
   mintApplicationReceipt,
   verifyApplicationReceipt,
+  isSameOrigin,
 } from '@/lib/apply-handoff'
 
 beforeAll(() => {
@@ -74,5 +75,41 @@ describe('apply-handoff tokens (secure app→portal prefill)', () => {
     // And the reverse, so neither verifier relies on the absence of a field.
     const handoff = mintHandoffToken('creator-123')!
     expect(verifyApplicationReceipt(handoff)).toBeNull()
+  })
+})
+
+describe('isSameOrigin — handoff origin check (no string prefixes)', () => {
+  const PORTAL = 'https://portal.wegotyouagency.com'
+
+  it('accepts the exact portal origin, any path/query', () => {
+    expect(isSameOrigin(PORTAL, PORTAL)).toBe(true)
+    // path-only difference: same origin, different path → allowed (the portal
+    // has many apply paths; origin is what matters, not the full string).
+    expect(isSameOrigin(`${PORTAL}/apply/summer-drop?ref=x`, PORTAL)).toBe(true)
+  })
+
+  it('REJECTS a lookalike domain that only shares a prefix', () => {
+    // The exploit: passes startsWith(PORTAL), different origin.
+    expect(isSameOrigin('https://portal.wegotyouagency.com.attacker.example/apply', PORTAL)).toBe(false)
+  })
+
+  it('REJECTS a different subdomain of our own domain', () => {
+    expect(isSameOrigin('https://evil.wegotyouagency.com/apply', PORTAL)).toBe(false)
+    expect(isSameOrigin('https://portal.evil.wegotyouagency.com/apply', PORTAL)).toBe(false)
+  })
+
+  it('REJECTS a scheme or port mismatch on the right host', () => {
+    expect(isSameOrigin('http://portal.wegotyouagency.com/apply', PORTAL)).toBe(false)
+    expect(isSameOrigin('https://portal.wegotyouagency.com:8443/apply', PORTAL)).toBe(false)
+  })
+
+  it('REJECTS a malformed URL without throwing', () => {
+    for (const bad of ['not a url', 'javascript:alert(1)//portal.wegotyouagency.com', '', 'portal.wegotyouagency.com/apply']) {
+      expect(isSameOrigin(bad, PORTAL)).toBe(false)
+    }
+  })
+
+  it('treats a malformed BASE as non-matching too (no throw)', () => {
+    expect(isSameOrigin(PORTAL, 'not-a-portal-url')).toBe(false)
   })
 })
