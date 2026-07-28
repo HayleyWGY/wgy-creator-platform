@@ -8,6 +8,7 @@ import { encryptField, decryptField } from '@/lib/field-crypto'
 import { createAccountToken, setupLinkUrl } from '@/lib/account-token'
 import { requireReauth, REAUTH_REQUIRED_FIELDS } from '@/lib/admin-reauth'
 import { notifyEmailChanged } from '@/lib/transactional-email'
+import { parseJson, adminCreatorPatchSchema } from '@/lib/validation'
 
 // dob is the decrypted "YYYY-MM-DD" string
 function calcAge(dobStr: string | null): number | null {
@@ -88,16 +89,6 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   })
 }
 
-const ADMIN_PATCHABLE = new Set([
-  'email',
-  'firstName', 'lastName', 'bio',
-  'instagramHandle', 'tiktokHandle', 'youtubeUrl',
-  'membershipStatus', 'membershipType',
-  'dateOfBirth', 'address', 'contactNumber', 'gender',
-  'addressLine1', 'addressLine2', 'city', 'postcode', 'country',
-  'contentNiches',
-])
-
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   const session = await getActiveSession()
   if (!session?.user?.id || !session.user.isAdmin) {
@@ -143,8 +134,8 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     // so the one control that should have caught it described it as routine.
     //
     // Three markers, all written by the DELETE handler in
-    // app/api/profile/route.ts. Two of them (email, membershipStatus) are in
-    // ADMIN_PATCHABLE, so an admin could set them by hand and forge a
+    // app/api/profile/route.ts. Two of them (email, membershipStatus) are
+    // admin-patchable, so an admin could set them by hand and forge a
     // deleted-looking account — checking only those would leave a two-step
     // version of the same attack. passwordHash is NOT admin-patchable, so the
     // 'DELETED' sentinel is the marker that cannot be forged through this
@@ -247,15 +238,14 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   }
 
   // ── Standard field updates ──────────────────────────────────────────
-  const data: Record<string, unknown> = {}
-  for (const key of Object.keys(body)) {
-    if (ADMIN_PATCHABLE.has(key)) data[key] = body[key]
-  }
-
-  if (typeof data.email === 'string') {
-    data.email = data.email.trim().toLowerCase()
-    if (!data.email) return NextResponse.json({ error: 'Email cannot be empty' }, { status: 400 })
-  }
+  // Validate against the shared schema (same field rules a member gets).
+  // Unknown keys — including currentPassword — are stripped, so only real,
+  // type/length-checked fields reach the update.
+  const stdParsed = parseJson(adminCreatorPatchSchema, body)
+  if (!stdParsed.ok) return stdParsed.response
+  const data: Record<string, unknown> = Object.fromEntries(
+    Object.entries(stdParsed.data).filter(([, v]) => v !== undefined),
+  )
 
   // Re-authenticate before changing email or membershipStatus.
   //
@@ -293,12 +283,9 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
   // Encrypt the sensitive PII fields before they touch the database.
   // DOB is normalised to "YYYY-MM-DD" first so age maths stays reliable.
+  // The schema already rejected an unparseable date, so this can't fail.
   if (typeof data.dateOfBirth === 'string' && data.dateOfBirth) {
-    const parsed = new Date(data.dateOfBirth)
-    if (isNaN(parsed.getTime())) {
-      return NextResponse.json({ error: 'Invalid date of birth' }, { status: 400 })
-    }
-    data.dateOfBirth = parsed.toISOString().slice(0, 10)
+    data.dateOfBirth = new Date(data.dateOfBirth).toISOString().slice(0, 10)
   }
   for (const key of ['dateOfBirth', 'address', 'contactNumber', 'gender'] as const) {
     if (key in data) {

@@ -3,6 +3,7 @@ import { getActiveSession } from "@/lib/session"
 import { rateLimit } from '@/lib/rate-limit'
 import { prisma } from '@/lib/prisma'
 import { pingRealtime } from '@/lib/realtime-server'
+import { parseJson, chatMessageSchema } from '@/lib/validation'
 import {
   parseMessagePageParams,
   messagePageQuery,
@@ -54,32 +55,38 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Too many requests — please slow down' }, { status: 429 })
   }
 
-  const { body, imageUrl } = await req.json()
-  if (!body?.trim() && !imageUrl) {
-    return NextResponse.json({ error: 'Message body required' }, { status: 400 })
+  const raw = await req.json().catch(() => null)
+  const parsed = parseJson(chatMessageSchema, raw)
+  if (!parsed.ok) return parsed.response
+  const body = parsed.data.body ?? ''
+  const imageUrl = parsed.data.imageUrl ?? null
+
+  try {
+    let thread = await prisma.dmThread.findUnique({ where: { creatorId: session.user.id } })
+    if (!thread) {
+      thread = await prisma.dmThread.create({ data: { creatorId: session.user.id } })
+    }
+
+    const message = await prisma.dmMessage.create({
+      data: {
+        threadId: thread.id,
+        senderId: session.user.id,
+        body: body.trim(),
+        imageUrl,
+      },
+      include: {
+        sender: { select: { id: true, firstName: true, lastName: true, profileImageUrl: true, isAdmin: true } },
+      },
+    })
+
+    await prisma.dmThread.update({ where: { id: thread.id }, data: { updatedAt: new Date() } })
+
+    // Wake the admin inbox and this thread's open views
+    pingRealtime([`dm:${thread.id}`, 'admin-inbox']).catch(() => {})
+
+    return NextResponse.json({ message }, { status: 201 })
+  } catch (err) {
+    console.error('[POST /api/chat/dm]', err)
+    return NextResponse.json({ error: 'Failed to send message' }, { status: 500 })
   }
-
-  let thread = await prisma.dmThread.findUnique({ where: { creatorId: session.user.id } })
-  if (!thread) {
-    thread = await prisma.dmThread.create({ data: { creatorId: session.user.id } })
-  }
-
-  const message = await prisma.dmMessage.create({
-    data: {
-      threadId: thread.id,
-      senderId: session.user.id,
-      body: body?.trim() || '',
-      imageUrl: imageUrl || null,
-    },
-    include: {
-      sender: { select: { id: true, firstName: true, lastName: true, profileImageUrl: true, isAdmin: true } },
-    },
-  })
-
-  await prisma.dmThread.update({ where: { id: thread.id }, data: { updatedAt: new Date() } })
-
-  // Wake the admin inbox and this thread's open views
-  pingRealtime([`dm:${thread.id}`, 'admin-inbox']).catch(() => {})
-
-  return NextResponse.json({ message }, { status: 201 })
 }

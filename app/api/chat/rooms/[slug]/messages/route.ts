@@ -3,6 +3,7 @@ import { getActiveSession } from "@/lib/session"
 import { rateLimit } from '@/lib/rate-limit'
 import { prisma } from '@/lib/prisma'
 import { pingRealtime } from '@/lib/realtime-server'
+import { parseJson, chatMessageSchema } from '@/lib/validation'
 import {
   parseMessagePageParams,
   messagePageQuery,
@@ -68,36 +69,42 @@ export async function POST(
     return NextResponse.json({ error: 'Too many requests — please slow down' }, { status: 429 })
   }
 
-  const { body, imageUrl } = await req.json()
-  if (!body?.trim() && !imageUrl) {
-    return NextResponse.json({ error: 'Message body required' }, { status: 400 })
-  }
+  const raw = await req.json().catch(() => null)
+  const parsed = parseJson(chatMessageSchema, raw)
+  if (!parsed.ok) return parsed.response
+  const body = parsed.data.body ?? ''
+  const imageUrl = parsed.data.imageUrl ?? null
 
-  const room = await prisma.chatRoom.findUnique({ where: { slug: params.slug } })
-  if (!room) return NextResponse.json({ error: 'Room not found' }, { status: 404 })
+  try {
+    const room = await prisma.chatRoom.findUnique({ where: { slug: params.slug } })
+    if (!room) return NextResponse.json({ error: 'Room not found' }, { status: 404 })
 
-  // Block @everyone/@all for non-admins
-  if (!session.user.isAdmin) {
-    const lower = (body || '').toLowerCase()
-    if (lower.includes('@everyone') || lower.includes('@all') || lower.includes('@channel')) {
-      return NextResponse.json({ error: 'Not allowed' }, { status: 403 })
+    // Block @everyone/@all for non-admins
+    if (!session.user.isAdmin) {
+      const lower = body.toLowerCase()
+      if (lower.includes('@everyone') || lower.includes('@all') || lower.includes('@channel')) {
+        return NextResponse.json({ error: 'Not allowed' }, { status: 403 })
+      }
     }
+
+    const message = await prisma.chatMessage.create({
+      data: {
+        roomId: room.id,
+        authorId: session.user.id,
+        body: body.trim(),
+        imageUrl,
+      },
+      include: {
+        author: { select: { id: true, firstName: true, lastName: true, profileImageUrl: true, isAdmin: true } },
+      },
+    })
+
+    // Nudge everyone in the room to refetch — content stays behind this API
+    pingRealtime(`room:${params.slug}`).catch(() => {})
+
+    return NextResponse.json({ message }, { status: 201 })
+  } catch (err) {
+    console.error('[POST /api/chat/rooms/[slug]/messages]', err)
+    return NextResponse.json({ error: 'Failed to send message' }, { status: 500 })
   }
-
-  const message = await prisma.chatMessage.create({
-    data: {
-      roomId: room.id,
-      authorId: session.user.id,
-      body: body?.trim() || '',
-      imageUrl: imageUrl || null,
-    },
-    include: {
-      author: { select: { id: true, firstName: true, lastName: true, profileImageUrl: true, isAdmin: true } },
-    },
-  })
-
-  // Nudge everyone in the room to refetch — content stays behind this API
-  pingRealtime(`room:${params.slug}`).catch(() => {})
-
-  return NextResponse.json({ message }, { status: 201 })
 }

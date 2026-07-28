@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
 import { NextResponse } from 'next/server'
 import { rateLimit } from '@/lib/rate-limit'
+import { parseJson, profilePatchSchema } from '@/lib/validation'
 
 const SAFE_SELECT = {
   id: true,
@@ -33,13 +34,6 @@ const SAFE_SELECT = {
   },
 }
 
-const PATCHABLE_FIELDS = new Set([
-  'firstName', 'lastName', 'bio',
-  'instagramHandle', 'tiktokHandle', 'youtubeUrl',
-  'profileImageUrl', 'contentNiches',
-  'addressLine1', 'addressLine2', 'city', 'postcode', 'country',
-])
-
 export async function GET() {
   const session = await getActiveSession()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -60,22 +54,32 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: 'Too many requests — please slow down' }, { status: 429 })
   }
 
-  const body = await req.json()
-  const data: Record<string, unknown> = {}
-  for (const key of Object.keys(body)) {
-    if (PATCHABLE_FIELDS.has(key)) data[key] = body[key]
-  }
+  // Validate types, lengths and formats against the shared schema. Unknown
+  // keys (isAdmin, membershipStatus, …) are stripped, so this also enforces
+  // the field allowlist the manual loop used to — one control, not two.
+  const raw = await req.json().catch(() => null)
+  const parsed = parseJson(profilePatchSchema, raw)
+  if (!parsed.ok) return parsed.response
 
+  // Only the keys the caller actually sent, so a PATCH stays partial.
+  const data = Object.fromEntries(
+    Object.entries(parsed.data).filter(([, v]) => v !== undefined),
+  )
   if (Object.keys(data).length === 0) {
     return NextResponse.json({ error: 'No valid fields' }, { status: 400 })
   }
 
-  const creator = await prisma.creator.update({
-    where: { id: session.user.id },
-    data,
-    select: SAFE_SELECT,
-  })
-  return NextResponse.json({ creator })
+  try {
+    const creator = await prisma.creator.update({
+      where: { id: session.user.id },
+      data,
+      select: SAFE_SELECT,
+    })
+    return NextResponse.json({ creator })
+  } catch (err) {
+    console.error('[PATCH /api/profile]', err)
+    return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 })
+  }
 }
 
 // DELETE — creator deletes their own account.

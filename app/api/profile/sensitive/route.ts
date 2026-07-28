@@ -3,8 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { rateLimit } from '@/lib/rate-limit'
 import { encryptField, decryptField } from '@/lib/field-crypto'
-
-const SENSITIVE_FIELDS = new Set(['dateOfBirth', 'address', 'contactNumber', 'gender'])
+import { parseJson, sensitivePatchSchema } from '@/lib/validation'
 
 export async function GET() {
   const session = await getActiveSession()
@@ -34,28 +33,22 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: 'Too many requests — please slow down' }, { status: 429 })
   }
 
-  const body = await req.json()
-  const data: Record<string, string | null> = {}
-  for (const key of Object.keys(body)) {
-    if (!SENSITIVE_FIELDS.has(key)) continue
-    const value = body[key]
-    if (value !== null && typeof value !== 'string') {
-      return NextResponse.json({ error: `${key} must be a string or null` }, { status: 400 })
-    }
-    data[key] = value
-  }
+  const raw = await req.json().catch(() => null)
+  const parsed = parseJson(sensitivePatchSchema, raw)
+  if (!parsed.ok) return parsed.response
 
+  // Only the keys the caller sent (partial PATCH).
+  const data: Record<string, string | null> = Object.fromEntries(
+    Object.entries(parsed.data).filter(([, v]) => v !== undefined),
+  )
   if (Object.keys(data).length === 0) {
     return NextResponse.json({ error: 'No valid fields' }, { status: 400 })
   }
 
-  // Normalise DOB to YYYY-MM-DD before encrypting so age maths stays sane
-  if (typeof data.dateOfBirth === 'string') {
-    const parsed = new Date(data.dateOfBirth)
-    if (isNaN(parsed.getTime())) {
-      return NextResponse.json({ error: 'Invalid date of birth' }, { status: 400 })
-    }
-    data.dateOfBirth = parsed.toISOString().slice(0, 10)
+  // Normalise DOB to YYYY-MM-DD before encrypting so age maths stays sane.
+  // The schema already rejected an unparseable date, so this can't fail.
+  if (typeof data.dateOfBirth === 'string' && data.dateOfBirth) {
+    data.dateOfBirth = new Date(data.dateOfBirth).toISOString().slice(0, 10)
   }
 
   const encrypted: Record<string, string | null> = {}
@@ -63,17 +56,22 @@ export async function PATCH(req: Request) {
     encrypted[key] = encryptField(value)
   }
 
-  const creator = await prisma.creator.update({
-    where: { id: session.user.id },
-    data: encrypted,
-    select: { dateOfBirth: true, address: true, contactNumber: true, gender: true },
-  })
-  return NextResponse.json({
-    creator: {
-      dateOfBirth: decryptField(creator.dateOfBirth),
-      address: decryptField(creator.address),
-      contactNumber: decryptField(creator.contactNumber),
-      gender: decryptField(creator.gender),
-    },
-  })
+  try {
+    const creator = await prisma.creator.update({
+      where: { id: session.user.id },
+      data: encrypted,
+      select: { dateOfBirth: true, address: true, contactNumber: true, gender: true },
+    })
+    return NextResponse.json({
+      creator: {
+        dateOfBirth: decryptField(creator.dateOfBirth),
+        address: decryptField(creator.address),
+        contactNumber: decryptField(creator.contactNumber),
+        gender: decryptField(creator.gender),
+      },
+    })
+  } catch (err) {
+    console.error('[PATCH /api/profile/sensitive]', err)
+    return NextResponse.json({ error: 'Failed to update details' }, { status: 500 })
+  }
 }
