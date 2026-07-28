@@ -1,3 +1,4 @@
+import { parseJson, campaignWriteSchema } from '@/lib/validation';
 import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
@@ -100,6 +101,10 @@ export async function PATCH(
 
   try {
     const body = await req.json();
+
+    const valid = parseJson(campaignWriteSchema, body);
+    if (!valid.ok) return valid.response;
+
     const {
       status,
       title, brandName, brandDescription, opportunityDescription,

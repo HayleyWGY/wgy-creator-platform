@@ -155,6 +155,60 @@ export const chatMessageSchema = z
     message: 'a message body or image is required',
   })
 
+const optionalHtml = z.string().max(LIMITS.htmlBody).nullable().optional()
+const optionalStringArray = z
+  .array(z.string().trim().max(LIMITS.arrayItemLen))
+  .max(LIMITS.arrayItems)
+  .nullable()
+  .optional()
+
+/**
+ * Campaign and content create/update. Used as a GATE: the routes keep reading
+ * from the raw body (they do their own coercion — parseInt, new Date,
+ * sanitizeRichText), so this only REJECTS bad values of the fields it names.
+ * Unknown fields are ignored (a default Zod object strips them without
+ * erroring), so listing every field isn't required and nothing existing breaks.
+ *
+ * Image fields are upload-only (admin form -> /api/upload -> Supabase), so they
+ * are held to supabaseImageUrl. The external links (brand site/socials, apply
+ * link, PDF on Vercel Blob, Canva template, video embed) are format-checked
+ * only — they are legitimately off-Supabase.
+ */
+export const campaignWriteSchema = z.object({
+  title: z.string().trim().max(LIMITS.title).optional(),
+  brandName: z.string().trim().max(LIMITS.brandName).optional(),
+  brandDescription: optionalText(LIMITS.htmlBody),
+  opportunityDescription: optionalHtml,
+  deliverables: optionalStringArray,
+  brandWebsite: optionalUrl,
+  brandInstagram: optionalText(LIMITS.handle),
+  brandTikTok: optionalText(LIMITS.handle),
+  applyLinkUrl: optionalUrl,
+  coverImageUrl: supabaseImageUrl,
+  brandLogoUrl: supabaseImageUrl,
+  paymentAmount: optionalText(LIMITS.addressPart),
+  paymentTerms: optionalText(LIMITS.addressPart),
+  eventTime: optionalText(LIMITS.addressPart),
+  eventLocation: optionalText(LIMITS.addressPart),
+  spotsRemaining: z.union([z.string(), z.number()]).nullable().optional(),
+})
+
+export const contentWriteSchema = z.object({
+  title: z.string().trim().max(LIMITS.title).optional(),
+  body: optionalHtml,
+  videoTranscript: optionalHtml,
+  contentType: optionalText(50),
+  section: optionalText(50),
+  status: optionalText(30),
+  categories: optionalStringArray,
+  thumbnailUrl: supabaseImageUrl,
+  bannerImageUrl: supabaseImageUrl,
+  pdfUrl: optionalUrl,
+  editableTemplateUrl: optionalUrl,
+  videoEmbedUrl: optionalUrl,
+  sortOrder: z.number().int().nullable().optional(),
+})
+
 // ── Parse helper ──────────────────────────────────────────────────────────
 
 export type ParseResult<T> =

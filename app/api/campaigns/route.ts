@@ -1,3 +1,4 @@
+import { parseJson, campaignWriteSchema } from '@/lib/validation';
 import { NextRequest, NextResponse } from "next/server";
 import { unstable_cache, revalidateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
@@ -178,6 +179,12 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
+
+    // Validate types, lengths and image origins before use. Gate only — the
+    // code below keeps doing its own coercion/sanitisation on `body`.
+    const valid = parseJson(campaignWriteSchema, body);
+    if (!valid.ok) return valid.response;
+
     const {
       title, brandName, brandDescription, opportunityDescription,
       deliverables, brandWebsite, brandInstagram, brandTikTok,

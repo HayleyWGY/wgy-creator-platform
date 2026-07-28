@@ -1,3 +1,4 @@
+import { parseJson, contentWriteSchema } from '@/lib/validation';
 import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { getActiveSession } from "@/lib/session";
@@ -44,6 +45,10 @@ export async function PATCH(
 
   try {
     const body = await req.json();
+
+    const valid = parseJson(contentWriteSchema, body);
+    if (!valid.ok) return valid.response;
+
     const readingTimeMinutes = body.body ? calculateReadingTime(body.body) : undefined;
 
     const data: Record<string, unknown> = {

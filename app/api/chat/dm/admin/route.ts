@@ -3,6 +3,7 @@ import { getActiveSession } from "@/lib/session"
 import { rateLimit } from '@/lib/rate-limit'
 import { prisma } from '@/lib/prisma'
 import { pingRealtime } from '@/lib/realtime-server'
+import { parseJson, chatMessageSchema } from '@/lib/validation'
 
 // GET — list all DM threads (admin only)
 export async function GET() {
@@ -88,31 +89,40 @@ export async function POST(req: Request) {
   }
 
 
-  const { creatorId, body, imageUrl } = await req.json()
+  const raw = await req.json().catch(() => null)
+  const creatorId = raw && typeof raw.creatorId === 'string' ? raw.creatorId : ''
   if (!creatorId) return NextResponse.json({ error: 'creatorId required' }, { status: 400 })
-  if (!body?.trim() && !imageUrl) return NextResponse.json({ error: 'Message body required' }, { status: 400 })
+  const parsed = parseJson(chatMessageSchema, raw)
+  if (!parsed.ok) return parsed.response
+  const body = parsed.data.body ?? ''
+  const imageUrl = parsed.data.imageUrl ?? null
 
-  let thread = await prisma.dmThread.findUnique({ where: { creatorId } })
-  if (!thread) {
-    thread = await prisma.dmThread.create({ data: { creatorId } })
+  try {
+    let thread = await prisma.dmThread.findUnique({ where: { creatorId } })
+    if (!thread) {
+      thread = await prisma.dmThread.create({ data: { creatorId } })
+    }
+
+    const message = await prisma.dmMessage.create({
+      data: {
+        threadId: thread.id,
+        senderId: session.user.id,
+        body: body.trim(),
+        imageUrl,
+      },
+      include: {
+        sender: { select: { id: true, firstName: true, lastName: true, profileImageUrl: true, isAdmin: true } },
+      },
+    })
+
+    await prisma.dmThread.update({ where: { id: thread.id }, data: { updatedAt: new Date() } })
+
+    // Wake the creator's open chat view and the admin inbox list
+    pingRealtime([`dm:${thread.id}`, 'admin-inbox']).catch(() => {})
+
+    return NextResponse.json({ message }, { status: 201 })
+  } catch (err) {
+    console.error('[POST /api/chat/dm/admin]', err)
+    return NextResponse.json({ error: 'Failed to send message' }, { status: 500 })
   }
-
-  const message = await prisma.dmMessage.create({
-    data: {
-      threadId: thread.id,
-      senderId: session.user.id,
-      body: body?.trim() || '',
-      imageUrl: imageUrl || null,
-    },
-    include: {
-      sender: { select: { id: true, firstName: true, lastName: true, profileImageUrl: true, isAdmin: true } },
-    },
-  })
-
-  await prisma.dmThread.update({ where: { id: thread.id }, data: { updatedAt: new Date() } })
-
-  // Wake the creator's open chat view and the admin inbox list
-  pingRealtime([`dm:${thread.id}`, 'admin-inbox']).catch(() => {})
-
-  return NextResponse.json({ message }, { status: 201 })
 }

@@ -7,6 +7,8 @@ import {
   adminCreatorPatchSchema,
   chatMessageSchema,
   supabaseImageUrl,
+  campaignWriteSchema,
+  contentWriteSchema,
 } from '@/lib/validation'
 
 // supabaseImageUrl validates against this at parse time.
@@ -104,5 +106,33 @@ describe('sensitive + admin schemas reuse the same field rules', () => {
 
   it('admin schema still enforces the shared bio cap', () => {
     expect(parseJson(adminCreatorPatchSchema, { bio: 'x'.repeat(LIMITS.bio + 1) }).ok).toBe(false)
+  })
+})
+
+describe('campaign / content write gates', () => {
+  it('reject an oversized title and an off-project image', () => {
+    expect(parseJson(campaignWriteSchema, { title: 'x'.repeat(LIMITS.title + 1) }).ok).toBe(false)
+    expect(parseJson(campaignWriteSchema, { coverImageUrl: 'https://evil.example/x.png' }).ok).toBe(false)
+    expect(parseJson(contentWriteSchema, { thumbnailUrl: 'https://evil.example/x.png' }).ok).toBe(false)
+  })
+
+  it('allow external links (apply/pdf/video/canva) that are valid URLs', () => {
+    expect(parseJson(campaignWriteSchema, { applyLinkUrl: 'https://brand.typeform.com/x', brandWebsite: 'https://brand.com' }).ok).toBe(true)
+    expect(parseJson(contentWriteSchema, {
+      pdfUrl: 'https://abc.public.blob.vercel-storage.com/x.pdf',
+      videoEmbedUrl: 'https://youtube.com/embed/x',
+      thumbnailUrl: 'https://proj.supabase.co/storage/v1/object/public/wgy/x.png',
+    }).ok).toBe(true)
+  })
+
+  it('reject type confusion on array fields (deliverables / categories)', () => {
+    expect(parseJson(campaignWriteSchema, { deliverables: 'not-an-array' }).ok).toBe(false)
+    expect(parseJson(contentWriteSchema, { categories: 'not-an-array' }).ok).toBe(false)
+  })
+
+  it('ignore unknown fields (gate lets the route keep its own data flow)', () => {
+    // sectionSlug/campaignType/scheduledAt etc. aren't in the schema; they must
+    // pass validation (stripped from parsed.data, still present on body).
+    expect(parseJson(campaignWriteSchema, { sectionSlug: 'events', campaignType: 'paid', title: 'Ok' }).ok).toBe(true)
   })
 })
