@@ -60,12 +60,43 @@ export async function POST(
       return NextResponse.json({ error: 'Comment cannot be empty' }, { status: 400 })
     }
 
+    // The post must exist. Without this a bogus id reached the create() and
+    // caused an unhandled foreign-key 500; it also gives us the author for the
+    // top-level notification without a second query.
+    const post = await prisma.creatorPost.findUnique({
+      where: { id: params.id },
+      select: { authorId: true, author: { select: { firstName: true } } },
+    })
+    if (!post) return NextResponse.json({ error: 'Post not found' }, { status: 404 })
+
+    // Validate the parent belongs to THIS post (mirrors the campaigns route).
+    // Without it, a parentId pointing into another post's thread was written
+    // verbatim: the reply rendered under a stranger's comment, counts drifted,
+    // and a fabricated notification fired. A non-existent parentId 500'd on the
+    // foreign key.
+    //
+    // Depth cap: a parent must itself be top-level (parentId === null). The
+    // render is only one level deep, so a reply-to-a-reply is written but never
+    // shown — cap it at two levels rather than store invisible rows.
+    let parent: { id: string; authorId: string } | null = null
+    if (parentId) {
+      const found = await prisma.creatorPostComment.findFirst({
+        where: { id: parentId, postId: params.id, isDeleted: false },
+        select: { id: true, authorId: true, parentId: true },
+      })
+      if (!found) return NextResponse.json({ error: 'Parent comment not found' }, { status: 404 })
+      if (found.parentId !== null) {
+        return NextResponse.json({ error: 'You can only reply to a top-level comment' }, { status: 400 })
+      }
+      parent = { id: found.id, authorId: found.authorId }
+    }
+
     const comment = await prisma.creatorPostComment.create({
       data: {
         postId: params.id,
         authorId: session.user.id,
         body: body.trim(),
-        parentId: parentId || null,
+        parentId: parent?.id ?? null,
       },
       include: {
         author: { select: authorSelect },
@@ -78,42 +109,33 @@ export async function POST(
       data: { commentsCount: { increment: 1 } },
     })
 
-    // Notify parent comment author on reply
-    if (parentId) {
-      const parentComment = await prisma.creatorPostComment.findUnique({
-        where: { id: parentId },
-        include: { post: { include: { author: { select: { firstName: true } } } } },
-      })
-      if (parentComment && parentComment.authorId !== session.user.id) {
+    // Notifications are fire-and-forget: a notification failure must not fail
+    // the comment that was already written (the campaigns route already does
+    // this; creator-posts previously let a notify error surface as a 500).
+    if (parent) {
+      // Reply → notify the parent author (never yourself).
+      if (parent.authorId !== session.user.id) {
         await prisma.notification.create({
           data: {
-            creatorId: parentComment.authorId,
+            creatorId: parent.authorId,
             type: 'reply',
             title: 'New reply to your comment',
-            description: `${session.user.firstName} ${session.user.lastName} replied to your comment on ${parentComment.post.author.firstName}'s post`,
+            description: `${session.user.firstName} ${session.user.lastName} replied to your comment on ${post.author.firstName}'s post`,
             referenceId: params.id,
           },
-        })
+        }).catch(err => console.error('[notify creator-post reply]', err))
       }
-    }
-
-    // Notify post author on top-level comment
-    if (!parentId) {
-      const post = await prisma.creatorPost.findUnique({
-        where: { id: params.id },
-        select: { authorId: true },
-      })
-      if (post && post.authorId !== session.user.id) {
-        await prisma.notification.create({
-          data: {
-            creatorId: post.authorId,
-            type: 'comment',
-            title: 'New comment on your post',
-            description: `${session.user.firstName} ${session.user.lastName} commented on your post`,
-            referenceId: params.id,
-          },
-        })
-      }
+    } else if (post.authorId !== session.user.id) {
+      // Top-level → notify the post author.
+      await prisma.notification.create({
+        data: {
+          creatorId: post.authorId,
+          type: 'comment',
+          title: 'New comment on your post',
+          description: `${session.user.firstName} ${session.user.lastName} commented on your post`,
+          referenceId: params.id,
+        },
+      }).catch(err => console.error('[notify creator-post comment]', err))
     }
 
     return NextResponse.json({ comment }, { status: 201 })

@@ -72,14 +72,21 @@ export async function POST(
     const campaign = await resolveCampaign(params.id)
     if (!campaign) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-    // Validate the parent belongs to this campaign, if replying
+    // Validate the parent belongs to this campaign, if replying.
+    // Depth cap: the parent must itself be top-level, so threads never exceed
+    // the one level the GET renders (a reply-to-a-reply would be stored but
+    // never shown). Mirrors the creator-posts route.
     let parent: { id: string; authorId: string } | null = null
     if (parentId) {
-      parent = await prisma.comment.findFirst({
+      const found = await prisma.comment.findFirst({
         where: { id: parentId, postId: campaign.id, isDeleted: false },
-        select: { id: true, authorId: true },
+        select: { id: true, authorId: true, parentId: true },
       })
-      if (!parent) return NextResponse.json({ error: 'Parent comment not found' }, { status: 404 })
+      if (!found) return NextResponse.json({ error: 'Parent comment not found' }, { status: 404 })
+      if (found.parentId !== null) {
+        return NextResponse.json({ error: 'You can only reply to a top-level comment' }, { status: 400 })
+      }
+      parent = { id: found.id, authorId: found.authorId }
     }
 
     const comment = await prisma.comment.create({
