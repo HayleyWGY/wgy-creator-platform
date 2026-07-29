@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   FileText,
   MessageSquare,
+  AlertCircle,
   LucideIcon,
 } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
@@ -86,6 +87,16 @@ export default function DashboardPage() {
   const [activity, setActivity] = useState<ActivityItem[]>([])
   const [unreadDms, setUnreadDms] = useState<number | null>(null)
   const [stats, setStats] = useState<AdminStats | null>(null)
+  const [failedPaymentCount, setFailedPaymentCount] = useState(0)
+
+  // Surface active payment failures so the team sees them immediately. Silent
+  // on error / when Stripe isn't connected yet (count stays 0, card hidden).
+  useEffect(() => {
+    fetch('/api/admin/failed-payments?range=30')
+      .then(r => r.json())
+      .then(data => setFailedPaymentCount(data.summary?.activeFailures || 0))
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     // Fetch DM threads for unread count + recent DM activity
@@ -225,6 +236,34 @@ export default function DashboardPage() {
           </div>
         ))}
       </div>
+
+      {/* Failed payments alert — only shown when there are active failures */}
+      {failedPaymentCount > 0 && (
+        <Link
+          href="/admin/failed-payments"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "14px",
+            marginTop: "16px",
+            background: "rgba(192,57,43,0.1)",
+            border: "1px solid rgba(192,57,43,0.3)",
+            borderRadius: "var(--radius-card)",
+            padding: "16px 20px",
+            textDecoration: "none",
+          }}
+        >
+          <AlertCircle size={20} color="#C0392B" />
+          <div style={{ flex: 1 }}>
+            <p className="font-montserrat font-bold" style={{ fontSize: "13px", color: "#C0392B", margin: 0 }}>
+              {failedPaymentCount} active payment failure{failedPaymentCount !== 1 ? "s" : ""}
+            </p>
+            <p className="font-montserrat font-normal" style={{ fontSize: "11px", color: "var(--text-muted)", margin: "2px 0 0" }}>
+              View failed payments →
+            </p>
+          </div>
+        </Link>
+      )}
 
       {/* Member growth chart */}
       <div

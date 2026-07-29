@@ -31,7 +31,7 @@ model Creator {
   address             String?               @db.Text
   contactNumber       String?
   gender              String?
-  stripeCustomerId    String?
+  stripeCustomerId    String?  @unique
   stripeSubId         String?
   membershipStatus    String                @default("active")
   // Stamped whenever membershipStatus flips to cancelled (kept on

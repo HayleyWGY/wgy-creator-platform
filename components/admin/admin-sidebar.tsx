@@ -21,6 +21,7 @@ import {
   MessageCircle,
   MessageSquare,
   Heart,
+  AlertCircle,
   LucideIcon,
 } from "lucide-react";
 
@@ -30,6 +31,7 @@ const NAV_ITEMS: { label: string; icon: LucideIcon; href: string }[] = [
   { label: "Community",  icon: MessageCircle,   href: "/admin/community"  },
   { label: "Engagement", icon: Heart,           href: "/admin/engagement" },
   { label: "Inbox",      icon: Inbox,           href: "/admin/inbox"      },
+  { label: "Failed Payments", icon: AlertCircle, href: "/admin/failed-payments" },
   { label: "Push Notifications", icon: Bell,      href: "/admin/notifications" },
   { label: "Creators",   icon: Users,           href: "/admin/creators"   },
   { label: "Tags",       icon: Tag,             href: "/admin/tags"       },
