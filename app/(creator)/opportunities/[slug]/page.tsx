@@ -371,7 +371,7 @@ export default function CampaignDetailPage() {
         <>
           <div className="px-5 flex flex-col gap-3">
             <span className="text-section-label">{isEvent ? "About the Event" : "About the Brand"}</span>
-            <p className="font-montserrat leading-[1.7]" style={{ fontSize: "13px", fontWeight: 500, color: "var(--text-muted)" }}>
+            <p className="font-montserrat leading-[1.7]" style={{ fontSize: "13px", fontWeight: 500, color: "var(--text-muted)", whiteSpace: "pre-wrap" }}>
               {campaign.brandDescription}
             </p>
             {brandLinks.length > 0 && (
@@ -405,7 +405,12 @@ export default function CampaignDetailPage() {
             <span className="text-section-label">The Opportunity</span>
             <div
               className="rich-content font-montserrat leading-[1.7]"
-              style={{ fontSize: "13px", fontWeight: 500, color: "var(--text-muted)" }}
+              // pre-wrap preserves the admin's line breaks: this field is
+              // written in a plain textarea (newlines, no markup), but rendered
+              // as HTML where a raw newline would otherwise collapse to a space
+              // and bunch everything into one paragraph. Harmless for the
+              // migrated entries that DO contain <p> markup.
+              style={{ fontSize: "13px", fontWeight: 500, color: "var(--text-muted)", whiteSpace: "pre-wrap" }}
               dangerouslySetInnerHTML={{ __html: campaign.opportunityDescription }}
             />
           </div>
