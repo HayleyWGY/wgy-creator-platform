@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client'
 import { prisma } from './prisma'
 import { pingRealtime } from './realtime-server'
 
@@ -35,7 +36,11 @@ export async function runOnboardingDrip(senderAdminId: string) {
     })
     if (due.length === 0) continue
 
-    // Skip anyone already sent this step
+    // Cheap pre-filter: skip anyone already sent this step. This is an
+    // OPTIMISATION, not the correctness mechanism — the @@unique([creatorId,
+    // templateId]) claim below is what actually prevents a double-send under a
+    // concurrent cron run or retry. Dropping this read would still be correct
+    // (once the constraint is applied), just less efficient in steady state.
     const already = await prisma.onboardingMessageSent.findMany({
       where: { templateId: step.id, creatorId: { in: due.map(d => d.id) } },
       select: { creatorId: true },
@@ -44,7 +49,7 @@ export async function runOnboardingDrip(senderAdminId: string) {
     const recipients = due.filter(d => !sentSet.has(d.id))
     if (recipients.length === 0) continue
 
-    // Ensure a DM thread per recipient
+    // Ensure a DM thread per recipient (idempotent; creatorId is unique).
     const ids = recipients.map(r => r.id)
     const existing = await prisma.dmThread.findMany({
       where: { creatorId: { in: ids } },
@@ -61,29 +66,38 @@ export async function runOnboardingDrip(senderAdminId: string) {
       created.forEach(t => threadByCreator.set(t.creatorId, t.id))
     }
 
-    // Personalise + send + log
-    await prisma.dmMessage.createMany({
-      data: recipients.map(r => ({
-        threadId: threadByCreator.get(r.id)!,
-        senderId: senderAdminId,
-        body: step.body.replace(/\{firstName\}/g, r.firstName || 'there'),
-      })),
-    })
-    await prisma.dmThread.updateMany({
-      where: { id: { in: recipients.map(r => threadByCreator.get(r.id)!) } },
-      data: { updatedAt: new Date() },
-    })
-    await prisma.onboardingMessageSent.createMany({
-      data: recipients.map(r => ({ creatorId: r.id, templateId: step.id })),
-    })
+    // Claim-then-send, atomically per recipient. The OnboardingMessageSent
+    // insert is the claim: if a concurrent run already sent this step, the
+    // unique constraint throws P2002, the whole transaction rolls back, and no
+    // duplicate DM is written. Only the run that wins the claim sends.
+    const pinged: string[] = []
+    for (const r of recipients) {
+      const threadId = threadByCreator.get(r.id)!
+      try {
+        await prisma.$transaction([
+          prisma.onboardingMessageSent.create({ data: { creatorId: r.id, templateId: step.id } }),
+          prisma.dmMessage.create({
+            data: {
+              threadId,
+              senderId: senderAdminId,
+              body: step.body.replace(/\{firstName\}/g, r.firstName || 'there'),
+            },
+          }),
+          prisma.dmThread.update({ where: { id: threadId }, data: { updatedAt: new Date() } }),
+        ])
+        pinged.push(`dm:${threadId}`)
+        totalSent += 1
+      } catch (err) {
+        // Lost the claim race (already sent) — skip, don't double-send.
+        if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') continue
+        throw err
+      }
+    }
 
-    // Wake recipients' open chats and the admin inbox
-    pingRealtime([
-      ...recipients.map(r => `dm:${threadByCreator.get(r.id)!}`),
-      'admin-inbox',
-    ]).catch(() => {})
-
-    totalSent += recipients.length
+    // Wake the recipients' open chats and the admin inbox.
+    if (pinged.length > 0) {
+      pingRealtime([...pinged, 'admin-inbox']).catch(() => {})
+    }
   }
 
   return totalSent

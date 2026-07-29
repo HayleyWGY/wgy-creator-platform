@@ -137,6 +137,10 @@ model Post {
   @@index([status, publishedAt])
   @@index([sectionId])
   @@index([authorId])
+  // campaignType is part of the campaign-filter OR clause. The member feed is
+  // cached, but the ADMIN filter path (adminAll) is uncached and hits this
+  // directly, which is what earns this index.
+  @@index([campaignType])
 }
 
 model Tag {
@@ -311,6 +315,12 @@ model OnboardingMessageSent {
   template        MessageTemplate @relation(fields: [templateId], references: [id])
   sentAt          DateTime        @default(now())
   streamMessageId String?
+
+  // Idempotency for the onboarding drip: one row per (creator, step). The
+  // drip claims this row before sending, so a concurrent cron run or a retry
+  // hits the constraint instead of double-sending. Doubles as the index for
+  // the drip's (creatorId, templateId) lookup, so no separate @@index needed.
+  @@unique([creatorId, templateId])
 }
 
 model ChatRoom {
@@ -354,6 +364,9 @@ model DmThread {
   isPinned  Boolean     @default(false)
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
+
+  // The admin inbox lists threads ordered by updatedAt desc.
+  @@index([updatedAt])
 }
 
 model DmMessage {
