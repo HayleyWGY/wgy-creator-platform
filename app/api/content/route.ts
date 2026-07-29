@@ -112,7 +112,7 @@ export async function POST(req: NextRequest) {
     if (item.status === "published") {
       const notifyTitle = contentNotifyTitle(item.section);
       if (notifyTitle) {
-        notifyAllCreators({
+        await notifyAllCreators({
           type: "content",
           title: notifyTitle,
           description: item.title,

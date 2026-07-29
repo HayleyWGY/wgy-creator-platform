@@ -1,6 +1,6 @@
 import { revalidateTag } from 'next/cache'
 import { prisma } from './prisma'
-import { notifyAllCreators } from './notify'
+import { notifyAllCreatorsMany, type NotifyInput } from './notify'
 
 // Publishes any campaigns/content whose scheduled time has arrived.
 //
@@ -37,18 +37,25 @@ export async function publishDueScheduled(force = false) {
     }),
   ])
 
+  // Flip each due item, collecting a notification only for the ones this run
+  // actually won the race to publish (updateMany count > 0). Fan-out happens
+  // ONCE at the end: if five items go live at 3am, notifying per item would
+  // re-query all ~1,000 creators five times and issue five write bursts;
+  // batching reads the recipients once and inserts every row in shared chunks.
+  const notifications: NotifyInput[] = []
+
   for (const post of duePosts) {
     const res = await prisma.post.updateMany({
       where: { id: post.id, status: 'scheduled' },
       data: { status: 'published', publishedAt: now },
     })
     if (res.count > 0) {
-      await notifyAllCreators({
+      notifications.push({
         type: 'campaign',
         title: 'New opportunity live',
         description: `${post.brandName ?? 'A brand'} — ${post.title}`,
         referenceId: post.slug ?? post.id,
-      }).catch(err => console.error('[scheduled publish notify post]', err))
+      })
     }
   }
 
@@ -61,15 +68,14 @@ export async function publishDueScheduled(force = false) {
       const title = contentNotifyTitle(item.section)
       // About/FAQ pages are evergreen — publish those silently
       if (title) {
-        await notifyAllCreators({
-          type: 'content',
-          title,
-          description: item.title,
-          referenceId: item.id,
-        }).catch(err => console.error('[scheduled publish notify content]', err))
+        notifications.push({ type: 'content', title, description: item.title, referenceId: item.id })
       }
     }
   }
+
+  await notifyAllCreatorsMany(notifications).catch(err =>
+    console.error('[scheduled publish notify]', err),
+  )
 
   // If anything went live, bust the members' cached lists so the newly
   // published items appear immediately rather than after the revalidate.

@@ -89,7 +89,7 @@ export async function PATCH(
     if (firstPublish) {
       const notifyTitle = contentNotifyTitle(item.section);
       if (notifyTitle) {
-        notifyAllCreators({
+        await notifyAllCreators({
           type: "content",
           title: notifyTitle,
           description: item.title,

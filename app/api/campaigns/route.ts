@@ -268,7 +268,7 @@ export async function POST(req: NextRequest) {
 
     // Notify every active creator when a campaign goes live on creation
     if (post.status === "published") {
-      notifyAllCreators({
+      await notifyAllCreators({
         type: "campaign",
         title: "New opportunity live",
         description: `${post.brandName ?? "A brand"} — ${post.title}`,
