@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { getActiveSession } from "@/lib/session"
 import { rateLimit } from '@/lib/rate-limit'
@@ -18,26 +19,49 @@ export async function POST(
       return NextResponse.json({ error: 'Too many requests — please slow down' }, { status: 429 })
     }
 
-    const existing = await prisma.creatorPostLike.findUnique({
-      where: { postId_creatorId: { postId: params.id, creatorId: session.user.id } },
-    })
+    const key = { postId_creatorId: { postId: params.id, creatorId: session.user.id } }
+    const existing = await prisma.creatorPostLike.findUnique({ where: key })
 
-    if (existing) {
-      await prisma.creatorPostLike.delete({ where: { id: existing.id } })
-      await prisma.creatorPost.update({
-        where: { id: params.id },
-        data:  { likesCount: { decrement: 1 } },
-      })
-      return NextResponse.json({ liked: false })
-    } else {
-      await prisma.creatorPostLike.create({
-        data: { postId: params.id, creatorId: session.user.id },
-      })
-      await prisma.creatorPost.update({
-        where: { id: params.id },
-        data:  { likesCount: { increment: 1 } },
-      })
-      return NextResponse.json({ liked: true })
+    // The like row and the denormalised count MUST move together, or the count
+    // drifts permanently. Each branch pairs the two writes in a $transaction so
+    // they commit or roll back as one — matching the campaign-like route.
+    //
+    // The findUnique above is only a hint: two concurrent requests (a mobile
+    // double-tap) can both read the same value and both enter the same branch.
+    // We make each branch idempotent against that race so the loser is a no-op,
+    // never an unhandled 500 or a second increment/decrement:
+    //   create loses -> P2002 (row already exists): already liked
+    //   delete loses -> P2025 (row already gone):   already unliked
+    // In both cases the transaction rolls back, so the count is untouched.
+    try {
+      if (existing) {
+        await prisma.$transaction([
+          prisma.creatorPostLike.delete({ where: key }),
+          prisma.creatorPost.update({
+            where: { id: params.id },
+            data:  { likesCount: { decrement: 1 } },
+          }),
+        ])
+        return NextResponse.json({ liked: false })
+      } else {
+        await prisma.$transaction([
+          prisma.creatorPostLike.create({
+            data: { postId: params.id, creatorId: session.user.id },
+          }),
+          prisma.creatorPost.update({
+            where: { id: params.id },
+            data:  { likesCount: { increment: 1 } },
+          }),
+        ])
+        return NextResponse.json({ liked: true })
+      }
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError) {
+        // Idempotent outcomes for the lost race — report the settled state.
+        if (err.code === 'P2002') return NextResponse.json({ liked: true })
+        if (err.code === 'P2025') return NextResponse.json({ liked: false })
+      }
+      throw err
     }
   } catch (error) {
     console.error('[POST /api/creator-posts/[id]/like]', error)
