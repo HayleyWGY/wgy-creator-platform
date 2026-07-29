@@ -3,6 +3,9 @@ import { rateLimit } from '@/lib/rate-limit'
 import { createClient } from '@supabase/supabase-js'
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
+import { validateImageUpload, verifyImageBytes } from '@/lib/upload-validation'
+
+const PROFILE_BUCKET = 'profiles'
 
 export async function POST(req: Request) {
   const session = await getActiveSession()
@@ -21,27 +24,21 @@ export async function POST(req: Request) {
   const file = formData.get('file')
   if (!(file instanceof File)) return NextResponse.json({ error: 'No file provided' }, { status: 400 })
 
-  // Server-side validation — extension derived from validated MIME, never the client filename
-  const ALLOWED_TYPES: Record<string, string> = {
-    'image/jpeg': 'jpg',
-    'image/png': 'png',
-    'image/webp': 'webp',
-  }
-  const ext = ALLOWED_TYPES[file.type]
-  if (!ext) {
-    return NextResponse.json({ error: 'Profile photo must be a JPEG, PNG or WebP image' }, { status: 400 })
-  }
-  if (file.size > 10 * 1024 * 1024) {
-    return NextResponse.json({ error: 'Image must be under 10MB' }, { status: 400 })
-  }
+  // Validation via the SHARED helper (single source of truth): MIME allowlist
+  // + size, then a magic-byte check that the bytes really are the declared
+  // image type. Previously this route duplicated the check inline with a
+  // different allowlist (no GIF) and cap (10MB) and no content check.
+  const check = validateImageUpload(file.type, file.size)
+  if (!check.ok) return NextResponse.json({ error: check.error }, { status: 400 })
 
-  const fileName = `${session.user.id}-${Date.now()}.${ext}`
+  const buffer = Buffer.from(await file.arrayBuffer())
+  const magic = verifyImageBytes(buffer, file.type)
+  if (!magic.ok) return NextResponse.json({ error: magic.error }, { status: 400 })
 
-  const bytes = await file.arrayBuffer()
-  const buffer = Buffer.from(bytes)
+  const fileName = `${session.user.id}-${Date.now()}.${check.ext}`
 
   const { error } = await supabase.storage
-    .from('profiles')
+    .from(PROFILE_BUCKET)
     .upload(fileName, buffer, { contentType: file.type, upsert: true })
 
   if (error) {
@@ -49,12 +46,29 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 })
   }
 
-  const { data } = supabase.storage.from('profiles').getPublicUrl(fileName)
+  const { data } = supabase.storage.from(PROFILE_BUCKET).getPublicUrl(fileName)
 
   await prisma.creator.update({
     where: { id: session.user.id },
     data: { profileImageUrl: data.publicUrl },
   })
+
+  // Delete this creator's PREVIOUS profile images. Each upload writes a new
+  // `${id}-${Date.now()}` key, so without this, storage grows without bound.
+  // Best-effort: a cleanup failure must not fail the upload the user just made.
+  try {
+    const { data: existing } = await supabase.storage
+      .from(PROFILE_BUCKET)
+      .list('', { limit: 100, search: session.user.id })
+    const stale = (existing ?? [])
+      .map(o => o.name)
+      .filter(name => name.startsWith(`${session.user.id}-`) && name !== fileName)
+    if (stale.length > 0) {
+      await supabase.storage.from(PROFILE_BUCKET).remove(stale)
+    }
+  } catch (cleanupErr) {
+    console.error('Profile image cleanup error:', cleanupErr)
+  }
 
   return NextResponse.json({ url: data.publicUrl })
 }

@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { getActiveSession } from "@/lib/session";
 import {
   validateImageUpload,
+  verifyImageBytes,
   buildUploadPath,
   MAX_ADMIN_IMAGE_BYTES,
 } from "@/lib/upload-validation";
@@ -41,8 +42,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: check.error }, { status: 400 });
     }
 
-    const path = buildUploadPath(folder, check.ext);
     const bytes = Buffer.from(await file.arrayBuffer());
+
+    // The declared MIME is client-controlled; verify the actual bytes match it.
+    const magic = verifyImageBytes(bytes, file.type);
+    if (!magic.ok) {
+      return NextResponse.json({ error: magic.error }, { status: 400 });
+    }
+
+    const path = buildUploadPath(folder, check.ext);
 
     const { error } = await supabase.storage
       .from(BUCKET)

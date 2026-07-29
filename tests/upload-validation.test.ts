@@ -1,10 +1,20 @@
 import { describe, it, expect } from 'vitest'
 import {
   validateImageUpload,
+  verifyImageBytes,
+  detectImageMime,
   buildUploadPath,
   MAX_IMAGE_BYTES,
   MAX_ADMIN_IMAGE_BYTES,
 } from '@/lib/upload-validation'
+
+// Minimal valid file signatures for each supported type.
+const SIG: Record<string, Buffer> = {
+  'image/jpeg': Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10]),
+  'image/png': Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00]),
+  'image/gif': Buffer.from([0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0x00]),
+  'image/webp': Buffer.from([0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50]),
+}
 
 describe('validateImageUpload', () => {
   it('accepts the allowed image types and returns the correct extension', () => {
@@ -130,5 +140,46 @@ describe('buildUploadPath', () => {
       // containing a dot could otherwise smuggle a second extension.
       expect(path.split('.').length).toBe(2)
     }
+  })
+})
+
+describe('detectImageMime — file signature detection', () => {
+  it('detects each supported type from its magic bytes', () => {
+    expect(detectImageMime(SIG['image/jpeg'])).toBe('image/jpeg')
+    expect(detectImageMime(SIG['image/png'])).toBe('image/png')
+    expect(detectImageMime(SIG['image/gif'])).toBe('image/gif')
+    expect(detectImageMime(SIG['image/webp'])).toBe('image/webp')
+  })
+
+  it('returns null for non-image / truncated content', () => {
+    expect(detectImageMime(Buffer.from('<!DOCTYPE html><script>'))).toBeNull()
+    expect(detectImageMime(Buffer.from('MZ\x90\x00'))).toBeNull() // PE/exe header
+    expect(detectImageMime(Buffer.from([0xff, 0xd8]))).toBeNull()  // too short for JPEG
+    expect(detectImageMime(Buffer.alloc(0))).toBeNull()
+    // RIFF but not WEBP (e.g. a WAV) must not pass as webp.
+    expect(detectImageMime(Buffer.from([0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x41, 0x56, 0x45]))).toBeNull()
+  })
+})
+
+describe('verifyImageBytes — content matches declared type', () => {
+  it('accepts bytes that match the declared type, returning the real ext', () => {
+    expect(verifyImageBytes(SIG['image/jpeg'], 'image/jpeg')).toEqual({ ok: true, ext: 'jpg' })
+    expect(verifyImageBytes(SIG['image/png'], 'image/png')).toEqual({ ok: true, ext: 'png' })
+    expect(verifyImageBytes(SIG['image/gif'], 'image/gif')).toEqual({ ok: true, ext: 'gif' })
+    expect(verifyImageBytes(SIG['image/webp'], 'image/webp')).toEqual({ ok: true, ext: 'webp' })
+  })
+
+  it('THE ATTACK: rejects when declared type and actual bytes disagree', () => {
+    // Client declares image/png but uploads arbitrary (HTML) content.
+    const evil = Buffer.from('<!DOCTYPE html><script>alert(1)</script>')
+    expect(verifyImageBytes(evil, 'image/png')).toMatchObject({ ok: false })
+
+    // Real JPEG bytes declared as PNG — still a mismatch, still rejected.
+    expect(verifyImageBytes(SIG['image/jpeg'], 'image/png')).toMatchObject({ ok: false })
+  })
+
+  it('rejects an executable declared as an image', () => {
+    const exe = Buffer.from([0x4d, 0x5a, 0x90, 0x00]) // "MZ" PE header
+    expect(verifyImageBytes(exe, 'image/jpeg').ok).toBe(false)
   })
 })

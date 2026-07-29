@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getActiveSession } from "@/lib/session"
 import { rateLimit } from '@/lib/rate-limit'
-import { validateImageUpload, buildUploadPath } from '@/lib/upload-validation'
+import { validateImageUpload, verifyImageBytes, buildUploadPath } from '@/lib/upload-validation'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -38,8 +38,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: check.error }, { status: 400 })
     }
 
-    const path = buildUploadPath(PREFIX, check.ext)
     const bytes = Buffer.from(await file.arrayBuffer())
+
+    // The declared MIME is client-controlled; verify the actual bytes match it.
+    const magic = verifyImageBytes(bytes, file.type)
+    if (!magic.ok) {
+      return NextResponse.json({ error: magic.error }, { status: 400 })
+    }
+
+    const path = buildUploadPath(PREFIX, check.ext)
 
     const { error } = await supabase.storage
       .from(BUCKET)
