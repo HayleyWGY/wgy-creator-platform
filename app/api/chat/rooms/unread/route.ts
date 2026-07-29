@@ -22,22 +22,37 @@ export async function GET() {
     }),
   ])
 
+  if (rooms.length === 0) return NextResponse.json({ unread: {} })
+
   const lastReadByRoom = new Map(reads.map(r => [r.roomId, r.lastReadAt]))
 
-  const counts = await Promise.all(
-    rooms.map(async room => {
-      const lastReadAt = lastReadByRoom.get(room.id)
-      const count = await prisma.chatMessage.count({
-        where: {
-          roomId: room.id,
-          isDeleted: false,
-          authorId: { not: session.user.id },
-          ...(lastReadAt ? { createdAt: { gt: lastReadAt } } : {}),
-        },
-      })
-      return [room.slug, count] as const
-    })
-  )
+  // ONE grouped query instead of one COUNT per room (this endpoint is polled
+  // by the community page). groupBy can't apply a different createdAt cutoff
+  // per group in its own right, but its `where` can: an OR of per-room
+  // conditions carries each room's own lastReadAt (or no cutoff at all when
+  // the room was never opened → everything counts). Semantics are identical to
+  // the previous per-room counts: unread = arrived after this member's
+  // lastReadAt for that room, or ever if never opened, excluding own messages.
+  const perRoom = rooms.map(room => {
+    const lastReadAt = lastReadByRoom.get(room.id)
+    return lastReadAt
+      ? { roomId: room.id, createdAt: { gt: lastReadAt } }
+      : { roomId: room.id }
+  })
 
-  return NextResponse.json({ unread: Object.fromEntries(counts) })
+  const grouped = await prisma.chatMessage.groupBy({
+    by: ['roomId'],
+    where: {
+      isDeleted: false,
+      authorId: { not: session.user.id },
+      OR: perRoom,
+    },
+    _count: { _all: true },
+  })
+
+  // groupBy omits rooms with zero matches, so default every room to 0.
+  const countByRoom = new Map(grouped.map(g => [g.roomId, g._count._all]))
+  const unread = Object.fromEntries(rooms.map(r => [r.slug, countByRoom.get(r.id) ?? 0]))
+
+  return NextResponse.json({ unread })
 }
