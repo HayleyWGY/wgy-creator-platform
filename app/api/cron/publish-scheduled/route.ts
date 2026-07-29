@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { publishDueScheduled } from '@/lib/scheduled-publish'
 import { runOnboardingDrip } from '@/lib/onboarding-drip'
+import { reconcileCounts } from '@/lib/reconcile-counts'
 import { prisma } from '@/lib/prisma'
 
 export const dynamic = 'force-dynamic'
@@ -37,6 +38,15 @@ export async function GET(req: NextRequest) {
   } catch (err) {
     console.error('[cron onboarding-drip]', err)
     result.onboardingError = true
+  }
+
+  try {
+    // Heal any drift between the denormalised like/comment counts and the real
+    // rows. Cheap at our scale; independent of the jobs above.
+    result.reconcile = await reconcileCounts()
+  } catch (err) {
+    console.error('[cron reconcile-counts]', err)
+    result.reconcileError = true
   }
 
   return NextResponse.json({ ok: true, ...result })
