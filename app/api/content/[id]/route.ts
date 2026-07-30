@@ -48,27 +48,45 @@ export async function PATCH(
 
     const valid = parseJson(contentWriteSchema, body);
     if (!valid.ok) return valid.response;
+    const input = valid.data as Record<string, unknown>;
 
-    const readingTimeMinutes = body.body ? calculateReadingTime(body.body) : undefined;
+    // Build the update from keys ACTUALLY PRESENT in the request. Prisma reads
+    // `undefined` as "leave this column alone" and `null` as "set it to null",
+    // so the old unconditional object turned every omitted field into an
+    // explicit null — a partial PATCH (a status toggle, a sortOrder nudge, a
+    // future mobile client sending only changed fields) silently wiped the
+    // body, PDF, thumbnail and categories, with no soft-delete or history to
+    // recover from. Presence is the signal: absent = untouched; explicit null
+    // (all these fields are .nullable() in the schema) = deliberately cleared.
+    const has = (k: string) => k in input;
+    const data: Record<string, unknown> = {};
 
-    const data: Record<string, unknown> = {
-      title:               body.title,
-      contentType:         body.contentType,
-      body:                body.body ? sanitizeRichText(body.body) : null,
-      pdfUrl:              body.pdfUrl ?? null,
-      editableTemplateUrl: body.editableTemplateUrl ?? null,
-      videoEmbedUrl:       body.videoEmbedUrl ?? null,
-      videoTranscript:     body.videoTranscript ?? null,
-      thumbnailUrl:        body.thumbnailUrl ?? null,
-      bannerImageUrl:      body.bannerImageUrl ?? null,
-      section:             body.section,
-      categories:          body.categories ?? [],
-      status:              body.status,
-      scheduledAt:         body.scheduledAt ? new Date(body.scheduledAt) : null,
-      sortOrder:           body.sortOrder ?? 0,
-    };
-
-    if (readingTimeMinutes !== undefined) data.readingTimeMinutes = readingTimeMinutes;
+    // Plain scalars: copy through when present.
+    for (const k of ['title', 'contentType', 'section', 'status'] as const) {
+      if (has(k)) data[k] = input[k];
+    }
+    // Nullable fields: an explicit null clears them; absence leaves them.
+    for (const k of [
+      'pdfUrl', 'editableTemplateUrl', 'videoEmbedUrl', 'videoTranscript',
+      'thumbnailUrl', 'bannerImageUrl',
+    ] as const) {
+      if (has(k)) data[k] = input[k] ?? null;
+    }
+    // categories is a non-nullable list column; null/absent-when-present -> [].
+    if (has('categories')) data.categories = input.categories ?? [];
+    // sortOrder defaults to 0 only when explicitly sent as null.
+    if (has('sortOrder')) data.sortOrder = input.sortOrder ?? 0;
+    if (has('scheduledAt')) {
+      data.scheduledAt = input.scheduledAt ? new Date(input.scheduledAt as string) : null;
+    }
+    // body is sanitised, and reading time is recomputed to stay consistent with
+    // it — but only when body is part of this request, so a partial edit never
+    // resets it. Clearing the body (explicit null/empty) zeroes reading time.
+    if (has('body')) {
+      const raw = input.body as string | null | undefined;
+      data.body = raw ? sanitizeRichText(raw) : null;
+      data.readingTimeMinutes = raw ? calculateReadingTime(raw) : 0;
+    }
 
     // Set publishedAt when first publishing (and notify creators once)
     let firstPublish = false;

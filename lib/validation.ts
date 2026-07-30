@@ -207,6 +207,10 @@ export const contentWriteSchema = z.object({
   editableTemplateUrl: optionalUrl,
   videoEmbedUrl: optionalUrl,
   sortOrder: z.number().int().nullable().optional(),
+  // datetime-local string ("2026-07-30T14:30") or null to clear. Was previously
+  // read straight off the raw body, bypassing validation; kept permissive here
+  // because the route does the `new Date(...)` coercion.
+  scheduledAt: z.string().trim().nullable().optional(),
 })
 
 // ── Parse helper ──────────────────────────────────────────────────────────
