@@ -1,7 +1,7 @@
 import { parseJson, contentWriteSchema } from '@/lib/validation';
 import { NextRequest, NextResponse } from "next/server";
 import { unstable_cache, revalidateTag } from "next/cache";
-import { getActiveSession } from "@/lib/session";
+import { getPayingSession } from "@/lib/session";
 import { sanitizeRichText } from "@/lib/sanitize";
 import { prisma } from "@/lib/prisma";
 import { calculateReadingTime } from "@/lib/reading-time";
@@ -29,7 +29,7 @@ const getPublishedContent = unstable_cache(
 );
 
 export async function GET(req: NextRequest) {
-  const session = await getActiveSession();
+  const session = await getPayingSession();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   }
@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await getActiveSession();
+  const session = await getPayingSession();
   if (!session?.user?.isAdmin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getActiveSession } from '@/lib/session'
+import { getPayingSession } from '@/lib/session'
 import { rateLimit } from '@/lib/rate-limit'
 
 const authorSelect = {
@@ -25,7 +25,7 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const session = await getActiveSession()
+  const session = await getPayingSession()
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
   }
@@ -55,7 +55,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getActiveSession()
+    const session = await getPayingSession()
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
     }

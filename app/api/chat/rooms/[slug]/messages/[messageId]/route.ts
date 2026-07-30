@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
-import { getActiveSession } from "@/lib/session"
+import { getPayingSession } from "@/lib/session"
 import { prisma } from '@/lib/prisma'
 
 export async function DELETE(
   _req: Request,
   { params }: { params: { slug: string; messageId: string } }
 ) {
-  const session = await getActiveSession()
+  const session = await getPayingSession()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const message = await prisma.chatMessage.findUnique({ where: { id: params.messageId } })

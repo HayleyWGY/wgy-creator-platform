@@ -12,6 +12,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
   }
 
+  // Applying is paid value: a member whose payment has failed is blocked here
+  // (not on getPayingSession) so we can return a specific, actionable message
+  // the UI shows, rather than a generic 401. Admins are staff and pass through.
+  if (session.user.membershipStatus === 'payment_failed' && !session.user.isAdmin) {
+    return NextResponse.json(
+      { error: 'payment_update_needed', message: 'Update your payment details to apply.' },
+      { status: 402 },
+    )
+  }
+
   const { campaignId } = await req.json().catch(() => ({ campaignId: null }))
 
   await prisma.creator.updateMany({

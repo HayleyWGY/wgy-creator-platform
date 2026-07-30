@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getActiveSession } from '@/lib/session'
+import { getPayingSession } from '@/lib/session'
 
 // POST — mark a room as read up to now for the current creator
 export async function POST(
   _req: Request,
   { params }: { params: { slug: string } }
 ) {
-  const session = await getActiveSession()
+  const session = await getPayingSession()
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
   }

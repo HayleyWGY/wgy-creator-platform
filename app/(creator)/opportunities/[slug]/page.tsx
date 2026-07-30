@@ -84,6 +84,7 @@ export default function CampaignDetailPage() {
   const [comments, setComments]     = useState<CampaignComment[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [replyingTo, setReplyingTo] = useState<{ id: string; name: string } | null>(null);
+  const [applyError, setApplyError] = useState<string | null>(null);
   const commentInputRef = useRef<HTMLInputElement>(null);
 
   function startReply(c: CampaignComment) {
@@ -227,15 +228,30 @@ export default function CampaignDetailPage() {
   // form pre-fills the creator's name/email/address. Until then this simply
   // opens the plain link — the feature is dormant.
   async function handleApply(applyLinkUrl: string) {
-    fetch("/api/profile/apply-click", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ campaignId: campaign?.id }),
-    }).catch(() => {});
+    setApplyError(null);
 
     // Open the tab synchronously (in the click gesture) to dodge popup
     // blockers, then point it at the tokenised URL once we have it.
     const tab = window.open("", "_blank", "noopener,noreferrer");
+
+    // Record the click AND enforce the paywall: a payment_failed member is
+    // blocked here (402) — show the message and stop before opening the link.
+    try {
+      const clickRes = await fetch("/api/profile/apply-click", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ campaignId: campaign?.id }),
+      });
+      if (clickRes.status === 402) {
+        if (tab) tab.close();
+        const data = await clickRes.json().catch(() => ({}));
+        setApplyError(data?.message ?? "Update your payment details to apply.");
+        return;
+      }
+    } catch {
+      // network hiccup on the click record is non-fatal — proceed to apply
+    }
+
     try {
       const res = await fetch("/api/apply-handoff", {
         method: "POST",
@@ -498,6 +514,11 @@ export default function CampaignDetailPage() {
               >
                 {isEvent ? "Register for This Event" : "Apply for This Campaign"}
               </button>
+              {applyError && (
+                <p className="font-montserrat text-center" style={{ fontSize: "12px", fontWeight: 600, color: "var(--error)" }}>
+                  {applyError}
+                </p>
+              )}
               {campaign.spotsRemaining != null && (
                 <p className="font-montserrat text-center" style={{ fontSize: "11px", fontWeight: 500, color: "var(--text-muted)" }}>
                   {campaign.spotsRemaining} spots remaining

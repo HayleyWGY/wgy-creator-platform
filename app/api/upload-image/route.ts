@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { getActiveSession } from "@/lib/session"
+import { getPayingSession } from "@/lib/session"
 import { rateLimit } from '@/lib/rate-limit'
 import { validateImageUpload, verifyImageBytes, buildUploadPath } from '@/lib/upload-validation'
 
@@ -17,7 +17,7 @@ const PREFIX = 'creator-posts'
 // keeping the stricter validation of the two (MIME allowlist, extension
 // derived from the MIME type, never the client filename).
 export async function POST(req: NextRequest) {
-  const session = await getActiveSession()
+  const session = await getPayingSession()
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
   }

@@ -2,7 +2,7 @@ import { parseJson, campaignWriteSchema } from '@/lib/validation';
 import { NextRequest, NextResponse } from "next/server";
 import { unstable_cache, revalidateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { getActiveSession } from "@/lib/session"
+import { getPayingSession } from "@/lib/session"
 import { notifyAllCreators } from "@/lib/notify";
 import { publishDueScheduled } from "@/lib/scheduled-publish";
 import { logAudit } from "@/lib/audit";
@@ -122,7 +122,7 @@ const FILTER_TO_SECTION_SLUG: Record<string, string> = {
 };
 
 export async function GET(req: NextRequest) {
-  const session = await getActiveSession();
+  const session = await getPayingSession();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   }
@@ -172,7 +172,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await getActiveSession();
+  const session = await getPayingSession();
   if (!session?.user?.isAdmin) {
     return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   }

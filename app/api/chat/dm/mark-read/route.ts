@@ -1,10 +1,10 @@
 import { prisma } from '@/lib/prisma'
-import { getActiveSession } from "@/lib/session"
+import { getPayingSession } from "@/lib/session"
 import { NextResponse } from 'next/server'
 
 export async function POST() {
   try {
-    const session = await getActiveSession()
+    const session = await getPayingSession()
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
     }

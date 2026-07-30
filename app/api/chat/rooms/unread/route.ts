@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getActiveSession } from '@/lib/session'
+import { getPayingSession } from '@/lib/session'
 
 // GET — unread message counts per community room for the current creator.
 // A message is unread if it arrived after the creator's lastReadAt for that
 // room (or ever, if they've never opened it), excluding their own messages.
 export async function GET() {
-  const session = await getActiveSession()
+  const session = await getPayingSession()
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
   }

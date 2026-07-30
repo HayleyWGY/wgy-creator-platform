@@ -2,7 +2,7 @@ import { parseJson, campaignWriteSchema } from '@/lib/validation';
 import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { getActiveSession } from "@/lib/session";
+import { getPayingSession } from "@/lib/session";
 import { notifyAllCreators } from "@/lib/notify";
 import { logAudit } from "@/lib/audit";
 import { sanitizeRichText } from "@/lib/sanitize";
@@ -21,7 +21,7 @@ export async function GET(
 ) {
   const { id } = await params;
 
-  const session = await getActiveSession();
+  const session = await getPayingSession();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   }
@@ -92,7 +92,7 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getActiveSession();
+  const session = await getPayingSession();
   if (!session?.user?.isAdmin) {
     return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   }

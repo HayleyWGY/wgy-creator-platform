@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getActiveSession } from "@/lib/session"
+import { getPayingSession } from "@/lib/session"
 import { rateLimit } from '@/lib/rate-limit'
 import { prisma } from '@/lib/prisma'
 import { pingRealtime } from '@/lib/realtime-server'
@@ -12,7 +12,7 @@ import {
 
 // GET — return the current creator's DM thread (create if missing)
 export async function GET(req: Request) {
-  const session = await getActiveSession()
+  const session = await getPayingSession()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   // Find-or-create the thread WITHOUT messages, then page them separately.
@@ -48,7 +48,7 @@ export async function GET(req: Request) {
 
 // POST — creator sends a message in their own thread
 export async function POST(req: Request) {
-  const session = await getActiveSession()
+  const session = await getPayingSession()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   if (!(await rateLimit(`dm-send:${session.user.id}`, 20, 60_000))) {

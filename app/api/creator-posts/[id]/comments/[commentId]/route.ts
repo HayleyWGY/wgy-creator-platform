@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getActiveSession } from "@/lib/session"
+import { getPayingSession } from "@/lib/session"
 
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: { id: string; commentId: string } }
 ) {
   try {
-    const session = await getActiveSession()
+    const session = await getPayingSession()
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
     }

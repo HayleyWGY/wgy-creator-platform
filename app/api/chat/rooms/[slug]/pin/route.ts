@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { getActiveSession } from "@/lib/session"
+import { getPayingSession } from "@/lib/session"
 import { NextResponse } from 'next/server'
 import { pingRealtime } from '@/lib/realtime-server'
 
@@ -8,7 +8,7 @@ export async function POST(
   { params }: { params: { slug: string } }
 ) {
   try {
-    const session = await getActiveSession()
+    const session = await getPayingSession()
     if (!session?.user?.isAdmin) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -36,7 +36,7 @@ export async function DELETE(
   { params }: { params: { slug: string } }
 ) {
   try {
-    const session = await getActiveSession()
+    const session = await getPayingSession()
     if (!session?.user?.isAdmin) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }

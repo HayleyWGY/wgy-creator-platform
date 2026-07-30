@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
-import { getActiveSession } from '@/lib/session'
+import { getPayingSession } from '@/lib/session'
 import { rateLimit } from '@/lib/rate-limit'
 
 // POST — toggle the current creator's like on a campaign.
@@ -10,7 +10,7 @@ export async function POST(
   _req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const session = await getActiveSession()
+  const session = await getPayingSession()
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
   }

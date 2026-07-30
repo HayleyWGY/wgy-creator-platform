@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getActiveSession } from "@/lib/session"
+import { getPayingSession } from "@/lib/session"
 import { rateLimit } from '@/lib/rate-limit'
 
 const authorSelect = {
@@ -18,7 +18,7 @@ export async function GET(
     // Community content is members-only. Without this the endpoint returned
     // comment bodies plus each author's id, name and profile image to anyone
     // holding a post id and no cookie at all.
-    const session = await getActiveSession()
+    const session = await getPayingSession()
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
     }
@@ -46,7 +46,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getActiveSession()
+    const session = await getPayingSession()
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
     }

@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "node:crypto";
 import { put } from "@vercel/blob";
-import { getActiveSession } from "@/lib/session";
+import { getPayingSession } from "@/lib/session";
 
 export async function POST(req: NextRequest) {
-  const session = await getActiveSession();
+  const session = await getPayingSession();
   if (!session?.user?.isAdmin) {
     return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   }

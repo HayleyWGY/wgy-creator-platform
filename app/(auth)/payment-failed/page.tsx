@@ -1,9 +1,30 @@
 "use client";
 
+import { useState } from "react";
 import { AlertCircle } from "lucide-react";
 import { WgyButton } from "@/components/ui/wgy-button";
 
 export default function PaymentFailedPage() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function openBillingPortal() {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/billing/portal", { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.url) {
+        window.location.href = data.url;
+        return;
+      }
+      setError(data.message ?? "Couldn’t open billing right now. Please contact support.");
+    } catch {
+      setError("Couldn’t open billing right now. Please contact support.");
+    }
+    setLoading(false);
+  }
+
   return (
     <div
       className="min-h-screen flex flex-col items-center"
@@ -33,18 +54,25 @@ export default function PaymentFailedPage() {
           Please update your payment details to continue.
         </p>
 
-        {/* Update payment button */}
+        {/* Update payment button — opens the Stripe Billing Portal */}
         <WgyButton
           variant="primary"
           fullWidth
+          disabled={loading}
           style={{ marginTop: "32px" }}
-          onClick={() => {
-            // TODO Phase 3: Add Stripe portal URL
-            window.location.href = "#";
-          }}
+          onClick={openBillingPortal}
         >
-          Update Payment Details
+          {loading ? "Opening…" : "Update Payment Details"}
         </WgyButton>
+
+        {error && (
+          <p
+            className="font-montserrat"
+            style={{ fontSize: "12px", fontWeight: 600, color: "var(--error)", marginTop: "12px" }}
+          >
+            {error}
+          </p>
+        )}
 
         {/* Contact link */}
         <a

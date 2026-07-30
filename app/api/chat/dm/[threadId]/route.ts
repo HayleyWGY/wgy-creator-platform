@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getActiveSession } from "@/lib/session"
+import { getPayingSession } from "@/lib/session"
 import { prisma } from '@/lib/prisma'
 import {
   parseMessagePageParams,
@@ -12,7 +12,7 @@ export async function GET(
   req: Request,
   { params }: { params: { threadId: string } }
 ) {
-  const session = await getActiveSession()
+  const session = await getPayingSession()
   if (!session?.user?.id || !session.user.isAdmin) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
@@ -50,7 +50,7 @@ export async function GET(
 
 // DELETE — soft-delete a DM message (admin only)
 export async function DELETE(req: Request) {
-  const session = await getActiveSession()
+  const session = await getPayingSession()
   if (!session?.user?.id || !session.user.isAdmin) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
