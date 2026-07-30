@@ -1,21 +1,57 @@
 import { headers } from 'next/headers'
+import * as Sentry from '@sentry/nextjs'
 import Stripe from 'stripe'
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '')
+import { getStripe } from '@/lib/stripe'
 
 export async function POST(req: Request) {
   const body      = await req.text()
   const signature = headers().get('stripe-signature')
 
-  let event: Stripe.Event
-
-  try {
-    event = stripe.webhooks.constructEvent(
-      body,
-      signature || '',
-      process.env.STRIPE_WEBHOOK_SECRET || ''
+  // A misconfiguration (missing key/secret) must be DISTINGUISHABLE from a
+  // forged request. Before, a missing STRIPE_WEBHOOK_SECRET was passed to
+  // constructEvent as '' and surfaced as an ordinary 400 signature failure —
+  // identical to a forgery — so Stripe would retry, give up, and we'd silently
+  // stop processing payments with nothing obviously broken. So: config errors
+  // fail LOUD as 500 + Sentry (Stripe still retries a 500, so no event is lost
+  // once the config is fixed); only genuine signature problems return 400.
+  //
+  // Not a module-load throw: STRIPE_SECRET_KEY/STRIPE_WEBHOOK_SECRET are
+  // intentionally optional pre-launch (billing is dormant — see lib/env.ts and
+  // lib/stripe.ts). Throwing at import would break `next build` and every cold
+  // start while Stripe is unconfigured. The fail-loud lives per-request, where
+  // it only fires if an event actually arrives.
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
+  if (!webhookSecret) {
+    Sentry.captureMessage(
+      '[stripe-webhook] STRIPE_WEBHOOK_SECRET is not set — cannot verify events; failing loud (500) so this is not mistaken for a forged request',
+      'error',
     )
+    return new Response('Webhook misconfigured: missing signing secret', { status: 500 })
+  }
+
+  let stripe: Stripe
+  try {
+    // Throws if STRIPE_SECRET_KEY is missing (lib/stripe.ts). Same class of
+    // misconfiguration as above → 500 + Sentry, never a silent 400.
+    stripe = getStripe()
+  } catch (err) {
+    Sentry.captureException(err, { tags: { subsystem: 'stripe-webhook', reason: 'missing-secret-key' } })
+    return new Response('Webhook misconfigured: Stripe not initialised', { status: 500 })
+  }
+
+  // A missing/blank signature header is a malformed or forged request, not a
+  // misconfiguration on our side → 400.
+  if (!signature) {
+    return new Response('Missing stripe-signature header', { status: 400 })
+  }
+
+  let event: Stripe.Event
+  try {
+    event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
   } catch {
+    // Secret and key are both present, so this is a real verification failure:
+    // a forged or tampered request. Fail closed, quietly — this is expected
+    // adversarial traffic, not an incident to page on.
     return new Response('Webhook signature verification failed', { status: 400 })
   }
 
