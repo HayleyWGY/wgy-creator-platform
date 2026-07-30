@@ -160,7 +160,7 @@ export default function CampaignsPage() {
     await fetch(`/api/campaigns/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "closed" }),
+      body: JSON.stringify({ status: "closed", mode: "status" }),
     });
     setCampaigns((prev) => prev.map((c) => c.id === id ? { ...c, status: "closed" } : c));
     setClosingId(null);
@@ -170,7 +170,7 @@ export default function CampaignsPage() {
     await fetch(`/api/campaigns/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "published" }),
+      body: JSON.stringify({ status: "published", mode: "status" }),
     });
     setCampaigns((prev) => prev.map((c) => c.id === id ? { ...c, status: "published" } : c));
   }

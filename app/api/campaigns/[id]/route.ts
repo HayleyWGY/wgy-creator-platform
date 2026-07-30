@@ -76,6 +76,7 @@ export async function GET(
       commentsCount:         post.commentsCount,
       status:                post.status,
       scheduledAt:           post.scheduledAt,
+      version:               post.version,
       createdAt:             post.createdAt,
       sectionName:           post.section.name,
       sectionSlug:           post.section.slug,
@@ -114,6 +115,20 @@ export async function PATCH(
       paymentAmount, paymentTerms, eventDate, eventTime, eventLocation,
     } = body;
 
+    // Explicit intent, replacing the old `if (title)` inference. "full" = edit
+    // form, anything else = a list status toggle. When the client sends `mode`
+    // we trust it; when it doesn't (legacy caller) we fall back to the old
+    // title-presence guess so nothing breaks mid-migration.
+    const { mode, version: clientVersion } = valid.data as { mode?: 'status' | 'full'; version?: number };
+    const isFullEdit = mode ? mode === 'full' : Boolean(title);
+
+    // Defect 2: a full edit that cleared the title used to fall through both
+    // branches and save nothing — a silent no-op that looked like a lost save.
+    // Now it's an explicit 400 the form can surface on the title field.
+    if (isFullEdit && !title?.trim()) {
+      return NextResponse.json({ error: "Title is required" }, { status: 400 });
+    }
+
     if (status === "schedule" && (!scheduledAt || new Date(scheduledAt) <= new Date())) {
       return NextResponse.json({ error: "A future date and time is required to schedule" }, { status: 400 });
     }
@@ -121,21 +136,21 @@ export async function PATCH(
     const data: Record<string, unknown> = {};
 
     // Status-only update (Close / Publish from list)
-    if (status === "published" && !title) {
+    if (!isFullEdit && status === "published") {
       data.status = "published";
       data.publishedAt = new Date();
       data.scheduledAt = null;
-    } else if (status === "closed" && !title) {
+    } else if (!isFullEdit && status === "closed") {
       data.status = "closed";
-    } else if (status === "draft" && !title) {
+    } else if (!isFullEdit && status === "draft") {
       data.status = "draft";
-    } else if (status === "schedule" && !title) {
+    } else if (!isFullEdit && status === "schedule") {
       data.status = "scheduled";
       data.scheduledAt = new Date(scheduledAt);
     }
 
     // Full field update (from edit form)
-    if (title) {
+    if (isFullEdit) {
       // opportunityDescription is rendered as HTML on the campaign page, so
       // sanitise before storage (see the create route for the same guard).
       const safeDescription = opportunityDescription
@@ -183,7 +198,32 @@ export async function PATCH(
 
     // Capture the previous status so we only notify on the draft→published transition
     const before = await prisma.post.findUnique({ where: { id }, select: { status: true } });
-    const post = await prisma.post.update({ where: { id }, data });
+
+    // Optimistic concurrency: when the client sends the version it read, match
+    // on (id, version) via updateMany and bump it. A stale copy updates zero
+    // rows -> 409, so the second admin to save is told rather than silently
+    // overwriting the first. `update` can't be used (its `where` needs a unique
+    // field; version isn't). Absent version = legacy caller, id-only update.
+    let post;
+    if (typeof clientVersion === 'number') {
+      data.version = { increment: 1 };
+      const { count } = await prisma.post.updateMany({
+        where: { id, version: clientVersion },
+        data,
+      });
+      if (count === 0) {
+        const exists = await prisma.post.findUnique({ where: { id }, select: { id: true } });
+        if (!exists) return NextResponse.json({ error: "Not found" }, { status: 404 });
+        return NextResponse.json(
+          { error: "This campaign was changed by someone else since you opened it. Reload to see the latest version before saving again." },
+          { status: 409 },
+        );
+      }
+      post = await prisma.post.findUnique({ where: { id } });
+      if (!post) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    } else {
+      post = await prisma.post.update({ where: { id }, data });
+    }
 
     // Bust the members' cached opportunities feed (new/edited/closed status)
     revalidateTag("campaigns");
@@ -199,7 +239,7 @@ export async function PATCH(
 
     await logAudit({
       actorId: session.user.id,
-      action: title
+      action: isFullEdit
         ? `Edited campaign (${post.status})`
         : `Set campaign status to ${post.status}`,
       detail: `${post.brandName ?? ""} — ${post.title}`,

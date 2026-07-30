@@ -113,6 +113,8 @@ model Post {
   createdAt              DateTime  @default(now())
   likesCount             Int       @default(0)
   commentsCount          Int       @default(0)
+  // Optimistic-concurrency token — see the matching field on PostContent.
+  version                Int       @default(0)
   isPinned               Boolean   @default(false)
   eventDate              DateTime?
   eventLocation          String?
@@ -241,6 +243,10 @@ model PostContent {
   commentsCount       Int              @default(0)
   sortOrder           Int              @default(0)
   readingTimeMinutes  Int?
+  // Optimistic-concurrency token. Every PATCH matches on (id, version) and
+  // increments it, so a second admin saving a stale copy matches zero rows and
+  // gets a 409 instead of silently clobbering the first admin's edit.
+  version             Int              @default(0)
   comments            ContentComment[]
 
   // Learning Lounge lists filter by section + status

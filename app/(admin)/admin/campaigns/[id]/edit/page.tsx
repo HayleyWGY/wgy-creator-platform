@@ -62,6 +62,8 @@ export default function EditCampaignPage() {
   const [sectionSlug, setSectionSlug] = useState(SECTIONS[0].slug);
   const [status, setStatus]       = useState<"draft" | "publish" | "schedule">("draft");
   const [scheduledAt, setScheduledAt] = useState("");
+  // Optimistic-concurrency token read on load, sent back on save.
+  const [version, setVersion]     = useState<number | null>(null);
   const [saving, setSaving]       = useState(false);
   const [error, setError]         = useState("");
 
@@ -113,6 +115,7 @@ export default function EditCampaignPage() {
         setEventDate(campaign.eventDate ? campaign.eventDate.split("T")[0] : "");
         setEventTime(campaign.eventTime ?? "");
         setEventLocation(campaign.eventLocation ?? "");
+        setVersion(campaign.version ?? 0);
       })
       .catch(() => setError("Failed to load campaign."))
       .finally(() => setLoading(false));
@@ -160,8 +163,19 @@ export default function EditCampaignPage() {
           eventDate: showEventFields ? eventDate || null : null,
           eventTime: showEventFields ? eventTime.trim() || null : null,
           eventLocation: showEventFields ? eventLocation.trim() || null : null,
+          // Explicit "this is the edit form" + the version we loaded, so the
+          // API applies the full update and rejects a stale overwrite (409).
+          mode: "full",
+          version: version ?? undefined,
         }),
       });
+      if (res.status === 409) {
+        const d = await res.json().catch(() => ({}));
+        if (confirm(`${d.error ?? "Someone else changed this since you opened it."}\n\nReload now to get their version? Your unsaved changes will be lost.`)) {
+          window.location.reload();
+        }
+        return;
+      }
       if (!res.ok) { const d = await res.json(); setError(d.error ?? "Failed to save."); return; }
       router.push("/admin/campaigns");
     } catch { setError("Network error. Please try again."); }

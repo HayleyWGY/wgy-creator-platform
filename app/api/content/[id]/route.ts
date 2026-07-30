@@ -1,4 +1,5 @@
 import { parseJson, contentWriteSchema } from '@/lib/validation';
+import type { PostContent } from '@prisma/client';
 import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { getPayingSession } from "@/lib/session";
@@ -99,7 +100,37 @@ export async function PATCH(
       firstPublish = existing?.status !== "published";
     }
 
-    const item = await prisma.postContent.update({ where: { id: params.id }, data });
+    // Optimistic concurrency: when the client sends the version it read, match
+    // on (id, version) via updateMany and bump the version. A stale copy
+    // updates zero rows, so a second admin saving over the first is told (409),
+    // not silently allowed. `update` can't be used here — its `where` only
+    // accepts unique fields, and version isn't unique. Absent version = legacy
+    // caller, plain id-only update as before.
+    const clientVersion = input.version;
+    let item: PostContent | null;
+    if (typeof clientVersion === 'number') {
+      data.version = { increment: 1 };
+      const { count } = await prisma.postContent.updateMany({
+        where: { id: params.id, version: clientVersion },
+        data,
+      });
+      if (count === 0) {
+        // Zero rows = either the row is gone (404) or the version moved (409).
+        const exists = await prisma.postContent.findUnique({
+          where: { id: params.id },
+          select: { id: true },
+        });
+        if (!exists) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+        return NextResponse.json(
+          { error: 'This item was changed by someone else since you opened it. Reload to see the latest version before saving again.' },
+          { status: 409 },
+        );
+      }
+      item = await prisma.postContent.findUnique({ where: { id: params.id } });
+    } else {
+      item = await prisma.postContent.update({ where: { id: params.id }, data });
+    }
+    if (!item) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     // Bust the members' cached content list so edits show immediately
     revalidateTag("content");

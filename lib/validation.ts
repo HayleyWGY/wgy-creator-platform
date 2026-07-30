@@ -191,6 +191,13 @@ export const campaignWriteSchema = z.object({
   eventTime: optionalText(LIMITS.addressPart),
   eventLocation: optionalText(LIMITS.addressPart),
   spotsRemaining: z.union([z.string(), z.number()]).nullable().optional(),
+  // Explicit intent, replacing the old `if (title)` inference: "status" is a
+  // list toggle (publish/close/schedule), "full" is the edit form. Absent =
+  // legacy caller, treated as before.
+  mode: z.enum(['status', 'full']).optional(),
+  // Optimistic-concurrency token the client read from the record. When present,
+  // the update matches on it and a mismatch is a 409.
+  version: z.number().int().optional(),
 })
 
 export const contentWriteSchema = z.object({

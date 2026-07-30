@@ -25,6 +25,7 @@ interface ContentItem {
   videoEmbedUrl: string | null;
   videoTranscript: string | null;
   sortOrder: number;
+  version: number;
 }
 
 const CONTENT_TYPES = [
@@ -120,6 +121,9 @@ export default function ContentPage() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  // Optimistic-concurrency token read when the editor opened; sent back on save
+  // so the API can reject a stale overwrite (409).
+  const [editingVersion, setEditingVersion] = useState<number | null>(null);
   const [form, setForm] = useState({ ...EMPTY_FORM });
   const [saving, setSaving] = useState(false);
   const [uploadingField, setUploadingField] = useState<string | null>(null);
@@ -140,12 +144,14 @@ export default function ContentPage() {
 
   function openNew() {
     setEditingId(null);
+    setEditingVersion(null);
     setForm({ ...EMPTY_FORM });
     setModalOpen(true);
   }
 
   function openEdit(item: ContentItem) {
     setEditingId(item.id);
+    setEditingVersion(item.version ?? 0);
     setForm({
       title: item.title,
       contentType: item.contentType,
@@ -168,11 +174,32 @@ export default function ContentPage() {
   async function handleSave() {
     if (!form.title.trim()) return;
     setSaving(true);
-    const payload = { ...form, scheduledAt: form.scheduledAt || null };
+    const payload = {
+      ...form,
+      scheduledAt: form.scheduledAt || null,
+      // On edit, send the version we opened with so a concurrent save is
+      // rejected rather than silently overwriting the other admin's changes.
+      ...(editingId ? { version: editingVersion ?? undefined } : {}),
+    };
     const url = editingId ? `/api/content/${editingId}` : "/api/content";
     const method = editingId ? "PATCH" : "POST";
-    await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     setSaving(false);
+
+    if (res.status === 409) {
+      const { error } = await res.json().catch(() => ({ error: "" }));
+      alert(error || "Someone else changed this since you opened it. Reload to see the latest version.");
+      // Refresh the list so the admin can reopen the current version. Their
+      // unsaved edits stay in the still-open form until they choose to reload.
+      fetchItems();
+      return;
+    }
+    if (!res.ok) {
+      const { error } = await res.json().catch(() => ({ error: "" }));
+      alert(error || "Failed to save. Please try again.");
+      return;
+    }
+
     setModalOpen(false);
     fetchItems();
   }
