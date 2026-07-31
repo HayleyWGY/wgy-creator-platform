@@ -265,3 +265,16 @@
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
+
+/* Skeleton shimmer for route-level loading.tsx placeholders. Respects reduced
+   motion: the box still shows, it just stops pulsing. */
+.wgy-skeleton {
+  animation: wgy-skeleton-pulse 1.4s ease-in-out infinite;
+}
+@keyframes wgy-skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.45; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wgy-skeleton { animation: none; }
+}
