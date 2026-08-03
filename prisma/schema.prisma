@@ -320,7 +320,6 @@ model OnboardingMessageSent {
   templateId      String
   template        MessageTemplate @relation(fields: [templateId], references: [id])
   sentAt          DateTime        @default(now())
-  streamMessageId String?
 
   // Idempotency for the onboarding drip: one row per (creator, step). The
   // drip claims this row before sending, so a concurrent cron run or a retry
