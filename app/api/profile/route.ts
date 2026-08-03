@@ -18,6 +18,7 @@ const SAFE_SELECT = {
   contentNiches: true,
   membershipStatus: true,
   membershipType: true,
+  stripeCustomerId: true,
   joinedAt: true,
   lastSeenAt: true,
   addressLine1: true,
@@ -43,7 +44,10 @@ export async function GET() {
     select: SAFE_SELECT,
   })
   if (!creator) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  return NextResponse.json({ creator })
+  // Expose only whether a Stripe customer is linked (drives the "Update payment
+  // method" button), never the raw id.
+  const { stripeCustomerId, ...safe } = creator
+  return NextResponse.json({ creator: { ...safe, hasPaymentAccount: !!stripeCustomerId } })
 }
 
 export async function PATCH(req: Request) {

@@ -8,6 +8,7 @@ interface MembershipProfile {
   membershipStatus: string
   membershipType: string
   joinedAt: string
+  hasPaymentAccount: boolean
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -145,49 +146,46 @@ export default function MembershipPage() {
               </div>
               <p className="font-montserrat" style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', margin: 0 }}>Payment Method</p>
             </div>
-            <p className="font-montserrat" style={{ fontSize: 13, lineHeight: 1.5, color: 'var(--text-muted)', margin: '0 0 16px' }}>
-              Update your payment details securely through Stripe. We never store your card information.
-            </p>
-
-            {portalError === 'no_stripe_id' ? (
-              <p className="font-montserrat text-center" style={{ fontSize: 13, color: 'var(--text-muted)', padding: '4px 0' }}>
+            {/* Only members whose account is linked to a Stripe customer can
+                self-serve. Everyone else is pointed at support directly, rather
+                than shown a button that would just fall back to the same
+                message on click. */}
+            {profile?.hasPaymentAccount && portalError !== 'no_stripe_id' ? (
+              <>
+                <p className="font-montserrat" style={{ fontSize: 13, lineHeight: 1.5, color: 'var(--text-muted)', margin: '0 0 16px' }}>
+                  Update your payment details securely through Stripe. We never store your card information.
+                </p>
+                {portalError === 'general' && (
+                  <p className="font-montserrat text-center" style={{ fontSize: 12, color: 'var(--error)', margin: '0 0 8px' }}>
+                    Something went wrong. Please try again or contact support.
+                  </p>
+                )}
+                <button
+                  onClick={handleUpdatePayment}
+                  disabled={loadingPortal}
+                  className="font-montserrat"
+                  style={{ width: '100%', height: 48, background: 'var(--pill-bg)', border: 'none', borderRadius: 'var(--radius-pill)', color: 'var(--pill-text)', fontWeight: 700, fontSize: 14, cursor: loadingPortal ? 'wait' : 'pointer', opacity: loadingPortal ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                >
+                  {loadingPortal ? (
+                    <>
+                      <span className="w-4 h-4 rounded-full animate-spin" style={{ border: '2px solid var(--pill-text)', borderTopColor: 'transparent' }} />
+                      Connecting to Stripe…
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard size={16} style={{ color: 'var(--pill-text)' }} />
+                      {portalError === 'general' ? 'Try Again' : 'Update Payment Method'}
+                    </>
+                  )}
+                </button>
+              </>
+            ) : (
+              <p className="font-montserrat" style={{ fontSize: 13, lineHeight: 1.5, color: 'var(--text-muted)', margin: 0 }}>
                 To update your payment details please contact{' '}
                 <a href="mailto:support@wegotyouagency.com?subject=Update%20payment%20details" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>
                   support@wegotyouagency.com
                 </a>
               </p>
-            ) : portalError === 'general' ? (
-              <>
-                <p className="font-montserrat text-center" style={{ fontSize: 12, color: 'var(--error)', margin: '0 0 8px' }}>
-                  Something went wrong. Please try again or contact support.
-                </p>
-                <button
-                  onClick={handleUpdatePayment}
-                  className="font-montserrat"
-                  style={{ width: '100%', height: 44, background: 'var(--accent)', border: 'none', borderRadius: 'var(--radius-pill)', color: 'var(--bg)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
-                >
-                  Try Again
-                </button>
-              </>
-            ) : (
-              <button
-                onClick={handleUpdatePayment}
-                disabled={loadingPortal}
-                className="font-montserrat"
-                style={{ width: '100%', height: 48, background: loadingPortal ? 'var(--surface-2)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-pill)', color: loadingPortal ? 'var(--text-muted)' : 'var(--bg)', fontWeight: 700, fontSize: 14, cursor: loadingPortal ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
-              >
-                {loadingPortal ? (
-                  <>
-                    <span className="w-4 h-4 rounded-full animate-spin" style={{ border: '2px solid var(--text-muted)', borderTopColor: 'transparent' }} />
-                    Connecting to Stripe…
-                  </>
-                ) : (
-                  <>
-                    <CreditCard size={16} />
-                    Update Payment Method
-                  </>
-                )}
-              </button>
             )}
           </div>
         )}
