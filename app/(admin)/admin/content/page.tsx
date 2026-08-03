@@ -115,6 +115,8 @@ function TypePill({ type }: { type: string }) {
 export default function ContentPage() {
   const [items, setItems] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
@@ -132,12 +134,24 @@ export default function ContentPage() {
   const bannerRef = useRef<HTMLInputElement>(null);
   const pdfRef = useRef<HTMLInputElement>(null);
 
+  const PAGE_SIZE = 50;
+
   async function fetchItems() {
     setLoading(true);
-    const res = await fetch("/api/content");
+    const res = await fetch(`/api/content?limit=${PAGE_SIZE}&offset=0`);
     const data = await res.json();
     setItems(data);
+    setHasMore(res.headers.get("X-Has-More") === "true");
     setLoading(false);
+  }
+
+  async function loadMore() {
+    setLoadingMore(true);
+    const res = await fetch(`/api/content?limit=${PAGE_SIZE}&offset=${items.length}`);
+    const data = await res.json();
+    setItems((prev) => [...prev, ...data]);
+    setHasMore(res.headers.get("X-Has-More") === "true");
+    setLoadingMore(false);
   }
 
   useEffect(() => { fetchItems(); }, []);
@@ -380,6 +394,21 @@ export default function ContentPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Load more — hidden while a type/status filter or search is active,
+          since those only narrow the already-loaded rows. */}
+      {!loading && hasMore && filterType === "all" && filterStatus === "all" && !search.trim() && (
+        <div className="flex justify-center mt-4">
+          <button
+            onClick={loadMore}
+            disabled={loadingMore}
+            className="font-montserrat uppercase"
+            style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.10em", padding: "8px 20px", borderRadius: "var(--radius-pill)", background: "transparent", color: "var(--text-muted)", border: "1px solid var(--border-strong)", cursor: loadingMore ? "wait" : "pointer" }}
+          >
+            {loadingMore ? "Loading…" : "Load more"}
+          </button>
         </div>
       )}
 

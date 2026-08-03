@@ -49,8 +49,22 @@ function mapCampaign(p: any) {
 // 60s revalidate + the 'campaigns' tag: admin create/edit/status changes call
 // revalidateTag('campaigns') for instant freshness (like/comment counts may
 // be up to 60s stale, which is fine for social-proof numbers).
+// Pagination defaults. limit/offset are passed as ARGUMENTS to the cached
+// function below, so unstable_cache folds them into its key automatically —
+// each page is cached under its own key, pages never collide, and because the
+// list is identical for every member the same offsets share the same cache
+// entry (hit rate preserved). revalidateTag('campaigns') still busts all pages.
+const DEFAULT_LIMIT = 50;
+const MAX_LIMIT = 100;
+
+function parsePaging(searchParams: URLSearchParams) {
+  const limit = Math.min(Math.max(parseInt(searchParams.get("limit") || String(DEFAULT_LIMIT), 10) || DEFAULT_LIMIT, 1), MAX_LIMIT);
+  const offset = Math.max(parseInt(searchParams.get("offset") || "0", 10) || 0, 0);
+  return { limit, offset };
+}
+
 const getMemberCampaigns = unstable_cache(
-  async (filter: string | null, liveOnly: boolean) => {
+  async (filter: string | null, liveOnly: boolean, limit: number, offset: number) => {
     const where: Record<string, unknown> = {};
     where.status = liveOnly ? "published" : { in: ["published", "closed"] };
 
@@ -75,13 +89,17 @@ const getMemberCampaigns = unstable_cache(
       where.sectionId = { in: opportunitySections.map((s: { id: string }) => s.id) };
     }
 
-    const posts = await prisma.post.findMany({
-      where,
-      orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
-      take: 2000,
-      include: { section: { select: { name: true, slug: true } } },
-    });
-    return posts.map(mapCampaign);
+    const [posts, total] = await Promise.all([
+      prisma.post.findMany({
+        where,
+        orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
+        skip: offset,
+        take: limit,
+        include: { section: { select: { name: true, slug: true } } },
+      }),
+      prisma.post.count({ where }),
+    ]);
+    return { campaigns: posts.map(mapCampaign), total };
   },
   ["member-campaigns"],
   { revalidate: 60, tags: ["campaigns"] },
@@ -130,6 +148,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const filter   = searchParams.get("filter");
   const adminAll = searchParams.get("adminAll") && session.user.isAdmin ? searchParams.get("adminAll") : null;
+  const { limit, offset } = parsePaging(searchParams);
 
   try {
     // Flip any due scheduled campaigns/content live before reading
@@ -138,8 +157,8 @@ export async function GET(req: NextRequest) {
 
     // Members get the cached opportunities feed (same for everyone)
     if (!adminAll) {
-      const campaigns = await getMemberCampaigns(filter, !!searchParams.get("live"));
-      return NextResponse.json({ campaigns });
+      const { campaigns, total } = await getMemberCampaigns(filter, !!searchParams.get("live"), limit, offset);
+      return NextResponse.json({ campaigns, total, limit, offset, hasMore: offset + campaigns.length < total });
     }
 
     // Admin: uncached, sees every campaign incl. drafts
@@ -157,14 +176,18 @@ export async function GET(req: NextRequest) {
       where.OR = orConditions;
     }
 
-    const posts = await prisma.post.findMany({
-      where,
-      orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
-      take: 2000,
-      include: { section: { select: { name: true, slug: true } } },
-    });
+    const [posts, total] = await Promise.all([
+      prisma.post.findMany({
+        where,
+        orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
+        skip: offset,
+        take: limit,
+        include: { section: { select: { name: true, slug: true } } },
+      }),
+      prisma.post.count({ where }),
+    ]);
 
-    return NextResponse.json({ campaigns: posts.map(mapCampaign) });
+    return NextResponse.json({ campaigns: posts.map(mapCampaign), total, limit, offset, hasMore: offset + posts.length < total });
   } catch (err) {
     console.error("[GET /api/campaigns]", err);
     return NextResponse.json({ error: "Failed to load campaigns" }, { status: 500 });

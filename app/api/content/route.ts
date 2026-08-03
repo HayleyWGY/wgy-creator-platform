@@ -17,16 +17,46 @@ const CONTENT_ORDER = [{ sortOrder: "asc" as const }, { publishedAt: "desc" as c
 // and suspenders: a 60s revalidate AND the 'content' tag — admin changes call
 // revalidateTag('content') for instant freshness, and even if that ever
 // missed, staleness self-heals within 60s. Admin reads stay uncached below.
+// Pagination defaults. limit/offset are ARGUMENTS to the cached function, so
+// unstable_cache keys each page separately (no cross-page/-member leak) while
+// identical (section, type, offset) requests share a cache entry across members.
+const DEFAULT_LIMIT = 50;
+const MAX_LIMIT = 100;
+
+function parsePaging(searchParams: URLSearchParams) {
+  const limit = Math.min(Math.max(parseInt(searchParams.get("limit") || String(DEFAULT_LIMIT), 10) || DEFAULT_LIMIT, 1), MAX_LIMIT);
+  const offset = Math.max(parseInt(searchParams.get("offset") || "0", 10) || 0, 0);
+  return { limit, offset };
+}
+
 const getPublishedContent = unstable_cache(
-  async (section: string | null, contentType: string | null) => {
+  async (section: string | null, contentType: string | null, limit: number, offset: number) => {
     const where: Record<string, unknown> = { status: "published" };
     if (contentType) where.contentType = contentType;
     if (section) where.section = section;
-    return prisma.postContent.findMany({ where, orderBy: CONTENT_ORDER, take: 200 });
+    const [items, total] = await Promise.all([
+      prisma.postContent.findMany({ where, orderBy: CONTENT_ORDER, skip: offset, take: limit }),
+      prisma.postContent.count({ where }),
+    ]);
+    return { items, total };
   },
   ["content-published"],
   { revalidate: 60, tags: ["content"] },
 );
+
+// Pagination metadata rides on headers so the response body stays the bare
+// array every existing client already reads — no client breaks, and paginating
+// clients read X-Total-Count / X-Has-More.
+function pagedJson(items: unknown[], total: number, limit: number, offset: number) {
+  return NextResponse.json(items, {
+    headers: {
+      "X-Total-Count": String(total),
+      "X-Has-More": String(offset + items.length < total),
+      "X-Limit": String(limit),
+      "X-Offset": String(offset),
+    },
+  });
+}
 
 export async function GET(req: NextRequest) {
   const session = await getPayingSession();
@@ -37,6 +67,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const section     = searchParams.get("section");
   const contentType = searchParams.get("contentType");
+  const { limit, offset } = parsePaging(searchParams);
 
   try {
     // Flip any due scheduled campaigns/content live before reading
@@ -45,8 +76,8 @@ export async function GET(req: NextRequest) {
 
     // Members always get the published list — served from cache
     if (!session.user.isAdmin) {
-      const items = await getPublishedContent(section, contentType);
-      return NextResponse.json(items);
+      const { items, total } = await getPublishedContent(section, contentType, limit, offset);
+      return pagedJson(items, total, limit, offset);
     }
 
     // Admin: uncached, may request any status (incl. drafts they just edited)
@@ -56,13 +87,12 @@ export async function GET(req: NextRequest) {
     if (contentType) where.contentType = contentType;
     if (section)     where.section     = section;
 
-    const items = await prisma.postContent.findMany({
-      where,
-      orderBy: CONTENT_ORDER,
-      take: 200, // prevent unbounded queries
-    });
+    const [items, total] = await Promise.all([
+      prisma.postContent.findMany({ where, orderBy: CONTENT_ORDER, skip: offset, take: limit }),
+      prisma.postContent.count({ where }),
+    ]);
 
-    return NextResponse.json(items);
+    return pagedJson(items, total, limit, offset);
   } catch (err) {
     console.error("[GET /api/content]", err);
     return NextResponse.json({ error: "Failed to load content" }, { status: 500 });

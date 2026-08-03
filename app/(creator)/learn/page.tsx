@@ -150,15 +150,34 @@ function LearnPageInner() {
   const [activeType, setActiveType] = useState("all");
   const [activeCategory, setActiveCategory] = useState("all");
   const [search, setSearch] = useState("");
+  const PAGE_SIZE = 50;
   const [items, setItems] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
 
   useEffect(() => {
-    fetch("/api/content?status=published&section=general")
-      .then((r) => r.json())
-      .then((data) => { setItems(data); setLoading(false); })
+    fetch(`/api/content?status=published&section=general&limit=${PAGE_SIZE}&offset=0`)
+      .then(async (r) => {
+        const data = await r.json();
+        setItems(data);
+        setHasMore(r.headers.get("X-Has-More") === "true");
+        setLoading(false);
+      })
       .catch(() => setLoading(false));
   }, []);
+
+  const loadMore = () => {
+    setLoadingMore(true);
+    fetch(`/api/content?status=published&section=general&limit=${PAGE_SIZE}&offset=${items.length}`)
+      .then(async (r) => {
+        const data = await r.json();
+        setItems((prev) => [...prev, ...data]);
+        setHasMore(r.headers.get("X-Has-More") === "true");
+      })
+      .catch(() => setHasMore(false))
+      .finally(() => setLoadingMore(false));
+  };
 
   useEffect(() => {
     const categoryParam = searchParams.get("category");
@@ -237,6 +256,29 @@ function LearnPageInner() {
           </div>
         ) : (
           filtered.map((item) => <ContentCard key={item.id} item={item} />)
+        )}
+
+        {/* Load more — hidden while filtering/searching, which only apply to
+            the items already loaded on the client. */}
+        {!loading && hasMore && activeType === "all" && activeCategory === "all" && !search.trim() && (
+          <button
+            onClick={loadMore}
+            disabled={loadingMore}
+            className="font-montserrat uppercase self-center mt-2"
+            style={{
+              fontSize: "11px",
+              fontWeight: 700,
+              letterSpacing: "0.12em",
+              padding: "10px 24px",
+              borderRadius: "var(--radius-pill)",
+              background: "transparent",
+              color: "var(--text-muted)",
+              border: "1px solid var(--border-strong)",
+              cursor: loadingMore ? "wait" : "pointer",
+            }}
+          >
+            {loadingMore ? "Loading…" : "Load more"}
+          </button>
         )}
       </div>
     </div>

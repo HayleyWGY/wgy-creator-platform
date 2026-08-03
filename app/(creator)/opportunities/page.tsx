@@ -25,24 +25,47 @@ interface Campaign {
 
 
 export default function OpportunitiesPage() {
+  const PAGE_SIZE = 50;
   const [activeFilter, setActiveFilter] = useState("All");
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
   const [search, setSearch] = useState("");
 
+  const buildUrl = (offset: number) => {
+    const base = `/api/campaigns?limit=${PAGE_SIZE}&offset=${offset}`;
+    return activeFilter === "All" ? base : `${base}&filter=${encodeURIComponent(activeFilter)}`;
+  };
+
+  // Reset and load the first page whenever the filter changes.
   useEffect(() => {
     setLoading(true);
-    const url =
-      activeFilter === "All"
-        ? "/api/campaigns"
-        : `/api/campaigns?filter=${encodeURIComponent(activeFilter)}`;
-
-    fetch(url)
+    fetch(buildUrl(0))
       .then((r) => r.json())
-      .then((data) => setCampaigns(data.campaigns ?? []))
-      .catch(() => setCampaigns([]))
+      .then((data) => {
+        setCampaigns(data.campaigns ?? []);
+        setHasMore(!!data.hasMore);
+      })
+      .catch(() => {
+        setCampaigns([]);
+        setHasMore(false);
+      })
       .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeFilter]);
+
+  const loadMore = () => {
+    setLoadingMore(true);
+    fetch(buildUrl(campaigns.length))
+      .then((r) => r.json())
+      .then((data) => {
+        setCampaigns((prev) => [...prev, ...(data.campaigns ?? [])]);
+        setHasMore(!!data.hasMore);
+      })
+      .catch(() => setHasMore(false))
+      .finally(() => setLoadingMore(false));
+  };
 
   const filtered = search.trim()
     ? campaigns.filter(
@@ -136,6 +159,29 @@ export default function OpportunitiesPage() {
               />
             </Link>
           ))
+        )}
+
+        {/* Load more — hidden while searching, since search only filters the
+            campaigns already loaded on the client. */}
+        {!loading && hasMore && !search.trim() && (
+          <button
+            onClick={loadMore}
+            disabled={loadingMore}
+            className="font-montserrat uppercase self-center mt-2"
+            style={{
+              fontSize: "11px",
+              fontWeight: 700,
+              letterSpacing: "0.12em",
+              padding: "10px 24px",
+              borderRadius: "var(--radius-pill)",
+              background: "transparent",
+              color: "var(--text-muted)",
+              border: "1px solid var(--border-strong)",
+              cursor: loadingMore ? "wait" : "pointer",
+            }}
+          >
+            {loadingMore ? "Loading…" : "Load more"}
+          </button>
         )}
       </div>
     </div>

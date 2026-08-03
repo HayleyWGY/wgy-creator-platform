@@ -139,19 +139,31 @@ function CloseModal({
 }
 
 export default function CampaignsPage() {
+  const PAGE_SIZE = 50;
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading]     = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore]     = useState(false);
   const [activeTab, setActiveTab] = useState("All");
   const [search, setSearch]       = useState("");
   const [closingId, setClosingId] = useState<string | null>(null);
 
   function loadCampaigns() {
     setLoading(true);
-    fetch("/api/campaigns?adminAll=true")
+    fetch(`/api/campaigns?adminAll=true&limit=${PAGE_SIZE}&offset=0`)
       .then((r) => r.json())
-      .then((data) => setCampaigns(data.campaigns ?? []))
+      .then((data) => { setCampaigns(data.campaigns ?? []); setHasMore(!!data.hasMore); })
       .catch(() => setCampaigns([]))
       .finally(() => setLoading(false));
+  }
+
+  function loadMore() {
+    setLoadingMore(true);
+    fetch(`/api/campaigns?adminAll=true&limit=${PAGE_SIZE}&offset=${campaigns.length}`)
+      .then((r) => r.json())
+      .then((data) => { setCampaigns((prev) => [...prev, ...(data.campaigns ?? [])]); setHasMore(!!data.hasMore); })
+      .catch(() => setHasMore(false))
+      .finally(() => setLoadingMore(false));
   }
 
   useEffect(() => { loadCampaigns(); }, []);
@@ -384,11 +396,22 @@ export default function CampaignsPage() {
           )}
         </div>
 
-        {/* Count */}
+        {/* Count + load more. Tab/search filter only the loaded rows, so the
+            button is hidden while a filter is active to avoid confusion. */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "16px" }}>
           <p className="font-montserrat font-normal" style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-            Showing {filtered.length} of {campaigns.length} campaign{campaigns.length !== 1 ? "s" : ""}
+            Showing {filtered.length} of {campaigns.length} loaded campaign{campaigns.length !== 1 ? "s" : ""}
           </p>
+          {hasMore && activeTab === "All" && !search.trim() && (
+            <button
+              onClick={loadMore}
+              disabled={loadingMore}
+              className="font-montserrat uppercase"
+              style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.10em", padding: "8px 20px", borderRadius: "var(--radius-pill)", background: "transparent", color: "var(--text-muted)", border: "1px solid var(--border-strong)", cursor: loadingMore ? "wait" : "pointer" }}
+            >
+              {loadingMore ? "Loading…" : "Load more"}
+            </button>
+          )}
         </div>
       </div>
 
