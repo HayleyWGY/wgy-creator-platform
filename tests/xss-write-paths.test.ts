@@ -71,7 +71,9 @@ describe('stored XSS — write paths are wired', () => {
 
   it('content POST and PATCH sanitise body', () => {
     expect(read('app/api/content/route.ts')).toMatch(/body:\s*body\.body\s*\?\s*sanitizeRichText/)
-    expect(read('app/api/content/[id]/route.ts')).toMatch(/body:\s*body\.body\s*\?\s*sanitizeRichText/)
+    // PATCH builds the update from present keys only (see the route), so the
+    // body sanitise reads as `data.body = raw ? sanitizeRichText(raw) : null`.
+    expect(read('app/api/content/[id]/route.ts')).toMatch(/data\.body\s*=\s*raw\s*\?\s*sanitizeRichText/)
   })
 
   it('migration scripts allowlist rather than denylist', () => {

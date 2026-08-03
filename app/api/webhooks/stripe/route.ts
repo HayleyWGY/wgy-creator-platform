@@ -65,9 +65,11 @@ export async function POST(req: Request) {
       // 3. If not: create new creator account with membershipStatus: active
       // 4. Send magic link email via Klaviyo so creator can set their password
       // 5. Log event to stripe_events table
-      // TODO: Map price IDs to regions when webhook is connected:
-      //   UK_PRICE_ID  = process.env.STRIPE_UK_PRICE_ID   -> region: 'uk'
-      //   INT_PRICE_ID = process.env.STRIPE_INT_PRICE_ID  -> region: 'international'
+      // TODO: Map price IDs to regions when webhook is connected, reading the
+      // price id from env (STRIPE_UK_PRICE_ID / STRIPE_INT_PRICE_ID — add them
+      // to .env.example and OPTIONAL_ENV at that point):
+      //   UK price id  -> region: 'uk'
+      //   INT price id -> region: 'international'
       // (This is the ONLY reliable source of a creator's region — see the
       //  region note in the failed-payments reporting, which currently has no
       //  region column because nothing populates it until this lands.)

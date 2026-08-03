@@ -109,7 +109,7 @@ describe('every API handler authenticates its caller', () => {
 
   it('every non-exempt handler calls getActiveSession()', () => {
     const missing = gated
-      .filter(h => !/getActiveSession\s*\(/.test(h.body))
+      .filter(h => !/get(?:Active|Paying)Session\s*\(/.test(h.body))
       .map(h => `${h.method} ${h.file}`)
 
     expect(
@@ -129,7 +129,7 @@ describe('every API handler authenticates its caller', () => {
       h => h.file.includes('creator-posts') && h.file.includes('comments') && h.method === 'GET',
     )
     expect(target, 'creator-posts/[id]/comments GET should exist').toBeTruthy()
-    expect(target!.body).toMatch(/getActiveSession\s*\(/)
+    expect(target!.body).toMatch(/get(?:Active|Paying)Session\s*\(/)
     expect(target!.body).toMatch(/401/)
     // The gate must precede the query, or it gates nothing.
     expect(target!.body.indexOf('getActiveSession')).toBeLessThan(
