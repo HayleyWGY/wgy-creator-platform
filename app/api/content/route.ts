@@ -37,25 +37,27 @@ async function runContentQuery(where: Record<string, unknown>, limit: number, of
   return { items, total };
 }
 
+// Shared published-content WHERE so browse and search apply the same filters.
+function publishedContentWhere(section: string | null, contentType: string | null, category: string | null) {
+  const where: Record<string, unknown> = { status: "published" };
+  if (contentType) where.contentType = contentType;
+  if (section) where.section = section;
+  if (category) where.categories = { has: category };
+  return where;
+}
+
 const getPublishedContent = unstable_cache(
-  async (section: string | null, contentType: string | null, limit: number, offset: number) => {
-    const where: Record<string, unknown> = { status: "published" };
-    if (contentType) where.contentType = contentType;
-    if (section) where.section = section;
-    return runContentQuery(where, limit, offset);
+  async (section: string | null, contentType: string | null, category: string | null, limit: number, offset: number) => {
+    return runContentQuery(publishedContentWhere(section, contentType, category), limit, offset);
   },
   ["content-published"],
   { revalidate: 60, tags: ["content"] },
 );
 
 // Uncached search across the whole published library (title match).
-async function searchPublishedContent(section: string | null, contentType: string | null, q: string, limit: number, offset: number) {
-  const where: Record<string, unknown> = {
-    status: "published",
-    title: { contains: q, mode: "insensitive" },
-  };
-  if (contentType) where.contentType = contentType;
-  if (section) where.section = section;
+async function searchPublishedContent(section: string | null, contentType: string | null, category: string | null, q: string, limit: number, offset: number) {
+  const where = publishedContentWhere(section, contentType, category);
+  where.title = { contains: q, mode: "insensitive" };
   return runContentQuery(where, limit, offset);
 }
 
@@ -82,6 +84,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const section     = searchParams.get("section");
   const contentType = searchParams.get("contentType");
+  const category    = searchParams.get("category");
   const q           = searchParams.get("q")?.trim() || null;
   const { limit, offset } = parsePaging(searchParams);
 
@@ -94,8 +97,8 @@ export async function GET(req: NextRequest) {
     // takes the uncached path so it covers the whole library.
     if (!session.user.isAdmin) {
       const { items, total } = q
-        ? await searchPublishedContent(section, contentType, q, limit, offset)
-        : await getPublishedContent(section, contentType, limit, offset);
+        ? await searchPublishedContent(section, contentType, category, q, limit, offset)
+        : await getPublishedContent(section, contentType, category, limit, offset);
       return pagedJson(items, total, limit, offset);
     }
 
@@ -105,6 +108,7 @@ export async function GET(req: NextRequest) {
     if (status)      where.status      = status;
     if (contentType) where.contentType = contentType;
     if (section)     where.section     = section;
+    if (category)    where.categories  = { has: category };
     if (q)           where.title       = { contains: q, mode: "insensitive" };
 
     const { items, total } = await runContentQuery(where, limit, offset);

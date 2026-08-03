@@ -197,9 +197,10 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ campaigns, total, limit, offset, hasMore: offset + campaigns.length < total });
     }
 
-    // Admin: uncached, sees every campaign incl. drafts. Filter tab and search
-    // term combine as AND clauses.
-    const and: Record<string, unknown>[] = [];
+    // Admin: uncached, sees every campaign incl. drafts. The type filter and
+    // search term apply to BOTH the list and the tab counts; the status tab
+    // narrows only the list (so each tab badge still shows its true total).
+    const baseAnd: Record<string, unknown>[] = [];
     if (filter && FILTER_TO_CAMPAIGN_TYPE[filter]) {
       const filterSection = await prisma.section.findUnique({
         where: { slug: FILTER_TO_SECTION_SLUG[filter] },
@@ -210,13 +211,27 @@ export async function GET(req: NextRequest) {
         { postType: FILTER_TO_POST_TYPE[filter] },
       ];
       if (filterSection) orConditions.push({ sectionId: filterSection.id });
-      and.push({ OR: orConditions });
+      baseAnd.push({ OR: orConditions });
     }
-    if (q) and.push(campaignSearchClause(q));
-    const where = and.length ? { AND: and } : {};
+    if (q) baseAnd.push(campaignSearchClause(q));
+    const baseWhere = baseAnd.length ? { AND: baseAnd } : {};
 
-    const { campaigns, total } = await runCampaignQuery(where, limit, offset);
-    return NextResponse.json({ campaigns, total, limit, offset, hasMore: offset + campaigns.length < total });
+    const adminStatus = searchParams.get("status");
+    const listWhere = adminStatus ? { AND: [...baseAnd, { status: adminStatus }] } : baseWhere;
+
+    const [{ campaigns, total }, grouped] = await Promise.all([
+      runCampaignQuery(listWhere, limit, offset),
+      // Per-status counts for the tab badges — the whole library, ignoring the
+      // active tab so every badge stays accurate however you page/filter.
+      prisma.post.groupBy({ by: ["status"], where: baseWhere, _count: { _all: true } }),
+    ]);
+    const counts: Record<string, number> = { All: 0 };
+    for (const g of grouped) {
+      counts[g.status] = g._count._all;
+      counts.All += g._count._all;
+    }
+
+    return NextResponse.json({ campaigns, total, limit, offset, hasMore: offset + campaigns.length < total, counts });
   } catch (err) {
     console.error("[GET /api/campaigns]", err);
     return NextResponse.json({ error: "Failed to load campaigns" }, { status: 500 });

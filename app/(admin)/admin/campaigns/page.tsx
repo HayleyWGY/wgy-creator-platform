@@ -148,16 +148,26 @@ export default function CampaignsPage() {
   const [search, setSearch]       = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [closingId, setClosingId] = useState<string | null>(null);
+  // Per-status totals from the server, so tab badges reflect the whole library
+  // rather than just the loaded page.
+  const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search.trim()), 300);
     return () => clearTimeout(t);
   }, [search]);
 
+  // Tab label -> stored status. "All" sends no status filter.
+  const TAB_STATUS: Record<string, string> = {
+    Live: "published", Scheduled: "scheduled", Draft: "draft", Closed: "closed",
+  };
+
   const campaignsUrl = (offset: number) => {
     let url = `/api/campaigns?adminAll=true&limit=${PAGE_SIZE}&offset=${offset}`;
-    // Search runs on the server so it spans every campaign, not just loaded rows.
+    // Search AND the status tab both run on the server, spanning every
+    // campaign rather than just the loaded rows.
     if (debouncedSearch) url += `&q=${encodeURIComponent(debouncedSearch)}`;
+    if (TAB_STATUS[activeTab]) url += `&status=${TAB_STATUS[activeTab]}`;
     return url;
   };
 
@@ -165,7 +175,7 @@ export default function CampaignsPage() {
     setLoading(true);
     fetch(campaignsUrl(0))
       .then((r) => r.json())
-      .then((data) => { setCampaigns(data.campaigns ?? []); setHasMore(!!data.hasMore); })
+      .then((data) => { setCampaigns(data.campaigns ?? []); setHasMore(!!data.hasMore); if (data.counts) setStatusCounts(data.counts); })
       .catch(() => setCampaigns([]))
       .finally(() => setLoading(false));
   }
@@ -179,7 +189,7 @@ export default function CampaignsPage() {
       .finally(() => setLoadingMore(false));
   }
 
-  useEffect(() => { loadCampaigns(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [debouncedSearch]);
+  useEffect(() => { loadCampaigns(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [debouncedSearch, activeTab]);
 
   async function handleClose(id: string) {
     await fetch(`/api/campaigns/${id}`, {
@@ -200,24 +210,17 @@ export default function CampaignsPage() {
     setCampaigns((prev) => prev.map((c) => c.id === id ? { ...c, status: "published" } : c));
   }
 
-  // Text search is done on the server (all campaigns). The status tab still
-  // narrows the loaded rows on the client.
-  const filtered = campaigns.filter((c) => {
-    const matchesTab =
-      activeTab === "All" ||
-      (activeTab === "Live"      && c.status === "published") ||
-      (activeTab === "Scheduled" && c.status === "scheduled") ||
-      (activeTab === "Draft"     && c.status === "draft") ||
-      (activeTab === "Closed"    && c.status === "closed");
-    return matchesTab;
-  });
+  // Search AND the status tab are applied on the server, so the loaded list is
+  // already the matches for the active tab.
+  const filtered = campaigns;
 
+  // Tab badges come from the server's whole-library status counts.
   const counts = {
-    All:       campaigns.length,
-    Live:      campaigns.filter((c) => c.status === "published").length,
-    Scheduled: campaigns.filter((c) => c.status === "scheduled").length,
-    Draft:     campaigns.filter((c) => c.status === "draft").length,
-    Closed:    campaigns.filter((c) => c.status === "closed").length,
+    All:       statusCounts.All ?? 0,
+    Live:      statusCounts.published ?? 0,
+    Scheduled: statusCounts.scheduled ?? 0,
+    Draft:     statusCounts.draft ?? 0,
+    Closed:    statusCounts.closed ?? 0,
   };
 
   const closingCampaign = closingId ? campaigns.find((c) => c.id === closingId) : null;
@@ -413,7 +416,7 @@ export default function CampaignsPage() {
           <p className="font-montserrat font-normal" style={{ fontSize: "12px", color: "var(--text-muted)" }}>
             Showing {filtered.length} of {campaigns.length} loaded campaign{campaigns.length !== 1 ? "s" : ""}
           </p>
-          {hasMore && activeTab === "All" && (
+          {hasMore && (
             <button
               onClick={loadMore}
               disabled={loadingMore}

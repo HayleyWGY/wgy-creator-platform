@@ -139,8 +139,11 @@ export default function ContentPage() {
 
   const contentUrl = (offset: number) => {
     let url = `/api/content?limit=${PAGE_SIZE}&offset=${offset}`;
-    // Search runs on the server so it spans all content, not just loaded rows.
+    // Search AND the type/status filters all run on the server, spanning all
+    // content rather than just the loaded rows.
     if (debouncedSearch) url += `&q=${encodeURIComponent(debouncedSearch)}`;
+    if (filterType !== "all") url += `&contentType=${encodeURIComponent(filterType)}`;
+    if (filterStatus !== "all") url += `&status=${encodeURIComponent(filterStatus)}`;
     return url;
   };
 
@@ -168,7 +171,7 @@ export default function ContentPage() {
   }, [search]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { fetchItems(); }, [debouncedSearch]);
+  useEffect(() => { fetchItems(); }, [debouncedSearch, filterType, filterStatus]);
 
   function openNew() {
     setEditingId(null);
@@ -262,13 +265,9 @@ export default function ContentPage() {
     }));
   }
 
-  // Text search is done on the server (all content). Type/status still narrow
-  // the loaded rows on the client.
-  const filtered = items.filter((item) => {
-    const matchType = filterType === "all" || item.contentType === filterType;
-    const matchStatus = filterStatus === "all" || item.status === filterStatus;
-    return matchType && matchStatus;
-  });
+  // Search and the type/status filters all run on the server now, so the loaded
+  // list is already the full set of matches.
+  const filtered = items;
 
   const bodyConfig: Record<string, { label: string; placeholder: string }> = {
     blog_post:       { label: "CONTENT",            placeholder: "Write your blog post..." },
@@ -414,7 +413,7 @@ export default function ContentPage() {
 
       {/* Load more — hidden while a type/status filter or search is active,
           since those only narrow the already-loaded rows. */}
-      {!loading && hasMore && filterType === "all" && filterStatus === "all" && (
+      {!loading && hasMore && (
         <div className="flex justify-center mt-4">
           <button
             onClick={loadMore}
