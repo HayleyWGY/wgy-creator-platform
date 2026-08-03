@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react'
+import { ArrowLeft, CheckCircle, AlertCircle, CreditCard } from 'lucide-react'
 
 interface MembershipProfile {
   membershipStatus: string
@@ -32,6 +32,32 @@ export default function MembershipPage() {
   const router = useRouter()
   const [profile, setProfile] = useState<MembershipProfile | null>(null)
   const [loading, setLoading] = useState(true)
+  // Portal button state. portalError: '' | 'no_stripe_id' | 'general'. We learn
+  // whether the member has a Stripe customer only when they click (the profile
+  // endpoint doesn't expose stripeCustomerId), so the button shows optimistically
+  // and swaps to the contact-support message if the API says no_stripe_id.
+  const [loadingPortal, setLoadingPortal] = useState(false)
+  const [portalError, setPortalError] = useState<'' | 'no_stripe_id' | 'general'>('')
+
+  const handleUpdatePayment = async () => {
+    setLoadingPortal(true)
+    setPortalError('')
+    try {
+      const res = await fetch('/api/stripe/portal', { method: 'POST' })
+      const data = await res.json().catch(() => ({}))
+      if (data.error === 'no_stripe_id' || data.error === 'billing_unavailable') {
+        setPortalError('no_stripe_id')
+        return
+      }
+      if (!res.ok || !data.url) throw new Error('portal')
+      // Hand off to Stripe's hosted portal. Our app never sees card details.
+      window.location.href = data.url
+    } catch {
+      setPortalError('general')
+    } finally {
+      setLoadingPortal(false)
+    }
+  }
 
   useEffect(() => {
     fetch('/api/profile')
@@ -107,6 +133,62 @@ export default function MembershipPage() {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Update payment method — secure hand-off to Stripe's hosted portal */}
+        {isPaid && (
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-card)', padding: 20, marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+              <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <CreditCard size={16} style={{ color: 'var(--accent)' }} />
+              </div>
+              <p className="font-montserrat" style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', margin: 0 }}>Payment Method</p>
+            </div>
+            <p className="font-montserrat" style={{ fontSize: 13, lineHeight: 1.5, color: 'var(--text-muted)', margin: '0 0 16px' }}>
+              Update your payment details securely through Stripe. We never store your card information.
+            </p>
+
+            {portalError === 'no_stripe_id' ? (
+              <p className="font-montserrat text-center" style={{ fontSize: 13, color: 'var(--text-muted)', padding: '4px 0' }}>
+                To update your payment details please contact{' '}
+                <a href="mailto:support@wegotyouagency.com?subject=Update%20payment%20details" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>
+                  support@wegotyouagency.com
+                </a>
+              </p>
+            ) : portalError === 'general' ? (
+              <>
+                <p className="font-montserrat text-center" style={{ fontSize: 12, color: 'var(--error)', margin: '0 0 8px' }}>
+                  Something went wrong. Please try again or contact support.
+                </p>
+                <button
+                  onClick={handleUpdatePayment}
+                  className="font-montserrat"
+                  style={{ width: '100%', height: 44, background: 'var(--accent)', border: 'none', borderRadius: 'var(--radius-pill)', color: 'var(--bg)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
+                >
+                  Try Again
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={handleUpdatePayment}
+                disabled={loadingPortal}
+                className="font-montserrat"
+                style={{ width: '100%', height: 48, background: loadingPortal ? 'var(--surface-2)' : 'var(--accent)', border: 'none', borderRadius: 'var(--radius-pill)', color: loadingPortal ? 'var(--text-muted)' : 'var(--bg)', fontWeight: 700, fontSize: 14, cursor: loadingPortal ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+              >
+                {loadingPortal ? (
+                  <>
+                    <span className="w-4 h-4 rounded-full animate-spin" style={{ border: '2px solid var(--text-muted)', borderTopColor: 'transparent' }} />
+                    Connecting to Stripe…
+                  </>
+                ) : (
+                  <>
+                    <CreditCard size={16} />
+                    Update Payment Method
+                  </>
+                )}
+              </button>
+            )}
           </div>
         )}
 

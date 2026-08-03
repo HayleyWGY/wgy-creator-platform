@@ -27,8 +27,12 @@ export default withAuth(
     if (
       token?.membershipStatus === 'payment_failed' &&
       !pathname.startsWith('/payment-failed') &&
+      !pathname.startsWith('/payment-updated') &&
       !pathname.startsWith('/sign-in')
     ) {
+      // /payment-updated is exempt: a member returning from the Stripe portal is
+      // still payment_failed until Stripe retries and the (Phase 2) webhook
+      // flips their status, so bouncing them here would hide the success page.
       return NextResponse.redirect(new URL('/payment-failed', req.url))
     }
 
@@ -67,6 +71,7 @@ export const config = {
     '/messages/:path*',
     '/notifications/:path*',
     '/membership/:path*',
+    '/payment-updated/:path*',
     '/search/:path*',
     '/about/:path*',
     '/admin/:path*',

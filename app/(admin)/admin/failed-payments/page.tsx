@@ -158,7 +158,8 @@ export default function FailedPaymentsPage() {
     setSendingDM(failure.creatorId)
     try {
       const firstName = failure.creatorName.split(' ')[0]
-      const draftMessage = `Hi ${firstName}, we noticed your recent payment didn't go through. Please update your payment details to keep your WGY membership active. If you need any help, just reply to this message and we'll sort it out for you.`
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://wgy-creator-platform.vercel.app'
+      const draftMessage = `Hi ${firstName}, we noticed your recent payment didn't go through. You can update your payment details here: ${appUrl}/membership\n\nIf you need any help just reply to this message and we'll sort it out for you.`
       // Admin -> creator send is /api/chat/dm/admin (creatorId + body). The
       // plain /api/chat/dm posts into the CALLER's own thread and ignores
       // creatorId, so it would have messaged nobody useful.
