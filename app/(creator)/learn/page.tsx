@@ -155,21 +155,37 @@ function LearnPageInner() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
   useEffect(() => {
-    fetch(`/api/content?status=published&section=general&limit=${PAGE_SIZE}&offset=0`)
+    const t = setTimeout(() => setDebouncedSearch(search.trim()), 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  const contentUrl = (offset: number) => {
+    let url = `/api/content?status=published&section=general&limit=${PAGE_SIZE}&offset=${offset}`;
+    // Search runs on the server so it covers the whole library.
+    if (debouncedSearch) url += `&q=${encodeURIComponent(debouncedSearch)}`;
+    return url;
+  };
+
+  // Reload the first page whenever the search term changes.
+  useEffect(() => {
+    setLoading(true);
+    fetch(contentUrl(0))
       .then(async (r) => {
         const data = await r.json();
         setItems(data);
         setHasMore(r.headers.get("X-Has-More") === "true");
-        setLoading(false);
       })
-      .catch(() => setLoading(false));
-  }, []);
+      .catch(() => setItems([]))
+      .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch]);
 
   const loadMore = () => {
     setLoadingMore(true);
-    fetch(`/api/content?status=published&section=general&limit=${PAGE_SIZE}&offset=${items.length}`)
+    fetch(contentUrl(items.length))
       .then(async (r) => {
         const data = await r.json();
         setItems((prev) => [...prev, ...data]);
@@ -187,11 +203,12 @@ function LearnPageInner() {
   // Suppress unused warning — router used in ContentCard via prop drilling is not needed here
   void router;
 
+  // Text search is handled on the server (whole library). Type/category still
+  // narrow the loaded results on the client.
   const filtered = items.filter((item) => {
     const matchType = activeType === "all" || item.contentType === activeType;
     const matchCat = activeCategory === "all" || item.categories.includes(activeCategory);
-    const matchSearch = !search || item.title.toLowerCase().includes(search.toLowerCase());
-    return matchType && matchCat && matchSearch;
+    return matchType && matchCat;
   });
 
   const pillBase = {
@@ -258,9 +275,9 @@ function LearnPageInner() {
           filtered.map((item) => <ContentCard key={item.id} item={item} />)
         )}
 
-        {/* Load more — hidden while filtering/searching, which only apply to
-            the items already loaded on the client. */}
-        {!loading && hasMore && activeType === "all" && activeCategory === "all" && !search.trim() && (
+        {/* Load more — works for search too (server-paged). Hidden only while a
+            client-side type/category filter is narrowing the loaded rows. */}
+        {!loading && hasMore && activeType === "all" && activeCategory === "all" && (
           <button
             onClick={loadMore}
             disabled={loadingMore}

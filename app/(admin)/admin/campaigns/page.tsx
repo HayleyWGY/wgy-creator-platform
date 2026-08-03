@@ -146,11 +146,24 @@ export default function CampaignsPage() {
   const [hasMore, setHasMore]     = useState(false);
   const [activeTab, setActiveTab] = useState("All");
   const [search, setSearch]       = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [closingId, setClosingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search.trim()), 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  const campaignsUrl = (offset: number) => {
+    let url = `/api/campaigns?adminAll=true&limit=${PAGE_SIZE}&offset=${offset}`;
+    // Search runs on the server so it spans every campaign, not just loaded rows.
+    if (debouncedSearch) url += `&q=${encodeURIComponent(debouncedSearch)}`;
+    return url;
+  };
 
   function loadCampaigns() {
     setLoading(true);
-    fetch(`/api/campaigns?adminAll=true&limit=${PAGE_SIZE}&offset=0`)
+    fetch(campaignsUrl(0))
       .then((r) => r.json())
       .then((data) => { setCampaigns(data.campaigns ?? []); setHasMore(!!data.hasMore); })
       .catch(() => setCampaigns([]))
@@ -159,14 +172,14 @@ export default function CampaignsPage() {
 
   function loadMore() {
     setLoadingMore(true);
-    fetch(`/api/campaigns?adminAll=true&limit=${PAGE_SIZE}&offset=${campaigns.length}`)
+    fetch(campaignsUrl(campaigns.length))
       .then((r) => r.json())
       .then((data) => { setCampaigns((prev) => [...prev, ...(data.campaigns ?? [])]); setHasMore(!!data.hasMore); })
       .catch(() => setHasMore(false))
       .finally(() => setLoadingMore(false));
   }
 
-  useEffect(() => { loadCampaigns(); }, []);
+  useEffect(() => { loadCampaigns(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [debouncedSearch]);
 
   async function handleClose(id: string) {
     await fetch(`/api/campaigns/${id}`, {
@@ -187,6 +200,8 @@ export default function CampaignsPage() {
     setCampaigns((prev) => prev.map((c) => c.id === id ? { ...c, status: "published" } : c));
   }
 
+  // Text search is done on the server (all campaigns). The status tab still
+  // narrows the loaded rows on the client.
   const filtered = campaigns.filter((c) => {
     const matchesTab =
       activeTab === "All" ||
@@ -194,11 +209,7 @@ export default function CampaignsPage() {
       (activeTab === "Scheduled" && c.status === "scheduled") ||
       (activeTab === "Draft"     && c.status === "draft") ||
       (activeTab === "Closed"    && c.status === "closed");
-    const matchesSearch =
-      !search.trim() ||
-      c.title.toLowerCase().includes(search.toLowerCase()) ||
-      c.brandName.toLowerCase().includes(search.toLowerCase());
-    return matchesTab && matchesSearch;
+    return matchesTab;
   });
 
   const counts = {
@@ -402,7 +413,7 @@ export default function CampaignsPage() {
           <p className="font-montserrat font-normal" style={{ fontSize: "12px", color: "var(--text-muted)" }}>
             Showing {filtered.length} of {campaigns.length} loaded campaign{campaigns.length !== 1 ? "s" : ""}
           </p>
-          {hasMore && activeTab === "All" && !search.trim() && (
+          {hasMore && activeTab === "All" && (
             <button
               onClick={loadMore}
               disabled={loadingMore}

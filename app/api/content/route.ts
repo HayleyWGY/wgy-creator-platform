@@ -29,20 +29,35 @@ function parsePaging(searchParams: URLSearchParams) {
   return { limit, offset };
 }
 
+async function runContentQuery(where: Record<string, unknown>, limit: number, offset: number) {
+  const [items, total] = await Promise.all([
+    prisma.postContent.findMany({ where, orderBy: CONTENT_ORDER, skip: offset, take: limit }),
+    prisma.postContent.count({ where }),
+  ]);
+  return { items, total };
+}
+
 const getPublishedContent = unstable_cache(
   async (section: string | null, contentType: string | null, limit: number, offset: number) => {
     const where: Record<string, unknown> = { status: "published" };
     if (contentType) where.contentType = contentType;
     if (section) where.section = section;
-    const [items, total] = await Promise.all([
-      prisma.postContent.findMany({ where, orderBy: CONTENT_ORDER, skip: offset, take: limit }),
-      prisma.postContent.count({ where }),
-    ]);
-    return { items, total };
+    return runContentQuery(where, limit, offset);
   },
   ["content-published"],
   { revalidate: 60, tags: ["content"] },
 );
+
+// Uncached search across the whole published library (title match).
+async function searchPublishedContent(section: string | null, contentType: string | null, q: string, limit: number, offset: number) {
+  const where: Record<string, unknown> = {
+    status: "published",
+    title: { contains: q, mode: "insensitive" },
+  };
+  if (contentType) where.contentType = contentType;
+  if (section) where.section = section;
+  return runContentQuery(where, limit, offset);
+}
 
 // Pagination metadata rides on headers so the response body stays the bare
 // array every existing client already reads — no client breaks, and paginating
@@ -67,6 +82,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const section     = searchParams.get("section");
   const contentType = searchParams.get("contentType");
+  const q           = searchParams.get("q")?.trim() || null;
   const { limit, offset } = parsePaging(searchParams);
 
   try {
@@ -74,9 +90,12 @@ export async function GET(req: NextRequest) {
     // (self-throttled to once/60s per instance)
     await publishDueScheduled().catch(() => {});
 
-    // Members always get the published list — served from cache
+    // Members always get the published list — cached, unless searching, which
+    // takes the uncached path so it covers the whole library.
     if (!session.user.isAdmin) {
-      const { items, total } = await getPublishedContent(section, contentType, limit, offset);
+      const { items, total } = q
+        ? await searchPublishedContent(section, contentType, q, limit, offset)
+        : await getPublishedContent(section, contentType, limit, offset);
       return pagedJson(items, total, limit, offset);
     }
 
@@ -86,12 +105,9 @@ export async function GET(req: NextRequest) {
     if (status)      where.status      = status;
     if (contentType) where.contentType = contentType;
     if (section)     where.section     = section;
+    if (q)           where.title       = { contains: q, mode: "insensitive" };
 
-    const [items, total] = await Promise.all([
-      prisma.postContent.findMany({ where, orderBy: CONTENT_ORDER, skip: offset, take: limit }),
-      prisma.postContent.count({ where }),
-    ]);
-
+    const { items, total } = await runContentQuery(where, limit, offset);
     return pagedJson(items, total, limit, offset);
   } catch (err) {
     console.error("[GET /api/content]", err);

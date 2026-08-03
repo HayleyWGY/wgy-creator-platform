@@ -117,6 +117,7 @@ export default function ContentPage() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
@@ -136,9 +137,16 @@ export default function ContentPage() {
 
   const PAGE_SIZE = 50;
 
+  const contentUrl = (offset: number) => {
+    let url = `/api/content?limit=${PAGE_SIZE}&offset=${offset}`;
+    // Search runs on the server so it spans all content, not just loaded rows.
+    if (debouncedSearch) url += `&q=${encodeURIComponent(debouncedSearch)}`;
+    return url;
+  };
+
   async function fetchItems() {
     setLoading(true);
-    const res = await fetch(`/api/content?limit=${PAGE_SIZE}&offset=0`);
+    const res = await fetch(contentUrl(0));
     const data = await res.json();
     setItems(data);
     setHasMore(res.headers.get("X-Has-More") === "true");
@@ -147,14 +155,20 @@ export default function ContentPage() {
 
   async function loadMore() {
     setLoadingMore(true);
-    const res = await fetch(`/api/content?limit=${PAGE_SIZE}&offset=${items.length}`);
+    const res = await fetch(contentUrl(items.length));
     const data = await res.json();
     setItems((prev) => [...prev, ...data]);
     setHasMore(res.headers.get("X-Has-More") === "true");
     setLoadingMore(false);
   }
 
-  useEffect(() => { fetchItems(); }, []);
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search.trim()), 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchItems(); }, [debouncedSearch]);
 
   function openNew() {
     setEditingId(null);
@@ -248,11 +262,12 @@ export default function ContentPage() {
     }));
   }
 
+  // Text search is done on the server (all content). Type/status still narrow
+  // the loaded rows on the client.
   const filtered = items.filter((item) => {
-    const matchSearch = item.title.toLowerCase().includes(search.toLowerCase());
     const matchType = filterType === "all" || item.contentType === filterType;
     const matchStatus = filterStatus === "all" || item.status === filterStatus;
-    return matchSearch && matchType && matchStatus;
+    return matchType && matchStatus;
   });
 
   const bodyConfig: Record<string, { label: string; placeholder: string }> = {
@@ -399,7 +414,7 @@ export default function ContentPage() {
 
       {/* Load more — hidden while a type/status filter or search is active,
           since those only narrow the already-loaded rows. */}
-      {!loading && hasMore && filterType === "all" && filterStatus === "all" && !search.trim() && (
+      {!loading && hasMore && filterType === "all" && filterStatus === "all" && (
         <div className="flex justify-center mt-4">
           <button
             onClick={loadMore}

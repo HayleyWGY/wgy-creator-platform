@@ -63,47 +63,78 @@ function parsePaging(searchParams: URLSearchParams) {
   return { limit, offset };
 }
 
-const getMemberCampaigns = unstable_cache(
-  async (filter: string | null, liveOnly: boolean, limit: number, offset: number) => {
-    const where: Record<string, unknown> = {};
-    where.status = liveOnly ? "published" : { in: ["published", "closed"] };
+// Builds the member (non-admin) opportunities WHERE: only live/closed posts in
+// opportunity sections, optionally narrowed to a filter tab. Shared by the
+// cached browse path and the uncached search path so they never diverge.
+async function buildMemberCampaignWhere(filter: string | null, liveOnly: boolean) {
+  const and: Record<string, unknown>[] = [
+    { status: liveOnly ? "published" : { in: ["published", "closed"] } },
+  ];
 
-    if (filter && FILTER_TO_CAMPAIGN_TYPE[filter]) {
-      const filterSection = await prisma.section.findUnique({
-        where: { slug: FILTER_TO_SECTION_SLUG[filter] },
-        select: { id: true },
-      });
-      const orConditions: Record<string, unknown>[] = [
-        { campaignType: FILTER_TO_CAMPAIGN_TYPE[filter] },
-        { postType: FILTER_TO_POST_TYPE[filter] },
-      ];
-      if (filterSection) orConditions.push({ sectionId: filterSection.id });
-      where.OR = orConditions;
-    }
+  const opportunitySections = await prisma.section.findMany({
+    where: { group: "OPPORTUNITIES" },
+    select: { id: true },
+  });
+  if (opportunitySections.length > 0) {
+    and.push({ sectionId: { in: opportunitySections.map((s: { id: string }) => s.id) } });
+  }
 
-    const opportunitySections = await prisma.section.findMany({
-      where: { group: "OPPORTUNITIES" },
+  if (filter && FILTER_TO_CAMPAIGN_TYPE[filter]) {
+    const filterSection = await prisma.section.findUnique({
+      where: { slug: FILTER_TO_SECTION_SLUG[filter] },
       select: { id: true },
     });
-    if (opportunitySections.length > 0) {
-      where.sectionId = { in: opportunitySections.map((s: { id: string }) => s.id) };
-    }
+    const or: Record<string, unknown>[] = [
+      { campaignType: FILTER_TO_CAMPAIGN_TYPE[filter] },
+      { postType: FILTER_TO_POST_TYPE[filter] },
+    ];
+    if (filterSection) or.push({ sectionId: filterSection.id });
+    and.push({ OR: or });
+  }
 
-    const [posts, total] = await Promise.all([
-      prisma.post.findMany({
-        where,
-        orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
-        skip: offset,
-        take: limit,
-        include: { section: { select: { name: true, slug: true } } },
-      }),
-      prisma.post.count({ where }),
-    ]);
-    return { campaigns: posts.map(mapCampaign), total };
+  return { AND: and };
+}
+
+// Case-insensitive text match across the fields a member searches on.
+function campaignSearchClause(q: string) {
+  return {
+    OR: [
+      { title: { contains: q, mode: "insensitive" as const } },
+      { brandName: { contains: q, mode: "insensitive" as const } },
+    ],
+  };
+}
+
+async function runCampaignQuery(where: Record<string, unknown>, limit: number, offset: number) {
+  const [posts, total] = await Promise.all([
+    prisma.post.findMany({
+      where,
+      orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
+      skip: offset,
+      take: limit,
+      include: { section: { select: { name: true, slug: true } } },
+    }),
+    prisma.post.count({ where }),
+  ]);
+  return { campaigns: posts.map(mapCampaign), total };
+}
+
+const getMemberCampaigns = unstable_cache(
+  async (filter: string | null, liveOnly: boolean, limit: number, offset: number) => {
+    const where = await buildMemberCampaignWhere(filter, liveOnly);
+    return runCampaignQuery(where, limit, offset);
   },
   ["member-campaigns"],
   { revalidate: 60, tags: ["campaigns"] },
 );
+
+// Uncached: search terms vary per keystroke, so caching each one is low value
+// and would bloat the cache. The library is small, so a direct query is fast.
+async function searchMemberCampaigns(filter: string | null, liveOnly: boolean, q: string, limit: number, offset: number) {
+  const where = await buildMemberCampaignWhere(filter, liveOnly);
+  (where.AND as Record<string, unknown>[]).push(campaignSearchClause(q));
+  return runCampaignQuery(where, limit, offset);
+}
 
 function makeSlug(brandName: string, title: string): string {
   return `${brandName}-${title}`
@@ -148,6 +179,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const filter   = searchParams.get("filter");
   const adminAll = searchParams.get("adminAll") && session.user.isAdmin ? searchParams.get("adminAll") : null;
+  const q        = searchParams.get("q")?.trim() || null;
   const { limit, offset } = parsePaging(searchParams);
 
   try {
@@ -155,14 +187,19 @@ export async function GET(req: NextRequest) {
     // (self-throttled to once/60s per instance)
     await publishDueScheduled().catch(() => {});
 
-    // Members get the cached opportunities feed (same for everyone)
+    // Members get the cached opportunities feed (same for everyone). A search
+    // term takes the uncached search path so it covers the WHOLE library, not
+    // just the loaded page.
     if (!adminAll) {
-      const { campaigns, total } = await getMemberCampaigns(filter, !!searchParams.get("live"), limit, offset);
+      const { campaigns, total } = q
+        ? await searchMemberCampaigns(filter, !!searchParams.get("live"), q, limit, offset)
+        : await getMemberCampaigns(filter, !!searchParams.get("live"), limit, offset);
       return NextResponse.json({ campaigns, total, limit, offset, hasMore: offset + campaigns.length < total });
     }
 
-    // Admin: uncached, sees every campaign incl. drafts
-    const where: Record<string, unknown> = {};
+    // Admin: uncached, sees every campaign incl. drafts. Filter tab and search
+    // term combine as AND clauses.
+    const and: Record<string, unknown>[] = [];
     if (filter && FILTER_TO_CAMPAIGN_TYPE[filter]) {
       const filterSection = await prisma.section.findUnique({
         where: { slug: FILTER_TO_SECTION_SLUG[filter] },
@@ -173,21 +210,13 @@ export async function GET(req: NextRequest) {
         { postType: FILTER_TO_POST_TYPE[filter] },
       ];
       if (filterSection) orConditions.push({ sectionId: filterSection.id });
-      where.OR = orConditions;
+      and.push({ OR: orConditions });
     }
+    if (q) and.push(campaignSearchClause(q));
+    const where = and.length ? { AND: and } : {};
 
-    const [posts, total] = await Promise.all([
-      prisma.post.findMany({
-        where,
-        orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
-        skip: offset,
-        take: limit,
-        include: { section: { select: { name: true, slug: true } } },
-      }),
-      prisma.post.count({ where }),
-    ]);
-
-    return NextResponse.json({ campaigns: posts.map(mapCampaign), total, limit, offset, hasMore: offset + posts.length < total });
+    const { campaigns, total } = await runCampaignQuery(where, limit, offset);
+    return NextResponse.json({ campaigns, total, limit, offset, hasMore: offset + campaigns.length < total });
   } catch (err) {
     console.error("[GET /api/campaigns]", err);
     return NextResponse.json({ error: "Failed to load campaigns" }, { status: 500 });

@@ -32,13 +32,24 @@ export default function OpportunitiesPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  // Debounce typing so we hit the server once the member pauses, not per key.
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search.trim()), 300);
+    return () => clearTimeout(t);
+  }, [search]);
 
   const buildUrl = (offset: number) => {
-    const base = `/api/campaigns?limit=${PAGE_SIZE}&offset=${offset}`;
-    return activeFilter === "All" ? base : `${base}&filter=${encodeURIComponent(activeFilter)}`;
+    let url = `/api/campaigns?limit=${PAGE_SIZE}&offset=${offset}`;
+    if (activeFilter !== "All") url += `&filter=${encodeURIComponent(activeFilter)}`;
+    // Search runs on the SERVER, so it covers the whole library, not just the
+    // campaigns already loaded on screen.
+    if (debouncedSearch) url += `&q=${encodeURIComponent(debouncedSearch)}`;
+    return url;
   };
 
-  // Reset and load the first page whenever the filter changes.
+  // Reset and load the first page whenever the filter or search term changes.
   useEffect(() => {
     setLoading(true);
     fetch(buildUrl(0))
@@ -53,7 +64,7 @@ export default function OpportunitiesPage() {
       })
       .finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeFilter]);
+  }, [activeFilter, debouncedSearch]);
 
   const loadMore = () => {
     setLoadingMore(true);
@@ -67,13 +78,8 @@ export default function OpportunitiesPage() {
       .finally(() => setLoadingMore(false));
   };
 
-  const filtered = search.trim()
-    ? campaigns.filter(
-        (c) =>
-          c.brandName.toLowerCase().includes(search.toLowerCase()) ||
-          c.title.toLowerCase().includes(search.toLowerCase())
-      )
-    : campaigns;
+  // Text search is done on the server now, so the list is already the matches.
+  const filtered = campaigns;
 
   return (
     <div>
@@ -161,9 +167,9 @@ export default function OpportunitiesPage() {
           ))
         )}
 
-        {/* Load more — hidden while searching, since search only filters the
-            campaigns already loaded on the client. */}
-        {!loading && hasMore && !search.trim() && (
+        {/* Load more — works for browse AND search, since both are paged on
+            the server now. */}
+        {!loading && hasMore && (
           <button
             onClick={loadMore}
             disabled={loadingMore}
