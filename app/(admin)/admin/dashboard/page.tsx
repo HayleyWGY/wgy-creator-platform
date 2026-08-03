@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { StatusPill } from '@/components/ui/status-pill'
+import { getAge } from '@/lib/utils'
 import Link from "next/link";
 import {
   FileText,
@@ -43,45 +45,7 @@ interface ActivityItem {
   createdAt: string;
 }
 
-function getAge(date: string) {
-  const diff = Date.now() - new Date(date).getTime()
-  const mins = Math.floor(diff / 60000)
-  if (mins < 60) return `${mins}m ago`
-  const hours = Math.floor(mins / 60)
-  if (hours < 24) return `${hours}h ago`
-  return `${Math.floor(hours / 24)}d ago`
-}
 
-function StatusPill({ status }: { status: string }) {
-  if (status === "LIVE") {
-    return (
-      <span
-        className="font-montserrat font-semibold uppercase"
-        style={{ fontSize: "9px", letterSpacing: "0.10em", background: "var(--accent)", color: "var(--bg)", padding: "3px 8px", borderRadius: "20px" }}
-      >
-        Live
-      </span>
-    );
-  }
-  if (status === "DRAFT") {
-    return (
-      <span
-        className="font-montserrat font-semibold uppercase"
-        style={{ fontSize: "9px", letterSpacing: "0.10em", background: "transparent", color: "var(--text-muted)", border: "1px solid rgba(255,255,255,0.15)", padding: "3px 8px", borderRadius: "20px" }}
-      >
-        Draft
-      </span>
-    );
-  }
-  return (
-    <span
-      className="font-montserrat font-semibold uppercase"
-      style={{ fontSize: "9px", letterSpacing: "0.10em", background: "var(--surface-2)", color: "var(--text-muted)", padding: "3px 8px", borderRadius: "20px" }}
-    >
-      Closed
-    </span>
-  );
-}
 
 export default function DashboardPage() {
   const [activity, setActivity] = useState<ActivityItem[]>([])

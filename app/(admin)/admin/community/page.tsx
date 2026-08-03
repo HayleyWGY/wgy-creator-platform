@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { getAge } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 
 interface Author {
@@ -41,14 +42,6 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-function getAge(date: string) {
-  const diff = Date.now() - new Date(date).getTime()
-  const mins = Math.floor(diff / 60000)
-  if (mins < 60) return `${mins}m ago`
-  const hours = Math.floor(mins / 60)
-  if (hours < 24) return `${hours}h ago`
-  return `${Math.floor(hours / 24)}d ago`
-}
 
 function Avatar({ author }: { author: Author }) {
   const initials = `${author.firstName[0]}${author.lastName[0]}`

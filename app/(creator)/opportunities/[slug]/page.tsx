@@ -5,6 +5,7 @@ import {
   Globe, Music2, Camera, Info, CalendarDays, Clock, MapPin, Trash2,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import { getAge } from '@/lib/utils'
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -54,14 +55,6 @@ interface CampaignComment {
   replies?: CampaignComment[];
 }
 
-function getAge(createdAt: string): string {
-  const diff = Date.now() - new Date(createdAt).getTime();
-  const days  = Math.floor(diff / 86400000);
-  const hours = Math.floor(diff / 3600000);
-  if (days > 0)  return `${days}d ago`;
-  if (hours > 0) return `${hours}h ago`;
-  return "Just now";
-}
 
 function formatEventDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-GB", {

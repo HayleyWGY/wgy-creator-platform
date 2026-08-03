@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { getAge } from '@/lib/utils'
 import { useSession } from "next-auth/react";
 import { ShieldCheck, UserPlus, X } from "lucide-react";
 
@@ -57,17 +58,6 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-function getAge(date: string) {
-  const diff = Date.now() - new Date(date).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 30) return `${days}d ago`;
-  return new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-}
 
 // ── Your Account ──────────────────────────────────────────────────────
 function AccountSection() {
@@ -348,7 +338,7 @@ function AdminTeamSection() {
                 {admin.firstName} {admin.lastName} {admin.id === meId && <span style={{ color: "var(--text-muted)", fontWeight: 500 }}>(you)</span>}
               </p>
               <p className="font-montserrat font-normal" style={{ fontSize: "11px", color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {admin.email} · last active {getAge(admin.lastSeenAt)}
+                {admin.email} · last active {getAge(admin.lastSeenAt, { absoluteAfterDays: 30, withYear: true })}
               </p>
             </div>
             {admin.id !== meId && (
@@ -454,7 +444,7 @@ function AuditLogSection() {
       {entries.map((e, i) => (
         <div key={e.id} style={{ display: "grid", gridTemplateColumns: "150px 160px 1fr", gap: "10px", padding: "10px 24px", borderTop: "1px solid rgba(255,255,255,0.04)", background: i % 2 ? "rgba(255,255,255,0.015)" : "transparent" }}>
           <span className="font-montserrat font-normal" style={{ fontSize: "11px", color: "var(--text-muted)" }} title={new Date(e.createdAt).toLocaleString("en-GB")}>
-            {getAge(e.createdAt)}
+            {getAge(e.createdAt, { absoluteAfterDays: 30, withYear: true })}
           </span>
           <span className="font-montserrat font-medium" style={{ fontSize: "11px", color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {e.actor.firstName} {e.actor.lastName}

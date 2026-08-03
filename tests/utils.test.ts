@@ -37,12 +37,33 @@ describe('getEmbedUrl (video embed conversion)', () => {
   })
 })
 
-describe('getAge (relative time on cards)', () => {
-  it('formats minutes, hours and days', () => {
-    const now = Date.now()
-    expect(getAge(new Date(now - 30 * 1000).toISOString())).toBe('Just now')
-    expect(getAge(new Date(now - 5 * 60_000).toISOString())).toBe('5m ago')
-    expect(getAge(new Date(now - 3 * 3_600_000).toISOString())).toBe('3h ago')
-    expect(getAge(new Date(now - 2 * 86_400_000).toISOString())).toBe('2d ago')
+describe('getAge (relative time — shared across the app)', () => {
+  const iso = (msAgo: number) => new Date(Date.now() - msAgo).toISOString()
+
+  it('formats just-now, minutes, hours and days', () => {
+    expect(getAge(iso(30 * 1000))).toBe('just now')        // < 1 min
+    expect(getAge(iso(5 * 60_000))).toBe('5m ago')
+    expect(getAge(iso(3 * 3_600_000))).toBe('3h ago')
+    expect(getAge(iso(2 * 86_400_000))).toBe('2d ago')
+  })
+
+  it('stays relative forever without options', () => {
+    expect(getAge(iso(400 * 86_400_000))).toBe('400d ago')
+  })
+
+  it('switches to a calendar date past absoluteAfterDays (Creators list: 7d)', () => {
+    const d = new Date(Date.now() - 40 * 86_400_000)
+    expect(getAge(d.toISOString(), { absoluteAfterDays: 7 })).toBe(
+      d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
+    )
+    // still relative when newer than the threshold
+    expect(getAge(iso(3 * 86_400_000), { absoluteAfterDays: 7 })).toBe('3d ago')
+  })
+
+  it('includes the year with withYear (Settings list: 30d)', () => {
+    const d = new Date(Date.now() - 60 * 86_400_000)
+    expect(getAge(d.toISOString(), { absoluteAfterDays: 30, withYear: true })).toBe(
+      d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+    )
   })
 })

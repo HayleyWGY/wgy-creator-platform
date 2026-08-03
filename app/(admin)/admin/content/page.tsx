@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { StatusPill } from '@/components/ui/status-pill'
 import { Plus, Pencil, Trash2, Eye, Search, Upload, X } from "lucide-react";
 import Image from "next/image";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
@@ -78,27 +79,6 @@ const EMPTY_FORM = {
   bannerImageUrl: "",
 };
 
-function StatusPill({ status }: { status: string }) {
-  if (status === "published") {
-    return (
-      <span className="font-montserrat font-semibold uppercase" style={{ fontSize: "9px", letterSpacing: "0.10em", background: "var(--accent)", color: "var(--bg)", padding: "3px 8px", borderRadius: "20px" }}>
-        Live
-      </span>
-    );
-  }
-  if (status === "scheduled") {
-    return (
-      <span className="font-montserrat font-semibold uppercase" style={{ fontSize: "9px", letterSpacing: "0.10em", background: "rgba(155,126,86,0.3)", color: "#e4aa55", padding: "3px 8px", borderRadius: "20px" }}>
-        Scheduled
-      </span>
-    );
-  }
-  return (
-    <span className="font-montserrat font-semibold uppercase" style={{ fontSize: "9px", letterSpacing: "0.10em", border: "1px solid rgba(255,255,255,0.15)", color: "var(--text-muted)", padding: "3px 8px", borderRadius: "20px" }}>
-      Draft
-    </span>
-  );
-}
 
 function TypePill({ type }: { type: string }) {
   const p = TYPE_PILL[type] ?? TYPE_PILL.blog_post;

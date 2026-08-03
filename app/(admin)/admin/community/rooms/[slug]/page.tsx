@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState, useRef, useCallback } from 'react'
+import { getAge } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Send, Trash2, Pin } from 'lucide-react'
 import { useRealtimePing } from '@/lib/use-realtime-ping'
@@ -35,14 +36,6 @@ const ROOM_META: Record<string, { emoji: string; name: string }> = {
   'events-chat':     { emoji: '📅', name: 'Events Chat' },
 }
 
-function getAge(date: string) {
-  const diff = Date.now() - new Date(date).getTime()
-  const mins = Math.floor(diff / 60000)
-  if (mins < 60) return `${mins}m ago`
-  const hours = Math.floor(mins / 60)
-  if (hours < 24) return `${hours}h ago`
-  return `${Math.floor(hours / 24)}d ago`
-}
 
 export default function AdminRoomPage({ params }: { params: { slug: string } }) {
   const router = useRouter()

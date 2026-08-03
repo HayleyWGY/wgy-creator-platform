@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { StatusPill } from '@/components/ui/status-pill'
 import { Search, Heart, MessageCircle, CalendarDays } from "lucide-react";
 import Link from "next/link";
 
@@ -24,46 +25,6 @@ function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
-function StatusPill({ status }: { status: string }) {
-  if (status === "published") {
-    return (
-      <span
-        className="font-montserrat font-semibold uppercase"
-        style={{ fontSize: "9px", letterSpacing: "0.10em", background: "var(--accent)", color: "var(--bg)", padding: "3px 8px", borderRadius: "20px" }}
-      >
-        Live
-      </span>
-    );
-  }
-  if (status === "draft") {
-    return (
-      <span
-        className="font-montserrat font-semibold uppercase"
-        style={{ fontSize: "9px", letterSpacing: "0.10em", border: "1px solid rgba(255,255,255,0.15)", color: "var(--text-muted)", padding: "3px 8px", borderRadius: "20px" }}
-      >
-        Draft
-      </span>
-    );
-  }
-  if (status === "scheduled") {
-    return (
-      <span
-        className="font-montserrat font-semibold uppercase"
-        style={{ fontSize: "9px", letterSpacing: "0.10em", background: "rgba(155,126,86,0.3)", color: "#e4aa55", padding: "3px 8px", borderRadius: "20px" }}
-      >
-        Scheduled
-      </span>
-    );
-  }
-  return (
-    <span
-      className="font-montserrat font-semibold uppercase"
-      style={{ fontSize: "9px", letterSpacing: "0.10em", background: "var(--surface-2)", color: "var(--text-muted)", padding: "3px 8px", borderRadius: "20px" }}
-    >
-      Closed
-    </span>
-  );
-}
 
 function SectionPill({ section }: { section: string }) {
   return (

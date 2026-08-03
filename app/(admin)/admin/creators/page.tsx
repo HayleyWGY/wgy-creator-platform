@@ -1,6 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { StatusPill } from '@/components/ui/status-pill'
+import { getAge } from '@/lib/utils'
 import { Search, X, MessageSquare } from 'lucide-react'
 
 interface Tag {
@@ -43,49 +45,11 @@ interface CreatorDetail extends Creator {
   applications?: { id: string; campaignName: string; appliedAt: string }[]
 }
 
-function getAge(dateStr: string) {
-  const diff = Date.now() - new Date(dateStr).getTime()
-  const mins = Math.floor(diff / 60000)
-  if (mins < 60) return `${mins}m ago`
-  const hours = Math.floor(mins / 60)
-  if (hours < 24) return `${hours}h ago`
-  const days = Math.floor(hours / 24)
-  if (days < 7) return `${days}d ago`
-  return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-}
 
 function formatJoined(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
 }
 
-function StatusPill({ status }: { status: string }) {
-  if (status === 'active') {
-    return (
-      <span className="font-montserrat font-semibold uppercase" style={{ fontSize: 9, letterSpacing: '0.10em', background: 'var(--accent)', color: 'var(--bg)', padding: '3px 10px', borderRadius: 20 }}>
-        Active
-      </span>
-    )
-  }
-  if (status === 'free') {
-    return (
-      <span className="font-montserrat font-semibold uppercase" style={{ fontSize: 9, letterSpacing: '0.10em', background: 'rgba(228,220,209,0.15)', color: 'var(--accent)', padding: '3px 10px', borderRadius: 20 }}>
-        Free
-      </span>
-    )
-  }
-  if (status === 'payment_failed') {
-    return (
-      <span className="font-montserrat font-semibold uppercase" style={{ fontSize: 9, letterSpacing: '0.10em', background: 'rgba(192,57,43,0.15)', color: '#C0392B', padding: '3px 10px', borderRadius: 20 }}>
-        Failed
-      </span>
-    )
-  }
-  return (
-    <span className="font-montserrat font-semibold uppercase" style={{ fontSize: 9, letterSpacing: '0.10em', background: 'rgba(255,255,255,0.08)', color: 'var(--text-muted)', padding: '3px 10px', borderRadius: 20 }}>
-      {status}
-    </span>
-  )
-}
 
 function CreatorAvatar({ creator, size = 32 }: { creator: Creator; size?: number }) {
   const initials = `${creator.firstName[0]}${creator.lastName[0]}`
@@ -295,7 +259,7 @@ function CreatorPanel({ creatorId, onClose }: { creatorId: string; onClose: () =
                   <p className="font-montserrat" style={{ fontSize: 11, color: '#C0392B', marginTop: 4 }}>{emailError}</p>
                 )}
                 <p className="font-montserrat font-normal" style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Joined {formatJoined(detail.joinedAt)}</p>
-                <p className="font-montserrat font-normal" style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>Last seen: {getAge(detail.lastSeenAt)}</p>
+                <p className="font-montserrat font-normal" style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>Last seen: {getAge(detail.lastSeenAt, { absoluteAfterDays: 7 })}</p>
               </div>
               <StatusPill status={detail.membershipStatus} />
             </div>

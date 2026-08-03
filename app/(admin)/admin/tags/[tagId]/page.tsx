@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { StatusPill } from '@/components/ui/status-pill'
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Search, X } from "lucide-react";
@@ -30,25 +31,6 @@ interface SearchResult {
   email: string;
 }
 
-function StatusPill({ status }: { status: string }) {
-  const active = status === "active";
-  return (
-    <span
-      className="font-montserrat font-semibold uppercase"
-      style={{
-        fontSize: "9px",
-        letterSpacing: "0.10em",
-        background: active ? "var(--accent)" : "rgba(192,57,43,0.15)",
-        color: active ? "var(--bg)" : "#C0392B",
-        padding: "3px 10px",
-        borderRadius: "20px",
-        justifySelf: "start",
-      }}
-    >
-      {active ? "Active" : status === "cancelled" ? "Cancelled" : status.replace("_", " ")}
-    </span>
-  );
-}
 
 export default function TagDetailPage() {
   const { tagId } = useParams<{ tagId: string }>();
@@ -420,7 +402,7 @@ export default function TagDetailPage() {
                 </div>
               </div>
 
-              <StatusPill status={creator.membershipStatus} />
+              <StatusPill status={creator.membershipStatus} style={{ justifySelf: 'start' }} />
 
               <p className="font-montserrat font-normal" style={{ fontSize: "12px", color: "var(--text-muted)" }}>
                 {new Date(creator.assignedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}

@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState, useRef, useCallback } from 'react'
+import { getAge } from '@/lib/utils'
 import { Send, Pin, MailPlus } from 'lucide-react'
 import { useRealtimePing } from '@/lib/use-realtime-ping'
 import { CHAT_POLL_INTERVAL_MS } from '@/lib/use-chat-poll'
@@ -124,15 +125,6 @@ export default function AdminInboxPage() {
       body: JSON.stringify({ threadId: thread.id, action: 'unread' }),
     }).catch(() => {})
     loadThreads()
-  }
-
-  const getAge = (date: string) => {
-    const diff = Date.now() - new Date(date).getTime()
-    const mins = Math.floor(diff / 60000)
-    if (mins < 60) return `${mins}m ago`
-    const hours = Math.floor(mins / 60)
-    if (hours < 24) return `${hours}h ago`
-    return `${Math.floor(hours / 24)}d ago`
   }
 
   return (
