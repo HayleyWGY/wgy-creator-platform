@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getActiveSession } from '@/lib/session'
+import { getPayingSession } from '@/lib/session'
 
 // GET /api/search?q= — searches live opportunities and published
-// Learning Lounge content by title/brand.
+// Learning Lounge content by title/brand. getPayingSession (not
+// getActiveSession): this returns paid-library titles/slugs/types, so a
+// payment_failed member is blocked here exactly as they are on the browse
+// pages (campaigns/content), rather than being able to search around the gate.
 export async function GET(req: NextRequest) {
-  const session = await getActiveSession()
+  const session = await getPayingSession()
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
   }

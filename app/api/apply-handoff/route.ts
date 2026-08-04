@@ -14,6 +14,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  // Applying is paid value: a payment_failed member is blocked here — the same
+  // 402 that app/api/profile/apply-click returns — so the UI can prompt them to
+  // fix their card. Kept on getActiveSession (not getPayingSession) precisely so
+  // we can return this specific, actionable message instead of a bare 401/403.
+  if (session.user.membershipStatus === 'payment_failed' && !session.user.isAdmin) {
+    return NextResponse.json(
+      { error: 'payment_update_needed', message: 'Update your payment details to apply.' },
+      { status: 402 },
+    )
+  }
+
   const portalUrl = process.env.NEXT_PUBLIC_PORTAL_URL
   const token = mintHandoffToken(session.user.id)
   if (!portalUrl || !token) {
