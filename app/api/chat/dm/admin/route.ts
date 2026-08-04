@@ -5,33 +5,72 @@ import { prisma } from '@/lib/prisma'
 import { pingRealtime } from '@/lib/realtime-server'
 import { parseJson, chatMessageSchema } from '@/lib/validation'
 
-// GET — list all DM threads (admin only)
-export async function GET() {
+// How many non-pinned threads to load per page. Every message send bumps the
+// thread's updatedAt, so any UNREAD thread is by definition recently-updated
+// and lands inside this window — unread-first ordering is preserved without
+// scanning every thread. Pinned threads are always included separately.
+const THREAD_PAGE_SIZE = 100
+
+const threadInclude = (adminId: string) => ({
+  creator: { select: { id: true, firstName: true, lastName: true, profileImageUrl: true, email: true } },
+  messages: {
+    where: { isDeleted: false },
+    orderBy: { createdAt: 'desc' as const },
+    take: 1,
+    include: {
+      sender: { select: { id: true, firstName: true, isAdmin: true } },
+    },
+  },
+  _count: {
+    select: { messages: { where: { isRead: false, senderId: { not: adminId } } } },
+  },
+})
+
+// GET — list DM threads (admin only). Paginated: pinned threads (always shown)
+// plus a capped, cursor-paged window of the most recently active threads.
+export async function GET(req: Request) {
   const session = await getActiveSession()
   if (!session?.user?.id || !session.user.isAdmin) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const threads = await prisma.dmThread.findMany({
-    include: {
-      creator: { select: { id: true, firstName: true, lastName: true, profileImageUrl: true, email: true } },
-      messages: {
-        where: { isDeleted: false },
-        orderBy: { createdAt: 'desc' },
-        take: 1,
-        include: {
-          sender: { select: { id: true, firstName: true, isAdmin: true } },
-        },
-      },
-      _count: {
-        select: { messages: { where: { isRead: false, senderId: { not: session.user.id } } } },
-      },
+  const url = new URL(req.url)
+  // Cursor = the updatedAt of the last thread on the previous page (ISO string).
+  const cursorParam = url.searchParams.get('cursor')
+  const cursor = cursorParam ? new Date(cursorParam) : null
+  const hasCursor = cursor !== null && !Number.isNaN(cursor.getTime())
+
+  const include = threadInclude(session.user.id)
+
+  // Pinned threads are fetched once, on the first page only, so a pinned but
+  // quiet thread (old updatedAt) never falls outside the activity window.
+  const pinnedPromise = hasCursor
+    ? Promise.resolve([])
+    : prisma.dmThread.findMany({
+        where: { isPinned: true },
+        include,
+        orderBy: { updatedAt: 'desc' },
+      })
+
+  // One extra row tells us whether another page exists without a count query.
+  const windowPromise = prisma.dmThread.findMany({
+    where: {
+      isPinned: false,
+      ...(hasCursor ? { updatedAt: { lt: cursor } } : {}),
     },
+    include,
     orderBy: { updatedAt: 'desc' },
+    take: THREAD_PAGE_SIZE + 1,
   })
 
-  // Pinned threads first, then unread, then most recent activity
-  threads.sort((a, b) => {
+  const [pinned, windowRows] = await Promise.all([pinnedPromise, windowPromise])
+
+  const hasMore = windowRows.length > THREAD_PAGE_SIZE
+  const pageRows = hasMore ? windowRows.slice(0, THREAD_PAGE_SIZE) : windowRows
+  const nextCursor = hasMore ? pageRows[pageRows.length - 1].updatedAt.toISOString() : null
+
+  // Order within what we loaded: pinned first, then unread, then most recent.
+  const threads = [...pinned, ...pageRows].sort((a, b) => {
     if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1
     const aUnread = a._count.messages > 0
     const bUnread = b._count.messages > 0
@@ -39,7 +78,7 @@ export async function GET() {
     return b.updatedAt.getTime() - a.updatedAt.getTime()
   })
 
-  return NextResponse.json({ threads })
+  return NextResponse.json({ threads, nextCursor, hasMore })
 }
 
 // PATCH — pin/unpin a thread, or mark it unread (admin only)
