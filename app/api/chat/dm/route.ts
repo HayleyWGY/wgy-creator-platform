@@ -25,11 +25,14 @@ export async function GET(req: Request) {
   if (!thread) {
     thread = await prisma.dmThread.create({ data: { creatorId: session.user.id } })
   } else {
-    // Mark all admin messages as read
-    await prisma.dmMessage.updateMany({
-      where: { threadId: thread.id, senderId: { not: session.user.id }, isRead: false },
-      data: { isRead: true },
-    })
+    // Mark all admin messages as read — but this GET is polled, so only write
+    // when there's actually something unread, instead of firing a no-op UPDATE
+    // on every poll.
+    const unreadWhere = { threadId: thread.id, senderId: { not: session.user.id }, isRead: false }
+    const hasUnread = await prisma.dmMessage.findFirst({ where: unreadWhere, select: { id: true } })
+    if (hasUnread) {
+      await prisma.dmMessage.updateMany({ where: unreadWhere, data: { isRead: true } })
+    }
   }
 
   // Newest-first + reverse (see lib/chat-pagination.ts for why).

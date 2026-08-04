@@ -39,17 +39,23 @@ export async function GET(
   })
   const { messages, hasMore } = toChronologicalPage(rows, limit)
 
-  // Mark creator messages as read
-  await prisma.dmMessage.updateMany({
-    where: { threadId: params.threadId, senderId: { not: session.user.id }, isRead: false },
-    data: { isRead: true },
-  })
+  // Mark creator messages as read. This GET is polled, so only issue the write
+  // when something is actually unread — otherwise every poll fires a no-op
+  // UPDATE, one of the hottest statements in the app.
+  const unreadWhere = { threadId: params.threadId, senderId: { not: session.user.id }, isRead: false }
+  const hasUnread = await prisma.dmMessage.findFirst({ where: unreadWhere, select: { id: true } })
+  if (hasUnread) {
+    await prisma.dmMessage.updateMany({ where: unreadWhere, data: { isRead: true } })
+  }
 
   return NextResponse.json({ thread: { ...thread, messages }, hasMore })
 }
 
 // DELETE — soft-delete a DM message (admin only)
-export async function DELETE(req: Request) {
+export async function DELETE(
+  req: Request,
+  { params }: { params: { threadId: string } }
+) {
   const session = await getPayingSession()
   if (!session?.user?.id || !session.user.isAdmin) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -58,10 +64,13 @@ export async function DELETE(req: Request) {
   const { messageId } = await req.json()
   if (!messageId) return NextResponse.json({ error: 'messageId required' }, { status: 400 })
 
-  await prisma.dmMessage.update({
-    where: { id: messageId },
+  // Scope to the thread in the URL — a messageId from another thread is a 404,
+  // so threadId is enforced rather than ignored.
+  const result = await prisma.dmMessage.updateMany({
+    where: { id: messageId, threadId: params.threadId },
     data: { isDeleted: true, deletedAt: new Date() },
   })
+  if (result.count === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   return NextResponse.json({ ok: true })
 }

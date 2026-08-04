@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getActiveSession } from '@/lib/session'
+import { rateLimit } from '@/lib/rate-limit'
 
 // POST — fired (fire-and-forget) when a creator taps Apply on any
 // opportunity. Records their first-ever apply for the onboarding
@@ -22,19 +23,41 @@ export async function POST(req: NextRequest) {
     )
   }
 
+  // Fire-and-forget from the client, but still throttled: without a limit a
+  // member can POST in a loop to inflate applyClicks (an admin-facing metric).
+  if (!(await rateLimit(`apply-click:${session.user.id}`, 20, 60_000))) {
+    return NextResponse.json({ error: 'Too many requests — please slow down' }, { status: 429 })
+  }
+
   const { campaignId } = await req.json().catch(() => ({ campaignId: null }))
+
+  // Only count the click — and only mark the onboarding "first apply" — when the
+  // id is a REAL opportunity a member could apply to: a published post in an
+  // OPPORTUNITIES section. Previously any Post id (a draft, a community post, or
+  // a made-up string) both incremented applyClicks and completed onboarding.
+  let validCampaign = false
+  if (typeof campaignId === 'string' && campaignId) {
+    const post = await prisma.post.findFirst({
+      where: { id: campaignId, status: 'published', section: { group: 'OPPORTUNITIES' } },
+      select: { id: true },
+    })
+    validCampaign = post !== null
+  }
+
+  if (!validCampaign) {
+    // Nothing to record — a spoofed/irrelevant id must not touch either metric.
+    return NextResponse.json({ success: true })
+  }
 
   await prisma.creator.updateMany({
     where: { id: session.user.id, firstApplyAt: null },
     data: { firstApplyAt: new Date() },
   })
 
-  if (typeof campaignId === 'string' && campaignId) {
-    await prisma.post.updateMany({
-      where: { id: campaignId },
-      data: { applyClicks: { increment: 1 } },
-    }).catch(() => {})
-  }
+  await prisma.post.update({
+    where: { id: campaignId },
+    data: { applyClicks: { increment: 1 } },
+  }).catch(() => {})
 
   return NextResponse.json({ success: true })
 }

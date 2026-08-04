@@ -9,7 +9,11 @@ export async function DELETE(
   const session = await getPayingSession()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const message = await prisma.chatMessage.findUnique({ where: { id: params.messageId } })
+  // Scope to the room in the URL: a message id that lives in another room is a
+  // 404 here, so the slug param is enforced rather than decorative.
+  const message = await prisma.chatMessage.findFirst({
+    where: { id: params.messageId, room: { slug: params.slug } },
+  })
   if (!message) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   // Admins can delete any message; creators can only delete their own

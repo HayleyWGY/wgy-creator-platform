@@ -17,7 +17,10 @@ export async function DELETE(
       where: { id: params.commentId },
       select: { id: true, authorId: true, postId: true, isDeleted: true },
     })
-    if (!comment || comment.isDeleted) {
+    // Scope to the campaign in the URL — a comment id that belongs to a
+    // different post is a 404 here, not a delete. (Matches the creator-posts
+    // comment-delete route.)
+    if (!comment || comment.isDeleted || comment.postId !== params.id) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 })
     }
 
