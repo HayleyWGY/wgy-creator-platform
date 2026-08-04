@@ -43,6 +43,54 @@ export function loginBackoffMs(priorFailures: number): number {
   return Math.min(MAX_MS, 250 * 2 ** (priorFailures - 2))
 }
 
+/**
+ * Per-account backoff — the distributed-attack backstop (the real gap the
+ * (email + IP) curve above leaves open).
+ *
+ * The (email + IP) counter resets per source IP, so a DISTRIBUTED attacker
+ * (many IPs against ONE account — a botnet or proxy pool) keeps every
+ * per-(email,ip) counter low by rotating IPs, and every per-IP rate limit low
+ * for the same reason. There was no per-account ceiling at all. This counter is
+ * keyed on the EMAIL ALONE, so every failure against an account lands in the
+ * SAME bucket regardless of source IP — rotating IPs no longer helps.
+ *
+ * It only ever adds DELAY, never a denial: a hard per-account block would be an
+ * account-lockout weapon (member emails aren't secret), the exact bug the old
+ * five-strike lock was. The delay is capped, so even during an active attack on
+ * their account the real member — who shares this counter — waits at most a few
+ * seconds and is never locked out.
+ *
+ * The threshold is deliberately HIGH: a member's own occasional typos (a
+ * handful in the window) never reach it; only a sustained per-account attack
+ * (dozens of failures) does. Bumped for BOTH existing and non-existent accounts
+ * and applied BEFORE the account lookup, so the delay stays uniform and can
+ * never become an account-existence oracle. The cap matches loginBackoffMs for
+ * the same denial-of-wallet reason (a sleeping serverless fn still bills).
+ */
+const ACCOUNT_BACKOFF_THRESHOLD = 10
+export function accountBackoffMs(failures: number): number {
+  if (failures < ACCOUNT_BACKOFF_THRESHOLD) return 0
+  const MAX_MS = 3_000
+  return Math.min(MAX_MS, 250 * 2 ** (failures - ACCOUNT_BACKOFF_THRESHOLD))
+}
+
+/**
+ * The delay a login should wait before bcrypt: the MAX of the (email + IP) and
+ * the per-account backoffs, so they never stack. Pure + exported for testing
+ * the distributed case (many IPs, one account) and the Redis-down case.
+ *
+ * REDIS-DOWN: both counters live in Redis and fail open to 0, so during a Redis
+ * outage this returns 0 — there is intentionally NO Redis-independent
+ * per-account delay. A DB-backed one would have to run AFTER the account lookup
+ * (only real accounts have a row), which would reintroduce the exact
+ * account-existence timing oracle the "delay before lookup" design eliminates.
+ * You can have Redis-independence OR that oracle protection, not both, in this
+ * flow — the protection wins. The outage posture is bcrypt + Sentry alerting.
+ */
+export function chooseLoginDelay(opts: { emailIpFailures: number; acctFailures: number }): number {
+  return Math.max(loginBackoffMs(opts.emailIpFailures), accountBackoffMs(opts.acctFailures))
+}
+
 // 60s in-memory cache of live membership status/role, per server instance.
 // Keeps revocation near-immediate (≤60s) without a DB read on every request.
 const statusCache = new Map<string, { status: string; isAdmin: boolean; at: number }>()
@@ -89,23 +137,24 @@ export const authOptions: NextAuthOptions = {
         // so an unthrottled login endpoint is a cheap CPU-exhaustion vector
         // even when no password is ever guessed.
         //
-        // Two keys, because they catch different attacks:
-        //  - by IP: one source spraying many different accounts. Deliberately
-        //    loose, since offices and mobile CGNAT share an IP among many
-        //    legitimate members.
-        //  - by email: many sources against one account. Complements the
-        //    existing DB-backed lockout (5 failures -> 15 min) below, which
-        //    only counts failures that reached the password check.
+        // Three Redis-backed signals, each catching a different attack:
+        //  - IP rate limit (DENY): one source spraying many accounts.
+        //    Deliberately loose, since offices/mobile CGNAT share an IP.
+        //  - (email + IP) backoff (DELAY): a single source hammering one
+        //    account slows ITSELF; the real member on their own IP is unaffected.
+        //  - (email alone) backoff (DELAY): the distributed backstop — many IPs
+        //    against one account. Every failure lands in one per-account bucket
+        //    regardless of source IP, so IP rotation can't dodge it. DELAY only,
+        //    never a per-account deny (that would be the old lockout weapon).
         //
-        // These FAIL OPEN: if Redis is unreachable or misconfigured, allow the
-        // login and report to Sentry rather than block. A members' platform
-        // must never be fully lockout-able by a Redis hiccup — a wrong
-        // credential once took the whole app down this way. Brute-force
-        // protection does NOT disappear when Redis is down: the per-account DB
-        // lockout below is independent of Redis. What's lost during an outage
-        // is only the IP-level pre-bcrypt throttle, which Sentry surfaces so it
-        // gets fixed fast. (When Redis IS working, genuine limit breaches are
-        // still enforced — fail-open only changes the error case.)
+        // All FAIL OPEN: if Redis is unreachable or misconfigured, allow the
+        // login and report to Sentry rather than block. A members' platform must
+        // never be fully lockout-able by a Redis hiccup — a wrong credential
+        // once took the whole app down this way. HONEST LIMIT: during a Redis
+        // outage all three signals are gone and bcrypt's cost is the only online
+        // brute-force protection left. There is deliberately no DB-backed
+        // per-account backstop — see accountBackoffMs for why (it would require
+        // a post-lookup read that reintroduces an account-existence oracle).
         const emailKey = credentials.email.trim().toLowerCase()
         const ip = getClientIp(req)
 
@@ -136,9 +185,13 @@ export const authOptions: NextAuthOptions = {
         // Capped, because on serverless a sleeping function still occupies
         // concurrency and bills — an uncapped backoff would be a denial-of-
         // wallet vector against ourselves.
-        const backoffKey = `login:${emailKey}:${ip}`
-        const priorFailures = await readFailureCount(backoffKey)
-        const delayMs = loginBackoffMs(priorFailures)
+        const backoffKey = `login:${emailKey}:${ip}`   // per (email, ip)
+        const acctKey = `login-acct:${emailKey}`        // per account (email alone)
+        const [emailIpFailures, acctFailures] = await Promise.all([
+          readFailureCount(backoffKey),
+          readFailureCount(acctKey),
+        ])
+        const delayMs = chooseLoginDelay({ emailIpFailures, acctFailures })
         if (delayMs > 0) await new Promise(resolve => setTimeout(resolve, delayMs))
 
         // Email matching stays case-insensitive and whitespace-tolerant:
@@ -167,23 +220,15 @@ export const authOptions: NextAuthOptions = {
         )
 
         if (!creator || !passwordMatch) {
-          // Count the failure against (email + IP) whether or not the account
-          // exists — otherwise the backoff itself would reveal which addresses
-          // are real.
-          await bumpFailureCount(backoffKey, BACKOFF_WINDOW_MS)
-
-          if (creator) {
-            // Atomic. The previous code read failedLoginAttempts into JS,
-            // added one and wrote it back; concurrent attempts all read the
-            // same stale value, so the counter barely moved — measured, 50
-            // parallel failures recorded as 1. Prisma's `increment` emits
-            //   SET "failedLoginAttempts" = ("failedLoginAttempts" + $1)
-            // which Postgres evaluates under a row lock, so no update is lost.
-            await prisma.creator.update({
-              where: { id: creator.id },
-              data: { failedLoginAttempts: { increment: 1 } },
-            })
-          }
+          // Count the failure against BOTH the (email + IP) and the per-account
+          // (email alone) counters — whether or not the account exists, so the
+          // delay can't reveal which addresses are real. Redis INCR is atomic,
+          // so concurrent failures all land (the old DB read-modify-write
+          // counter that this replaces lost updates under concurrency).
+          await Promise.all([
+            bumpFailureCount(backoffKey, BACKOFF_WINDOW_MS),
+            bumpFailureCount(acctKey, BACKOFF_WINDOW_MS),
+          ])
 
           // One outcome for "no such account" and "wrong password". Returning
           // a distinguishable error for either — as the old 'locked' throw did,
@@ -194,14 +239,16 @@ export const authOptions: NextAuthOptions = {
 
         if (creator.membershipStatus === 'cancelled') return null
 
-        // Clear both counters on success: the durable per-account record and
-        // the (email + IP) backoff, so a member who mistypes twice then gets
-        // it right starts clean.
+        // Clear both backoff counters on success, so a member who mistyped a
+        // couple of times then got it right starts clean.
         await prisma.creator.update({
           where: { id: creator.id },
-          data: { lastSeenAt: new Date(), failedLoginAttempts: 0, lockedUntil: null },
+          data: { lastSeenAt: new Date() },
         })
-        await clearFailureCount(backoffKey)
+        await Promise.all([
+          clearFailureCount(backoffKey),
+          clearFailureCount(acctKey),
+        ])
 
         return {
           id: creator.id,

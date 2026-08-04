@@ -45,9 +45,6 @@ model Creator {
   // Set the first time the creator taps Apply on any opportunity —
   // powers the "apply to your first opportunity" checklist item
   firstApplyAt        DateTime?
-  // Login brute-force protection — see lib/auth.ts authorize()
-  failedLoginAttempts Int                   @default(0)
-  lockedUntil         DateTime?
   // Null means the account has never had a password chosen BY ITS OWNER: it
   // was created by an admin with an unusable random hash and is waiting on a
   // setup link. lastSeenAt cannot express this — it defaults to now().

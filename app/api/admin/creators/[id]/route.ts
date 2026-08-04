@@ -186,8 +186,6 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
           lastName: lastName.trim(),
           passwordHash: bcrypt.hashSync(unusablePassword, 10),
           membershipStatus: 'active',
-          failedLoginAttempts: 0,
-          lockedUntil: null,
           passwordSetAt: null,
         },
         select: { id: true, email: true, firstName: true, lastName: true, membershipStatus: true },

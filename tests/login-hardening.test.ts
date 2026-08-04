@@ -1,8 +1,6 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import bcrypt from 'bcryptjs'
-import { PrismaClient } from '@prisma/client'
-import { PrismaPg } from '@prisma/adapter-pg'
-import { loginBackoffMs } from '@/lib/auth'
+import { loginBackoffMs, accountBackoffMs, chooseLoginDelay } from '@/lib/auth'
 
 /**
  * Three defects in the credentials flow, all in authorize():
@@ -16,17 +14,6 @@ import { loginBackoffMs } from '@/lib/auth'
  *     accounts answer far faster, and only a REGISTERED address could ever
  *     produce the "locked" message.
  */
-
-const hasDb = Boolean(process.env.DIRECT_URL || process.env.DATABASE_URL)
-
-const prisma = hasDb
-  ? new PrismaClient({
-      adapter: new PrismaPg({
-        connectionString: (process.env.DIRECT_URL || process.env.DATABASE_URL)!,
-        max: 10,
-      }),
-    })
-  : (null as unknown as PrismaClient)
 
 describe('progressive backoff curve', () => {
   it('does not punish the first couple of typos', () => {
@@ -62,73 +49,45 @@ describe('progressive backoff curve', () => {
   })
 })
 
-describe.skipIf(!hasDb)('atomic failure counter (integration)', () => {
-  let id = ''
-
-  beforeAll(async () => {
-    const row = await prisma.creator.create({
-      data: {
-        email: `vitest-login-${Date.now()}-${Math.random().toString(36).slice(2)}@example.invalid`,
-        firstName: 'Vitest',
-        lastName: 'Login',
-        passwordHash: 'x',
-      },
-      select: { id: true },
-    })
-    id = row.id
+describe('per-account backoff — the distributed brute-force backstop', () => {
+  it('does not delay a member’s occasional typos (below the high threshold)', () => {
+    for (const n of [0, 1, 5, 9]) expect(accountBackoffMs(n)).toBe(0)
   })
 
-  afterAll(async () => {
-    if (id) {
-      await prisma.auditLog.deleteMany({ where: { actorId: id } })
-      await prisma.creator.delete({ where: { id } }).catch(() => {})
+  it('kicks in past the threshold and is CAPPED (denial-of-wallet bound)', () => {
+    expect(accountBackoffMs(10)).toBe(250)
+    expect(accountBackoffMs(11)).toBe(500)
+    for (const n of [20, 100, 10_000]) expect(accountBackoffMs(n)).toBeLessThanOrEqual(3000)
+    expect(accountBackoffMs(1000)).toBe(3000)
+  })
+
+  it('never denies — only ever a finite, capped delay', () => {
+    for (const n of [0, 10, 100, 100_000]) {
+      const d = accountBackoffMs(n)
+      expect(Number.isFinite(d)).toBe(true)
+      expect(d).toBeLessThanOrEqual(3000)
     }
-    await prisma.$disconnect()
   })
 
-  it('THE REGRESSION: 50 concurrent increments all land', async () => {
-    await prisma.creator.update({ where: { id }, data: { failedLoginAttempts: 0 } })
-
-    await Promise.all(
-      Array.from({ length: 50 }, () =>
-        prisma.creator.update({
-          where: { id },
-          data: { failedLoginAttempts: { increment: 1 } },
-        }),
-      ),
-    )
-
-    const after = await prisma.creator.findUnique({
-      where: { id },
-      select: { failedLoginAttempts: true },
-    })
-    // Measured against the old read-modify-write, this came back as 1.
-    expect(after?.failedLoginAttempts).toBe(50)
+  it('DISTRIBUTED CASE: many IPs against one account is still throttled', () => {
+    // A botnet rotates IPs, so the (email+ip) counter is ~fresh (0–1) on every
+    // attempt — the OLD design had no per-account ceiling and imposed ~no delay
+    // here. The email-alone counter accumulates across ALL those IPs, so the
+    // delay still climbs to the cap despite the rotation.
+    const perIpFresh = 1
+    const accountUnderAttack = 200
+    expect(loginBackoffMs(perIpFresh)).toBe(0) // what the old design saw: nothing
+    expect(chooseLoginDelay({ emailIpFailures: perIpFresh, acctFailures: accountUnderAttack })).toBe(3000)
   })
 
-  it('read-modify-write loses updates — why increment is required', async () => {
-    await prisma.creator.update({ where: { id }, data: { failedLoginAttempts: 0 } })
-
-    await Promise.all(
-      Array.from({ length: 50 }, async () => {
-        const row = await prisma.creator.findUnique({
-          where: { id },
-          select: { failedLoginAttempts: true },
-        })
-        return prisma.creator.update({
-          where: { id },
-          data: { failedLoginAttempts: (row?.failedLoginAttempts ?? 0) + 1 },
-        })
-      }),
-    )
-
-    const after = await prisma.creator.findUnique({
-      where: { id },
-      select: { failedLoginAttempts: true },
-    })
-    // Demonstrates the defect rather than asserting an exact number, since
-    // how many are lost depends on scheduling. The point is: not all of them.
-    expect(after?.failedLoginAttempts).toBeLessThan(50)
+  it('REDIS-DOWN CASE: counters fail open to 0 → no delay, logins not blocked', () => {
+    // Both counters live in Redis and fail open to 0 during an outage, so the
+    // delay is 0 — a Redis hiccup must NEVER lock the platform. Documented
+    // posture: during an outage bcrypt's cost + Sentry alerting are the only
+    // online protection; there is intentionally NO DB-backed per-account
+    // backstop, because it would have to run after the account lookup and would
+    // reintroduce the account-existence timing oracle this flow eliminates.
+    expect(chooseLoginDelay({ emailIpFailures: 0, acctFailures: 0 })).toBe(0)
   })
 })
 
@@ -198,9 +157,20 @@ describe('authorize() wiring', () => {
     expect(src).not.toMatch(/lockedUntil:\s*new Date\(Date\.now\(\)/)
   })
 
-  it('uses the atomic increment, not read-modify-write', () => {
-    expect(src).toMatch(/failedLoginAttempts:\s*\{\s*increment:\s*1\s*\}/)
-    expect(src).not.toMatch(/creator\.failedLoginAttempts\s*\+\s*1/)
+  it('per-account pressure is a Redis-keyed delay, not the old dead DB column', () => {
+    // failedLoginAttempts + lockedUntil were dead (written, never read to lock).
+    // Removed. Per-account pressure now lives in the (email-alone) Redis
+    // counter, and Redis INCR is atomic (the DB counter's read-modify-write was
+    // the concurrency bug this replaces).
+    expect(src).toMatch(/acctKey\s*=\s*`login-acct:\$\{emailKey\}`/)
+    expect(src).not.toMatch(/failedLoginAttempts/)
+    expect(src).not.toMatch(/lockedUntil/)
+  })
+
+  it('per-account backstop is a DELAY, never a per-account deny (no lockout weapon)', () => {
+    // login-acct is used with the backoff helpers (delay), never rateLimit
+    // (deny). A per-account deny would be the old account-lockout DoS.
+    expect(src).not.toMatch(/rateLimit\(`login-acct/)
   })
 
   it('always reaches bcrypt.compare, even with no account', () => {
@@ -212,13 +182,15 @@ describe('authorize() wiring', () => {
     expect(src).toMatch(/DUMMY_PASSWORD_HASH/)
   })
 
-  it('counts failures for unknown addresses too', () => {
-    // Otherwise the backoff itself reveals which addresses are real.
-    const block = src.slice(src.indexOf('if (!creator || !passwordMatch)'))
-    const bumpAt = block.indexOf('bumpFailureCount')
-    const creatorGuardAt = block.indexOf('if (creator)')
-    expect(bumpAt).toBeGreaterThan(-1)
-    expect(bumpAt).toBeLessThan(creatorGuardAt)
+  it('counts failures for unknown addresses too, on BOTH counters', () => {
+    // Otherwise the delay itself reveals which addresses are real. Both the
+    // (email+ip) and the (email-alone) counter are bumped unconditionally in
+    // the failure path — no per-account-existence guard gates them.
+    const guardAt = src.indexOf('if (!creator || !passwordMatch)')
+    const block = src.slice(guardAt, src.indexOf('return null', guardAt))
+    expect(block).toMatch(/bumpFailureCount\(backoffKey/)
+    expect(block).toMatch(/bumpFailureCount\(acctKey/)
+    expect(block).not.toMatch(/if \(creator\)/)
   })
 
   it('delays before the account lookup, so timing is uniform', () => {

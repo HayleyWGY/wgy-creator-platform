@@ -55,10 +55,6 @@ export async function POST(req: Request) {
     data: {
       passwordHash: await bcrypt.hash(password, 10),
       passwordSetAt: new Date(),
-      // A fresh start: clear any lockout inherited from failed attempts
-      // against the unusable placeholder password.
-      failedLoginAttempts: 0,
-      lockedUntil: null,
     },
   })
 
