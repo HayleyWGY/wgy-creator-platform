@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { useSession } from 'next-auth/react'
 import { Send, Trash2 } from 'lucide-react'
 import { getAge } from '@/lib/utils'
@@ -22,11 +23,12 @@ interface ContentComment {
 function Avatar({ author }: { author: CommentAuthor }) {
   if (author.profileImageUrl) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
+      <Image
         src={author.profileImageUrl}
         alt=""
-        style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+        width={28}
+        height={28}
+        style={{ borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
       />
     )
   }

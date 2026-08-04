@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 import { Camera, X, Plus } from 'lucide-react'
@@ -70,11 +71,12 @@ function YouTubeIcon() {
 function Avatar({ profile, size = 88 }: { profile: CreatorProfile; size?: number }) {
   if (profile.profileImageUrl) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
+      <Image
         src={profile.profileImageUrl}
         alt=""
-        style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--accent)' }}
+        width={size}
+        height={size}
+        style={{ borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--accent)' }}
       />
     )
   }

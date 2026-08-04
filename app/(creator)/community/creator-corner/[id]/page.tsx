@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Send, X } from 'lucide-react'
 import { getAge } from '@/lib/utils'
@@ -40,11 +41,12 @@ function Avatar({ author, size = 28 }: { author: Author; size?: number }) {
   const initials = `${author.firstName[0]}${author.lastName[0]}`
   if (author.profileImageUrl) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
+      <Image
         src={author.profileImageUrl}
         alt={initials}
-        style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+        width={size}
+        height={size}
+        style={{ borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
       />
     )
   }

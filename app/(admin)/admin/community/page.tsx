@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { getAge } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 
@@ -47,8 +48,7 @@ function Avatar({ author }: { author: Author }) {
   const initials = `${author.firstName[0]}${author.lastName[0]}`
   if (author.profileImageUrl) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img src={author.profileImageUrl} alt={initials} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />
+      <Image src={author.profileImageUrl} alt={initials} width={32} height={32} style={{ borderRadius: '50%', objectFit: 'cover' }} />
     )
   }
   return (
@@ -182,8 +182,7 @@ export default function AdminCommunityPage() {
 
             {/* Image */}
             {post.imageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={post.imageUrl} alt="" style={{ width: 40, height: 40, borderRadius: 6, objectFit: 'cover', display: 'block' }} />
+              <Image src={post.imageUrl} alt="" width={40} height={40} style={{ borderRadius: 6, objectFit: 'cover', display: 'block' }} />
             ) : (
               <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 11, color: 'var(--text-muted)' }}>—</span>
             )}

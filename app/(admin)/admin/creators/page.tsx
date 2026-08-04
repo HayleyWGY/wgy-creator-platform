@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import Image from 'next/image'
 import { StatusPill } from '@/components/ui/status-pill'
 import { getAge } from '@/lib/utils'
 import { Search, X, MessageSquare } from 'lucide-react'
@@ -55,8 +56,7 @@ function CreatorAvatar({ creator, size = 32 }: { creator: Creator; size?: number
   const initials = `${creator.firstName[0]}${creator.lastName[0]}`
   if (creator.profileImageUrl) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img src={creator.profileImageUrl} alt="" style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+      <Image src={creator.profileImageUrl} alt="" width={size} height={size} style={{ borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
     )
   }
   return (

@@ -1,6 +1,7 @@
 'use client'
 import { useCallback, useEffect, useRef, useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { useSession } from 'next-auth/react'
 import { ArrowLeft, Send, ImageIcon, Trash2 } from 'lucide-react'
 import { useChatPoll, CHAT_POLL_INTERVAL_MS } from '@/lib/use-chat-poll'
@@ -33,11 +34,12 @@ interface DmThread {
 function Avatar({ sender }: { sender: MessageSender }) {
   if (sender.profileImageUrl) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
+      <Image
         src={sender.profileImageUrl}
         alt=""
-        style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+        width={32}
+        height={32}
+        style={{ borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
       />
     )
   }

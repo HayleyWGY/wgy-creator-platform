@@ -1,6 +1,7 @@
 'use client'
 import { useCallback, useEffect, useRef, useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { useSession } from 'next-auth/react'
 import { ArrowLeft, Send, Trash2, CornerUpLeft, X } from 'lucide-react'
 import { useChatPoll, CHAT_POLL_INTERVAL_MS } from '@/lib/use-chat-poll'
@@ -66,11 +67,12 @@ function truncate(s: string, n: number): string {
 function Avatar({ author }: { author: MessageAuthor }) {
   if (author.profileImageUrl) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
+      <Image
         src={author.profileImageUrl}
         alt=""
-        style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+        width={32}
+        height={32}
+        style={{ borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
       />
     )
   }
