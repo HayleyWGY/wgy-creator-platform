@@ -65,7 +65,11 @@ export function verifyHandoffToken(token: string | null | undefined): string | n
   const secret = process.env.APPLY_HANDOFF_SECRET
   if (!secret || !token) return null
 
-  const [payload, sig] = token.split('.')
+  // Strict parse: a token is exactly payload.signature. Reject any extra
+  // trailing segment (payload.signature.junk) rather than silently ignoring it.
+  const parts = token.split('.')
+  if (parts.length !== 2) return null
+  const [payload, sig] = parts
   if (!payload || !sig) return null
 
   const expected = sign(payload, secret)
@@ -154,7 +158,10 @@ export function verifyApplicationReceipt(token: string | null | undefined): Rece
   const secret = process.env.APPLY_HANDOFF_SECRET
   if (!secret || !token) return null
 
-  const [payload, sig] = token.split('.')
+  // Strict parse: exactly payload.signature — reject a trailing extra segment.
+  const parts = token.split('.')
+  if (parts.length !== 2) return null
+  const [payload, sig] = parts
   if (!payload || !sig) return null
 
   const a = fromB64url(sig)
