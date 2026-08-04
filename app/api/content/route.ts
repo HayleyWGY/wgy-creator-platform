@@ -64,15 +64,19 @@ async function searchPublishedContent(section: string | null, contentType: strin
 // Pagination metadata rides on headers so the response body stays the bare
 // array every existing client already reads — no client breaks, and paginating
 // clients read X-Total-Count / X-Has-More.
-function pagedJson(items: unknown[], total: number, limit: number, offset: number) {
-  return NextResponse.json(items, {
-    headers: {
-      "X-Total-Count": String(total),
-      "X-Has-More": String(offset + items.length < total),
-      "X-Limit": String(limit),
-      "X-Offset": String(offset),
-    },
-  });
+function pagedJson(items: unknown[], total: number, limit: number, offset: number, cacheable = false) {
+  const headers: Record<string, string> = {
+    "X-Total-Count": String(total),
+    "X-Has-More": String(offset + items.length < total),
+    "X-Limit": String(limit),
+    "X-Offset": String(offset),
+  };
+  // Only the member (published) list is safe to cache: identical for every
+  // member, and PRIVATE only so no shared cache is ever involved. The admin
+  // path is deliberately NOT cacheable — an admin editing a draft must see it
+  // fresh.
+  if (cacheable) headers["Cache-Control"] = "private, max-age=30";
+  return NextResponse.json(items, { headers });
 }
 
 export async function GET(req: NextRequest) {
@@ -99,7 +103,7 @@ export async function GET(req: NextRequest) {
       const { items, total } = q
         ? await searchPublishedContent(section, contentType, category, q, limit, offset)
         : await getPublishedContent(section, contentType, category, limit, offset);
-      return pagedJson(items, total, limit, offset);
+      return pagedJson(items, total, limit, offset, true); // member list → cacheable
     }
 
     // Admin: uncached, may request any status (incl. drafts they just edited)

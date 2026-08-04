@@ -4,7 +4,21 @@ import { useState, useEffect, useRef } from "react";
 import { StatusPill } from '@/components/ui/status-pill'
 import { Plus, Pencil, Trash2, Eye, Search, Upload, X } from "lucide-react";
 import Image from "next/image";
-import { RichTextEditor } from "@/components/admin/rich-text-editor";
+import dynamic from "next/dynamic";
+// TipTap is a heavy, client-only bundle used only inside the content editor
+// modal. Dynamic-import it so it's fetched on demand (when the page is used)
+// rather than shipped in this route's initial JS.
+const RichTextEditor = dynamic(
+  () => import("@/components/admin/rich-text-editor").then(m => m.RichTextEditor),
+  {
+    ssr: false,
+    loading: () => (
+      <div style={{ minHeight: 200, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)", fontSize: 13 }}>
+        Loading editor…
+      </div>
+    ),
+  },
+);
 import { getEmbedUrl } from "@/lib/utils";
 
 interface ContentItem {

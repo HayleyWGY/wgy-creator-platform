@@ -200,7 +200,15 @@ export async function GET(req: NextRequest) {
       const { campaigns, total } = q
         ? await searchMemberCampaigns(filter, !!searchParams.get("live"), q, limit, offset)
         : await getMemberCampaigns(filter, !!searchParams.get("live"), limit, offset);
-      return NextResponse.json({ campaigns, total, limit, offset, hasMore: offset + campaigns.length < total });
+      // The member opportunities feed is identical for every member (no
+      // per-user fields — likedByMe lives on the single-campaign route). So a
+      // short PRIVATE (browser-only) cache is safe: a shared/CDN cache is never
+      // involved, so one member's response can never reach another, and the
+      // data is already 60s-stale-tolerant via unstable_cache.
+      return NextResponse.json(
+        { campaigns, total, limit, offset, hasMore: offset + campaigns.length < total },
+        { headers: { "Cache-Control": "private, max-age=30" } },
+      );
     }
 
     // Admin: uncached, sees every campaign incl. drafts. The type filter and

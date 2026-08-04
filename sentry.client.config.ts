@@ -7,7 +7,7 @@ const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN
 Sentry.init({
   dsn,
   enabled: !!dsn,
-  tracesSampleRate: 0,
+  tracesSampleRate: Number(process.env.NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE ?? '0.1'),
   // Don't replay sessions — keep it light and privacy-preserving
   replaysSessionSampleRate: 0,
   replaysOnErrorSampleRate: 0,
