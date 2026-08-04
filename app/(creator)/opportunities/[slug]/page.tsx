@@ -299,7 +299,7 @@ export default function CampaignDetailPage() {
           {campaign.brandLogoUrl ? (
             <Image src={campaign.brandLogoUrl} alt={campaign.brandName} fill style={{ objectFit: "cover" }} />
           ) : (
-            <span className="font-montserrat font-semibold" style={{ fontSize: "20px", color: "#706b6b" }}>
+            <span className="font-montserrat font-semibold" style={{ fontSize: "20px", color: "var(--warm-grey)" }}>
               {campaign.brandInitials}
             </span>
           )}

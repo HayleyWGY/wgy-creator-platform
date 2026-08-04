@@ -109,7 +109,7 @@ export default function AdminPostDetailPage({ params }: { params: { id: string }
     const ci = c.author.isAdmin ? 'WG' : `${c.author.firstName[0]}${c.author.lastName[0]}`
     return (
       <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginLeft: isReply ? 40 : 0 }}>
-        <div style={{ width: 32, height: 32, borderRadius: '50%', background: c.author.isAdmin ? '#9b7e56' : 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+        <div style={{ width: 32, height: 32, borderRadius: '50%', background: c.author.isAdmin ? 'var(--gold-wgy)' : 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
           {c.author.profileImageUrl && !c.author.isAdmin ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={c.author.profileImageUrl} alt={ci} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -120,7 +120,7 @@ export default function AdminPostDetailPage({ params }: { params: { id: string }
         <div style={{ flex: 1, background: 'var(--surface)', borderRadius: '0 10px 10px 10px', padding: '10px 14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
             <div>
-              <span style={{ color: c.author.isAdmin ? '#9b7e56' : 'white', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 12 }}>
+              <span style={{ color: c.author.isAdmin ? 'var(--gold-wgy)' : 'white', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 12 }}>
                 {c.author.isAdmin ? 'WGY' : `${c.author.firstName} ${c.author.lastName}`}
               </span>
               <span style={{ color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontSize: 10, marginLeft: 8 }}>{getAge(c.createdAt)}</span>
@@ -258,7 +258,7 @@ export default function AdminPostDetailPage({ params }: { params: { id: string }
           </div>
         )}
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-          <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#9b7e56', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--gold-wgy)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <span style={{ fontSize: 10, fontWeight: 700, color: '#fff', fontFamily: 'Montserrat, sans-serif' }}>WG</span>
           </div>
           <input

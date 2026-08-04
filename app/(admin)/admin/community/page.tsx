@@ -122,7 +122,7 @@ export default function AdminCommunityPage() {
                 )}
               </div>
               <div style={{ marginTop: 10 }}>
-                <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 11, color: '#9b7e56' }}>View messages →</span>
+                <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 11, color: 'var(--gold-wgy)' }}>View messages →</span>
               </div>
             </div>
           )

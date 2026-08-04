@@ -143,7 +143,7 @@ export default function AdminRoomPage({ params }: { params: { slug: string } }) 
         }}>
           <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>📌</span>
           <div style={{ flex: 1 }}>
-            <p style={{ margin: '0 0 3px', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.10em', color: '#9b7e56' }}>
+            <p style={{ margin: '0 0 3px', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.10em', color: 'var(--gold-wgy)' }}>
               PINNED MESSAGE
             </p>
             <p style={{ margin: 0, fontFamily: 'Montserrat, sans-serif', fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>
@@ -152,7 +152,7 @@ export default function AdminRoomPage({ params }: { params: { slug: string } }) 
           </div>
           <button
             onClick={handleUnpin}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9b7e56', fontFamily: 'Montserrat, sans-serif', fontSize: 11, fontWeight: 600, flexShrink: 0, padding: '2px 0' }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gold-wgy)', fontFamily: 'Montserrat, sans-serif', fontSize: 11, fontWeight: 600, flexShrink: 0, padding: '2px 0' }}
           >
             Unpin
           </button>
@@ -172,21 +172,21 @@ export default function AdminRoomPage({ params }: { params: { slug: string } }) 
           const isPinned = pinnedMessage?.id === msg.id
           return (
             <div key={msg.id} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-              <div style={{ width: 32, height: 32, borderRadius: '50%', background: isAdmin ? '#9b7e56' : 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div style={{ width: 32, height: 32, borderRadius: '50%', background: isAdmin ? 'var(--gold-wgy)' : 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <span style={{ color: 'var(--bg)', fontWeight: 700, fontSize: 10, fontFamily: 'Montserrat, sans-serif' }}>
                   {isAdmin ? 'WG' : initials}
                 </span>
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
-                  <span style={{ color: isAdmin ? '#9b7e56' : 'white', fontFamily: 'Montserrat, sans-serif', fontWeight: 600, fontSize: 12 }}>
+                  <span style={{ color: isAdmin ? 'var(--gold-wgy)' : 'white', fontFamily: 'Montserrat, sans-serif', fontWeight: 600, fontSize: 12 }}>
                     {isAdmin ? 'WGY' : `${msg.author?.firstName} ${msg.author?.lastName}`}
                   </span>
                   <span style={{ color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif', fontSize: 10 }}>
                     {getAge(msg.createdAt)}
                   </span>
                   {isPinned && (
-                    <span style={{ color: '#9b7e56', fontFamily: 'Montserrat, sans-serif', fontSize: 9, fontWeight: 700 }}>📌 PINNED</span>
+                    <span style={{ color: 'var(--gold-wgy)', fontFamily: 'Montserrat, sans-serif', fontSize: 9, fontWeight: 700 }}>📌 PINNED</span>
                   )}
                 </div>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
@@ -206,7 +206,7 @@ export default function AdminRoomPage({ params }: { params: { slug: string } }) 
                         style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, opacity: isPinned ? 1 : 0.4, flexShrink: 0 }}
                         title={isPinned ? 'Unpin message' : 'Pin message'}
                       >
-                        <Pin size={14} color="#9b7e56" />
+                        <Pin size={14} color="var(--gold-wgy)" />
                       </button>
                       <button
                         onClick={() => handleDelete(msg.id)}
@@ -228,10 +228,10 @@ export default function AdminRoomPage({ params }: { params: { slug: string } }) 
       {/* Send as WGY */}
       <div style={{ padding: '16px 24px', borderTop: '1px solid rgba(255,255,255,0.06)', background: 'var(--surface)', display: 'flex', gap: 12, alignItems: 'flex-end', flexShrink: 0 }}>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
-          <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#9b7e56', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--gold-wgy)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span style={{ color: 'var(--bg)', fontWeight: 700, fontSize: 9, fontFamily: 'Montserrat, sans-serif' }}>WG</span>
           </div>
-          <span style={{ color: '#9b7e56', fontFamily: 'Montserrat, sans-serif', fontSize: 11, fontWeight: 600 }}>Sending as WGY</span>
+          <span style={{ color: 'var(--gold-wgy)', fontFamily: 'Montserrat, sans-serif', fontSize: 11, fontWeight: 600 }}>Sending as WGY</span>
         </div>
         <textarea
           value={input}

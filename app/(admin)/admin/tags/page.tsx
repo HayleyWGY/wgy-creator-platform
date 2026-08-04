@@ -11,7 +11,7 @@ interface TagItem {
   count: number;
 }
 
-const COLOUR_SWATCHES = ["#e4dcd1", "#9b7e56", "#8a8a8a", "#4a5e4a", "#3d3550", "#8b6f5e"];
+const COLOUR_SWATCHES = ["#e4dcd1", "var(--gold-wgy)", "#8a8a8a", "#4a5e4a", "#3d3550", "#8b6f5e"];
 
 function TagModal({
   tag,

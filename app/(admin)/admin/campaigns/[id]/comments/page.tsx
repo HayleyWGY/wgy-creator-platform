@@ -87,7 +87,7 @@ export default function AdminCampaignCommentsPage() {
     const initials = c.author.isAdmin ? 'WG' : `${c.author.firstName[0]}${c.author.lastName[0]}`
     return (
       <div style={{ display: 'flex', gap: 10, marginLeft: isReply ? 40 : 0 }}>
-        <div style={{ width: 32, height: 32, borderRadius: '50%', background: c.author.isAdmin ? '#9b7e56' : 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+        <div style={{ width: 32, height: 32, borderRadius: '50%', background: c.author.isAdmin ? 'var(--gold-wgy)' : 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
           {c.author.profileImageUrl && !c.author.isAdmin ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={c.author.profileImageUrl} alt={initials} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -97,7 +97,7 @@ export default function AdminCampaignCommentsPage() {
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: c.author.isAdmin ? '#9b7e56' : 'var(--text)', fontFamily: 'Montserrat, sans-serif' }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: c.author.isAdmin ? 'var(--gold-wgy)' : 'var(--text)', fontFamily: 'Montserrat, sans-serif' }}>
               {c.author.isAdmin ? 'WGY' : `${c.author.firstName} ${c.author.lastName}`}
             </span>
             <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif' }}>{getAge(c.createdAt)}</span>
@@ -153,7 +153,7 @@ export default function AdminCampaignCommentsPage() {
           </div>
         )}
         <div style={{ display: 'flex', gap: 12, alignItems: 'center', maxWidth: 720 }}>
-          <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#9b7e56', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--gold-wgy)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <span style={{ fontSize: 10, fontWeight: 700, color: '#fff', fontFamily: 'Montserrat, sans-serif' }}>WG</span>
           </div>
           <input

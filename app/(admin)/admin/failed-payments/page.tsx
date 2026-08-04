@@ -203,9 +203,9 @@ export default function FailedPaymentsPage() {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
         <div>
-          <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', margin: 0 }}>ADMIN</p>
+          <p style={{ color: 'var(--warm-grey)', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', margin: 0 }}>ADMIN</p>
           <p style={{ color: 'white', fontFamily: 'Playfair Display, serif', fontStyle: 'italic', fontSize: 32, margin: '4px 0 4px' }}>Failed Payments</p>
-          <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 13, margin: 0 }}>Pulled live from Stripe. No card details are stored or shown.</p>
+          <p style={{ color: 'var(--warm-grey)', fontFamily: 'Montserrat, sans-serif', fontSize: 13, margin: 0 }}>Pulled live from Stripe. No card details are stored or shown.</p>
         </div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           <select value={range} onChange={e => setRange(e.target.value)}
@@ -215,12 +215,12 @@ export default function FailedPaymentsPage() {
             <option value="365">Last 12 months</option>
           </select>
           <button onClick={() => fetchData(true)} disabled={refreshing}
-            style={{ background: '#2a2a2a', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '8px 14px', color: refreshing ? '#706b6b' : '#e4dcd1', fontFamily: 'Montserrat, sans-serif', fontSize: 13, cursor: refreshing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+            style={{ background: '#2a2a2a', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '8px 14px', color: refreshing ? 'var(--warm-grey)' : '#e4dcd1', fontFamily: 'Montserrat, sans-serif', fontSize: 13, cursor: refreshing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
             <RefreshCw size={14} style={{ animation: refreshing ? 'spin 0.8s linear infinite' : 'none' }} />
             {refreshing ? 'Refreshing...' : 'Refresh'}
           </button>
           <button onClick={handleExport} disabled={filtered.length === 0}
-            style={{ background: '#e4dcd1', border: 'none', borderRadius: 8, padding: '8px 16px', color: '#222222', fontFamily: 'Montserrat, sans-serif', fontWeight: 600, fontSize: 13, cursor: filtered.length === 0 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 6, opacity: filtered.length === 0 ? 0.4 : 1 }}>
+            style={{ background: '#e4dcd1', border: 'none', borderRadius: 8, padding: '8px 16px', color: 'var(--charcoal)', fontFamily: 'Montserrat, sans-serif', fontWeight: 600, fontSize: 13, cursor: filtered.length === 0 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 6, opacity: filtered.length === 0 ? 0.4 : 1 }}>
             <Download size={14} />Export CSV
           </button>
         </div>
@@ -258,7 +258,7 @@ export default function FailedPaymentsPage() {
               { label: 'OUTSTANDING', value: formatAmount(summary.totalOutstanding, 'GBP'), colour: '#e4dcd1', bg: 'rgba(228,220,209,0.08)' },
             ].map(card => (
               <div key={card.label} style={{ background: card.bg, border: `1px solid ${card.colour}30`, borderRadius: 12, padding: '16px 20px' }}>
-                <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.12em', margin: '0 0 8px' }}>{card.label}</p>
+                <p style={{ color: 'var(--warm-grey)', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.12em', margin: '0 0 8px' }}>{card.label}</p>
                 <p style={{ color: card.colour, fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 24, margin: 0 }}>{card.value}</p>
               </div>
             ))}
@@ -267,13 +267,13 @@ export default function FailedPaymentsPage() {
           {/* Filters */}
           <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
             <div style={{ position: 'relative', flex: 1, maxWidth: 320 }}>
-              <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#706b6b' }} />
+              <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--warm-grey)' }} />
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name or email..."
                 style={{ width: '100%', background: '#2a2a2a', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '8px 14px 8px 34px', color: 'white', fontFamily: 'Montserrat, sans-serif', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
             </div>
             {['all', 'retrying', 'failed', 'resolved'].map(s => (
               <button key={s} onClick={() => setStatusFilter(s)}
-                style={{ background: statusFilter === s ? '#e4dcd1' : '#2a2a2a', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '8px 14px', color: statusFilter === s ? '#222222' : '#706b6b', fontFamily: 'Montserrat, sans-serif', fontWeight: 600, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.08em', cursor: 'pointer' }}>
+                style={{ background: statusFilter === s ? '#e4dcd1' : '#2a2a2a', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '8px 14px', color: statusFilter === s ? 'var(--charcoal)' : 'var(--warm-grey)', fontFamily: 'Montserrat, sans-serif', fontWeight: 600, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.08em', cursor: 'pointer' }}>
                 {s === 'all' ? `All (${matched.length})` : s}
               </button>
             ))}
@@ -283,7 +283,7 @@ export default function FailedPaymentsPage() {
           <div style={{ background: '#2a2a2a', borderRadius: 12, overflow: 'hidden', marginBottom: 24 }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 140px 100px 80px 100px 140px', background: '#1a1a1a', padding: '12px 20px', gap: 12 }}>
               {['CREATOR', 'AMOUNT', 'STATUS', 'ATTEMPTS', 'FAILED DATE', 'ACTIONS'].map(h => (
-                <span key={h} style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.12em' }}>{h}</span>
+                <span key={h} style={{ color: 'var(--warm-grey)', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.12em' }}>{h}</span>
               ))}
             </div>
 
@@ -291,7 +291,7 @@ export default function FailedPaymentsPage() {
               <div style={{ padding: '40px 20px', textAlign: 'center' }}>
                 <CheckCircle size={32} color="#27AE60" style={{ margin: '0 auto 12px' }} />
                 <p style={{ color: 'white', fontFamily: 'Playfair Display, serif', fontStyle: 'italic', fontSize: 18, margin: '0 0 6px' }}>No failed payments</p>
-                <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 13, margin: 0 }}>
+                <p style={{ color: 'var(--warm-grey)', fontFamily: 'Montserrat, sans-serif', fontSize: 13, margin: 0 }}>
                   {search || statusFilter !== 'all' ? 'No results match your filters' : `No payment failures in the last ${range} days`}
                 </p>
               </div>
@@ -305,16 +305,16 @@ export default function FailedPaymentsPage() {
                   style={{ display: 'grid', gridTemplateColumns: '1fr 140px 100px 80px 100px 140px', padding: '16px 20px', gap: 12, borderBottom: index < filtered.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', alignItems: 'center', background: failure.status === 'failed' ? 'rgba(192,57,43,0.03)' : 'transparent' }}>
                   <div>
                     <p style={{ color: 'white', fontFamily: 'Montserrat, sans-serif', fontWeight: 600, fontSize: 13, margin: '0 0 2px' }}>{failure.creatorName}</p>
-                    <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 11, margin: '0 0 2px' }}>{failure.email}</p>
-                    {failure.instagramHandle && <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 10, margin: 0 }}>{failure.instagramHandle}</p>}
+                    <p style={{ color: 'var(--warm-grey)', fontFamily: 'Montserrat, sans-serif', fontSize: 11, margin: '0 0 2px' }}>{failure.email}</p>
+                    {failure.instagramHandle && <p style={{ color: 'var(--warm-grey)', fontFamily: 'Montserrat, sans-serif', fontSize: 10, margin: 0 }}>{failure.instagramHandle}</p>}
                   </div>
                   <p style={{ color: 'white', fontFamily: 'Montserrat, sans-serif', fontWeight: 600, fontSize: 14, margin: 0 }}>{formatAmount(failure.amount, failure.currency)}</p>
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: statusCfg.bg, border: `1px solid ${statusCfg.colour}40`, borderRadius: 20, padding: '4px 10px', width: 'fit-content' }}>
                     <Icon size={10} color={statusCfg.colour} />
                     <span style={{ color: statusCfg.colour, fontFamily: 'Montserrat, sans-serif', fontWeight: 600, fontSize: 10 }}>{statusCfg.label}</span>
                   </div>
-                  <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 13, margin: 0, textAlign: 'center' }}>{failure.attemptCount}</p>
-                  <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 12, margin: 0 }}>{formatDate(failure.failedAt)}</p>
+                  <p style={{ color: 'var(--warm-grey)', fontFamily: 'Montserrat, sans-serif', fontSize: 13, margin: 0, textAlign: 'center' }}>{failure.attemptCount}</p>
+                  <p style={{ color: 'var(--warm-grey)', fontFamily: 'Montserrat, sans-serif', fontSize: 12, margin: 0 }}>{formatDate(failure.failedAt)}</p>
                   <div style={{ display: 'flex', gap: 8 }}>
                     {failure.status !== 'resolved' && (
                       <button onClick={() => handleSendDM(failure)} disabled={sendingDM === failure.creatorId}
@@ -324,7 +324,7 @@ export default function FailedPaymentsPage() {
                       </button>
                     )}
                     <button onClick={() => router.push(`/admin/creators?search=${encodeURIComponent(failure.email)}`)}
-                      style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, padding: '5px 10px', color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontWeight: 600, fontSize: 10, cursor: 'pointer' }}
+                      style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, padding: '5px 10px', color: 'var(--warm-grey)', fontFamily: 'Montserrat, sans-serif', fontWeight: 600, fontSize: 10, cursor: 'pointer' }}
                       title="View creator profile">View</button>
                   </div>
                 </div>
@@ -341,7 +341,7 @@ export default function FailedPaymentsPage() {
                   <p style={{ color: '#F59E0B', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 12, margin: 0 }}>
                     {unmatched.length} Unmatched Payment{unmatched.length !== 1 ? 's' : ''}
                   </p>
-                  <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 11, margin: '2px 0 0' }}>
+                  <p style={{ color: 'var(--warm-grey)', fontFamily: 'Montserrat, sans-serif', fontSize: 11, margin: '2px 0 0' }}>
                     These Stripe customers could not be automatically matched to an app creator by email. Please link them manually.
                   </p>
                 </div>
@@ -355,7 +355,7 @@ export default function FailedPaymentsPage() {
                       <p style={{ color: 'white', fontFamily: 'Montserrat, sans-serif', fontWeight: 600, fontSize: 13, margin: '0 0 4px' }}>
                         {failure.email || 'No email on Stripe record'}
                       </p>
-                      <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 11, margin: 0 }}>
+                      <p style={{ color: 'var(--warm-grey)', fontFamily: 'Montserrat, sans-serif', fontSize: 11, margin: 0 }}>
                         {formatAmount(failure.amount, failure.currency)} · {formatDate(failure.failedAt)} · {failure.attemptCount} attempt{failure.attemptCount !== 1 ? 's' : ''}
                       </p>
                     </div>
@@ -374,17 +374,17 @@ export default function FailedPaymentsPage() {
                           <button key={creator.id} onClick={() => handleManualMatch(failure.stripeCustomerId, creator.id)}
                             style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 6, padding: '8px 12px', color: 'white', fontFamily: 'Montserrat, sans-serif', fontSize: 12, cursor: 'pointer', textAlign: 'left', display: 'flex', justifyContent: 'space-between' }}>
                             <span>{creator.firstName} {creator.lastName}</span>
-                            <span style={{ color: '#706b6b', fontSize: 11 }}>{creator.email}</span>
+                            <span style={{ color: 'var(--warm-grey)', fontSize: 11 }}>{creator.email}</span>
                           </button>
                         ))}
                         {matchResults.length === 0 && (
-                          <p style={{ color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 12, textAlign: 'center', padding: '8px 0', margin: 0 }}>
+                          <p style={{ color: 'var(--warm-grey)', fontFamily: 'Montserrat, sans-serif', fontSize: 12, textAlign: 'center', padding: '8px 0', margin: 0 }}>
                             {matchSearchTerm ? 'No creators found' : 'Type to search creators'}
                           </p>
                         )}
                       </div>
                       <button onClick={() => { setMatchingCustomerId(null); setMatchSearchTerm(''); setMatchResults([]) }}
-                        style={{ background: 'none', border: 'none', color: '#706b6b', fontFamily: 'Montserrat, sans-serif', fontSize: 11, cursor: 'pointer', marginTop: 8, padding: 0 }}>
+                        style={{ background: 'none', border: 'none', color: 'var(--warm-grey)', fontFamily: 'Montserrat, sans-serif', fontSize: 11, cursor: 'pointer', marginTop: 8, padding: 0 }}>
                         Cancel
                       </button>
                     </div>

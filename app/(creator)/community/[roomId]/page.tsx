@@ -323,7 +323,7 @@ export default function ChatRoomPage({ params }: { params: { roomId: string } })
           }}>
             <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>📌</span>
             <div>
-              <p style={{ margin: '0 0 3px', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.10em', color: '#9b7e56' }}>
+              <p style={{ margin: '0 0 3px', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.10em', color: 'var(--gold-wgy)' }}>
                 PINNED MESSAGE
               </p>
               <p style={{ margin: 0, fontFamily: 'Montserrat, sans-serif', fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>

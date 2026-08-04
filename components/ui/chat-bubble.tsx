@@ -6,7 +6,7 @@
  *  - received:  grey surface, left-aligned
  *  - isWgy:     WGY-authored (DM from WGY, or admin post shown as "WGY").
  *               Carries a subtle gold accent on the author label — the
- *               ONLY place gold (#9b7e56) is allowed to appear.
+ *               ONLY place gold (var(--gold-wgy)) is allowed to appear.
  *
  * Status/timestamp labels (DELIVERED, SEEN, "2h ago") render as small
  * uppercase letterspaced captions beneath the bubble.

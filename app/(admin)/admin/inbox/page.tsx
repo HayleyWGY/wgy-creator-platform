@@ -257,7 +257,7 @@ export default function AdminInboxPage() {
                 const initials = `${msg.sender?.firstName?.[0] || ''}${msg.sender?.lastName?.[0] || ''}`
                 return (
                   <div key={msg.id} style={{ display: 'flex', flexDirection: isAdmin ? 'row-reverse' : 'row', gap: 10, alignItems: 'flex-end' }}>
-                    <div style={{ width: 32, height: 32, borderRadius: '50%', background: isAdmin ? '#9b7e56' : 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: '50%', background: isAdmin ? 'var(--gold-wgy)' : 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <span style={{ color: 'var(--bg)', fontWeight: 700, fontSize: 10, fontFamily: 'Montserrat, sans-serif' }}>
                         {isAdmin ? 'WG' : initials}
                       </span>
@@ -266,7 +266,7 @@ export default function AdminInboxPage() {
                       <span style={{ color: 'var(--text-muted)', fontSize: 11, fontFamily: 'Montserrat, sans-serif' }}>
                         {isAdmin ? 'WGY' : `${msg.sender?.firstName} ${msg.sender?.lastName}`} · {getAge(msg.createdAt)}
                       </span>
-                      <div style={{ background: isAdmin ? '#9b7e56' : 'var(--surface)', borderRadius: isAdmin ? '12px 0 12px 12px' : '0 12px 12px 12px', padding: '10px 16px' }}>
+                      <div style={{ background: isAdmin ? 'var(--gold-wgy)' : 'var(--surface)', borderRadius: isAdmin ? '12px 0 12px 12px' : '0 12px 12px 12px', padding: '10px 16px' }}>
                         <p style={{ color: 'white', fontFamily: 'Montserrat, sans-serif', fontSize: 13, lineHeight: 1.5, margin: 0, wordBreak: 'break-word' }}>
                           {msg.body}
                         </p>

@@ -86,10 +86,10 @@ export function CampaignCard({
               boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
             }}
           >
-            <span className="font-montserrat font-bold" style={{ fontSize: compactBadge ? "12px" : "16px", color: "#222222", lineHeight: 1 }}>
+            <span className="font-montserrat font-bold" style={{ fontSize: compactBadge ? "12px" : "16px", color: "var(--charcoal)", lineHeight: 1 }}>
               {eventDay}
             </span>
-            <span className="font-montserrat font-semibold uppercase" style={{ fontSize: compactBadge ? "6px" : "8px", color: "#706b6b", letterSpacing: "0.08em" }}>
+            <span className="font-montserrat font-semibold uppercase" style={{ fontSize: compactBadge ? "6px" : "8px", color: "var(--warm-grey)", letterSpacing: "0.08em" }}>
               {eventMonth}
             </span>
           </div>

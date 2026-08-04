@@ -43,7 +43,7 @@ function TypePill({ type }: { type: string }) {
     return <span className="font-montserrat font-bold uppercase" style={{ fontSize: "8px", letterSpacing: "0.08em", background: "rgba(39,174,96,0.15)", color: "#27AE60", padding: "2px 7px", borderRadius: "20px" }}>Paid</span>;
   }
   if (t === "event") {
-    return <span className="font-montserrat font-bold uppercase" style={{ fontSize: "8px", letterSpacing: "0.08em", background: "rgba(155,126,86,0.2)", color: "#9b7e56", padding: "2px 7px", borderRadius: "20px" }}>Event</span>;
+    return <span className="font-montserrat font-bold uppercase" style={{ fontSize: "8px", letterSpacing: "0.08em", background: "rgba(155,126,86,0.2)", color: "var(--gold-wgy)", padding: "2px 7px", borderRadius: "20px" }}>Event</span>;
   }
   if (t === "app-partners" || t === "app partners") {
     return <span className="font-montserrat font-bold uppercase" style={{ fontSize: "8px", letterSpacing: "0.08em", background: "rgba(61,53,80,0.5)", color: "var(--accent)", padding: "2px 7px", borderRadius: "20px" }}>Affiliate</span>;

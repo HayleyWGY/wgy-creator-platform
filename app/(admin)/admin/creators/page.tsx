@@ -273,7 +273,7 @@ function CreatorPanel({ creatorId, onClose }: { creatorId: string; onClose: () =
             {/* Content niches */}
             {detail.contentNiches?.length > 0 && (
               <div style={{ marginTop: 16 }}>
-                <p className="font-montserrat font-bold uppercase" style={{ fontSize: 10, letterSpacing: '0.10em', color: '#9b7e56', marginBottom: 8 }}>Content Niches</p>
+                <p className="font-montserrat font-bold uppercase" style={{ fontSize: 10, letterSpacing: '0.10em', color: 'var(--gold-wgy)', marginBottom: 8 }}>Content Niches</p>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {detail.contentNiches.map(n => (
                     <span key={n} className="font-montserrat font-semibold uppercase" style={{ fontSize: 9, letterSpacing: '0.08em', background: 'rgba(228,220,209,0.12)', color: 'var(--accent)', padding: '3px 10px', borderRadius: 20 }}>
@@ -287,7 +287,7 @@ function CreatorPanel({ creatorId, onClose }: { creatorId: string; onClose: () =
             {/* Recent campaigns applied to */}
             {detail.applications && detail.applications.length > 0 && (
               <div style={{ marginTop: 16 }}>
-                <p className="font-montserrat font-bold uppercase" style={{ fontSize: 10, letterSpacing: '0.10em', color: '#9b7e56', marginBottom: 8 }}>Recent Campaigns Applied To</p>
+                <p className="font-montserrat font-bold uppercase" style={{ fontSize: 10, letterSpacing: '0.10em', color: 'var(--gold-wgy)', marginBottom: 8 }}>Recent Campaigns Applied To</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {detail.applications.map(a => (
                     <div key={a.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
@@ -312,7 +312,7 @@ function CreatorPanel({ creatorId, onClose }: { creatorId: string; onClose: () =
 
             {/* Sensitive section */}
             <div style={{ marginTop: 20 }}>
-              <p className="font-montserrat font-bold uppercase" style={{ fontSize: 10, letterSpacing: '0.10em', color: '#9b7e56', marginBottom: 4 }}>
+              <p className="font-montserrat font-bold uppercase" style={{ fontSize: 10, letterSpacing: '0.10em', color: 'var(--gold-wgy)', marginBottom: 4 }}>
                 Sensitive (Admin Only)
               </p>
               <div style={{ borderTop: '1px solid rgba(155,126,86,0.2)' }}>
