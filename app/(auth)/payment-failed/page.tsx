@@ -12,7 +12,7 @@ export default function PaymentFailedPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/billing/portal", { method: "POST" });
+      const res = await fetch("/api/stripe/portal", { method: "POST" });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.url) {
         window.location.href = data.url;
