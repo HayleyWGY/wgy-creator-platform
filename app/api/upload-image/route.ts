@@ -1,13 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 import { getPayingSession } from "@/lib/session"
+import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { rateLimit } from '@/lib/rate-limit'
 import { validateImageUpload, verifyImageBytes, buildUploadPath } from '@/lib/upload-validation'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-)
 
 const BUCKET = 'wgy-uploads'
 const PREFIX = 'creator-posts'
@@ -26,6 +21,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    const supabase = getSupabaseAdmin()
     const formData = await req.formData()
     const file = formData.get('file')
 

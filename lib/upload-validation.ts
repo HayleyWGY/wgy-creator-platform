@@ -112,6 +112,41 @@ export function verifyImageBytes(
 }
 
 /**
+ * True when the buffer begins with the PDF file signature, "%PDF-" —
+ * 0x25 0x50 0x44 0x46 0x2D. (The version follows, e.g. "%PDF-1.7".)
+ */
+export function isPdf(buffer: Buffer): boolean {
+  return (
+    buffer.length >= 5 &&
+    buffer[0] === 0x25 && // %
+    buffer[1] === 0x50 && // P
+    buffer[2] === 0x44 && // D
+    buffer[3] === 0x46 && // F
+    buffer[4] === 0x2d    // -
+  )
+}
+
+/**
+ * The PDF counterpart to verifyImageBytes: checks the uploaded BYTES really are
+ * a PDF, not just a client-declared "application/pdf". Same reasoning — file.type
+ * is client-controlled and the blob is stored with PUBLIC access, so an
+ * unverified upload is an open file host under our brand. Rejects a wrong
+ * declared type OR bytes that aren't a real PDF.
+ */
+export function verifyPdfBytes(
+  buffer: Buffer,
+  declaredType: string | undefined | null,
+): UploadValidationResult {
+  if (declaredType !== 'application/pdf') {
+    return { ok: false, error: 'File must be a PDF' }
+  }
+  if (!isPdf(buffer)) {
+    return { ok: false, error: 'File contents are not a valid PDF' }
+  }
+  return { ok: true, ext: 'pdf' }
+}
+
+/**
  * Builds the server-side storage path. The filename is generated here —
  * nothing from the client's filename is used.
  *

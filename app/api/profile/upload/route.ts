@@ -1,6 +1,6 @@
 import { getActiveSession } from "@/lib/session"
 import { rateLimit } from '@/lib/rate-limit'
-import { createClient } from '@supabase/supabase-js'
+import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { validateImageUpload, verifyImageBytes } from '@/lib/upload-validation'
@@ -15,10 +15,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Too many requests — please slow down' }, { status: 429 })
   }
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  )
+  const supabase = getSupabaseAdmin()
 
   const formData = await req.formData()
   const file = formData.get('file')

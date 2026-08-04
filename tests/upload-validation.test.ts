@@ -3,6 +3,8 @@ import {
   validateImageUpload,
   verifyImageBytes,
   detectImageMime,
+  verifyPdfBytes,
+  isPdf,
   buildUploadPath,
   MAX_IMAGE_BYTES,
   MAX_ADMIN_IMAGE_BYTES,
@@ -181,5 +183,36 @@ describe('verifyImageBytes — content matches declared type', () => {
   it('rejects an executable declared as an image', () => {
     const exe = Buffer.from([0x4d, 0x5a, 0x90, 0x00]) // "MZ" PE header
     expect(verifyImageBytes(exe, 'image/jpeg').ok).toBe(false)
+  })
+})
+
+describe('verifyPdfBytes — PDF content matches declared type', () => {
+  // A real PDF starts "%PDF-1.7" -> 0x25 0x50 0x44 0x46 0x2D ...
+  const realPdf = Buffer.from([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x37, 0x0a])
+
+  it('detects a real PDF signature', () => {
+    expect(isPdf(realPdf)).toBe(true)
+    expect(isPdf(Buffer.from([0x25, 0x50, 0x44]))).toBe(false) // too short
+    expect(isPdf(Buffer.from('<!DOCTYPE html>'))).toBe(false)
+    expect(isPdf(Buffer.alloc(0))).toBe(false)
+  })
+
+  it('accepts real PDF bytes declared as application/pdf', () => {
+    expect(verifyPdfBytes(realPdf, 'application/pdf')).toEqual({ ok: true, ext: 'pdf' })
+  })
+
+  it('THE ATTACK: rejects non-PDF bytes spoofed as application/pdf', () => {
+    // Client declares application/pdf but uploads HTML / a PNG / an executable.
+    const html = Buffer.from('<!DOCTYPE html><script>alert(1)</script>')
+    const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
+    const exe = Buffer.from([0x4d, 0x5a, 0x90, 0x00])
+    for (const buf of [html, png, exe]) {
+      expect(verifyPdfBytes(buf, 'application/pdf')).toMatchObject({ ok: false })
+    }
+  })
+
+  it('rejects a real PDF declared as the wrong type', () => {
+    expect(verifyPdfBytes(realPdf, 'image/png')).toMatchObject({ ok: false })
+    expect(verifyPdfBytes(realPdf, undefined)).toMatchObject({ ok: false })
   })
 })

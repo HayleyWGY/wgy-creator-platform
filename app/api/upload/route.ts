@@ -1,17 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import { getActiveSession } from "@/lib/session";
+import { getSupabaseAdmin } from "@/lib/supabase-server";
 import {
   validateImageUpload,
   verifyImageBytes,
   buildUploadPath,
   MAX_ADMIN_IMAGE_BYTES,
 } from "@/lib/upload-validation";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-);
 
 const BUCKET = "wgy-uploads";
 
@@ -22,6 +17,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    const supabase = getSupabaseAdmin();
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
     const folder = (formData.get("folder") as string) ?? "wgy-campaigns";
