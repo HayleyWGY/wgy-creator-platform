@@ -3,6 +3,13 @@ import { Playfair_Display, Montserrat } from "next/font/google";
 import { Providers } from "./providers";
 import "./globals.css";
 
+// The CSP nonce is generated per request in middleware, so pages can't be
+// statically prerendered (a build-time HTML can't carry a per-request nonce).
+// Forcing dynamic rendering app-wide is the required trade for nonce-based CSP
+// in Next 14. Cost is small here: pages are client-rendered shells behind auth
+// that weren't CDN-cacheable anyway.
+export const dynamic = "force-dynamic";
+
 // Playfair Display is used ITALIC ONLY (accent words), weights 400–600.
 const playfair = Playfair_Display({
   subsets: ["latin"],
