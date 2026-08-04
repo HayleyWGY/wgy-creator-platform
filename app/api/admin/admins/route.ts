@@ -237,17 +237,39 @@ export async function DELETE(req: Request) {
   // because their own account kept the total above the threshold. Requiring
   // one other admin to survive means a takeover always leaves a legitimate
   // admin able to respond.
-  const otherAdminCount = await prisma.creator.count({
-    where: { isAdmin: true, id: { not: session.user.id } },
-  })
-  if (otherAdminCount <= 1) {
+  //
+  // The count and the demotion run in ONE serializable transaction. Read-then-
+  // write across two statements is a TOCTOU race: two concurrent demotions
+  // could both observe two other admins and both proceed, dropping below the
+  // floor. Serializable makes Postgres detect that read/write conflict and
+  // abort one of them (P2034), which we surface as "try again" rather than
+  // letting the invariant break.
+  let demoted: boolean
+  try {
+    demoted = await prisma.$transaction(async (tx) => {
+      const otherAdminCount = await tx.creator.count({
+        where: { isAdmin: true, id: { not: session.user.id } },
+      })
+      if (otherAdminCount <= 1) return false
+      await tx.creator.update({ where: { id: adminId }, data: { isAdmin: false } })
+      return true
+    }, { isolationLevel: 'Serializable' })
+  } catch (err: unknown) {
+    // P2034 = serialization failure: two demotions raced. The change didn't
+    // apply; ask the caller to retry rather than risk breaking the invariant.
+    if (typeof err === 'object' && err !== null && 'code' in err && err.code === 'P2034') {
+      return NextResponse.json({ error: 'Another admin change happened at the same time — please try again.' }, { status: 409 })
+    }
+    throw err
+  }
+
+  if (!demoted) {
     return NextResponse.json(
       { error: 'There must always be at least one other admin besides you. Add another admin before removing this one.' },
       { status: 400 },
     )
   }
 
-  await prisma.creator.update({ where: { id: adminId }, data: { isAdmin: false } })
   await logAudit({
     actorId: session.user.id,
     action: 'Removed admin access',

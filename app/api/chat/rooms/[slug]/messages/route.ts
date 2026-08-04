@@ -79,13 +79,13 @@ export async function POST(
     const room = await prisma.chatRoom.findUnique({ where: { slug: params.slug } })
     if (!room) return NextResponse.json({ error: 'Room not found' }, { status: 404 })
 
-    // Block @everyone/@all for non-admins
-    if (!session.user.isAdmin) {
-      const lower = body.toLowerCase()
-      if (lower.includes('@everyone') || lower.includes('@all') || lower.includes('@channel')) {
-        return NextResponse.json({ error: 'Not allowed' }, { status: 403 })
-      }
-    }
+    // NOTE: there used to be an "@everyone/@all/@channel" block here for
+    // non-admins. It was cosmetic — those strings trigger NO notification
+    // behaviour anywhere in the app, and the substring check was trivially
+    // defeated ("@ everyone", a Cyrillic 'е', etc.). Rather than leave code
+    // implying a protection that doesn't exist, it's removed. If real mention
+    // handling is built later, gate it there where the notification actually
+    // fires, not on a string match here.
 
     const message = await prisma.chatMessage.create({
       data: {

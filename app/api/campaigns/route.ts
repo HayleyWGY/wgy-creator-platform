@@ -1,6 +1,7 @@
 import { parseJson, campaignWriteSchema } from '@/lib/validation';
 import { NextRequest, NextResponse } from "next/server";
 import { unstable_cache, revalidateTag } from "next/cache";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getPayingSession } from "@/lib/session"
 import { notifyAllCreators } from "@/lib/notify";
@@ -8,8 +9,13 @@ import { publishDueScheduled } from "@/lib/scheduled-publish";
 import { logAudit } from "@/lib/audit";
 import { sanitizeRichText } from "@/lib/sanitize";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function mapCampaign(p: any) {
+// The exact row shape every campaign query returns: a Post plus its section's
+// name + slug (the include used by runCampaignQuery below).
+type CampaignRow = Prisma.PostGetPayload<{
+  include: { section: { select: { name: true; slug: true } } }
+}>;
+
+function mapCampaign(p: CampaignRow) {
   return {
     id:                    p.id,
     slug:                  p.slug ?? p.id,
