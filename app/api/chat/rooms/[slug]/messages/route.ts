@@ -45,6 +45,10 @@ export async function GET(
     where: { roomId: room.id, isDeleted: false },
     include: {
       author: { select: { id: true, firstName: true, lastName: true, profileImageUrl: true, isAdmin: true } },
+      replyTo: {
+        select: { id: true, body: true, isDeleted: true, author: { select: { firstName: true, lastName: true } } },
+      },
+      mentions: { select: { creator: { select: { id: true, firstName: true, lastName: true } } } },
     },
     ...messagePageQuery(limit, before),
   })
@@ -74,18 +78,39 @@ export async function POST(
   if (!parsed.ok) return parsed.response
   const body = parsed.data.body ?? ''
   const imageUrl = parsed.data.imageUrl ?? null
+  const replyToId = parsed.data.replyToId ?? null
+  const mentionIds = parsed.data.mentions ?? []
 
   try {
     const room = await prisma.chatRoom.findUnique({ where: { slug: params.slug } })
     if (!room) return NextResponse.json({ error: 'Room not found' }, { status: 404 })
 
-    // NOTE: there used to be an "@everyone/@all/@channel" block here for
-    // non-admins. It was cosmetic — those strings trigger NO notification
-    // behaviour anywhere in the app, and the substring check was trivially
-    // defeated ("@ everyone", a Cyrillic 'е', etc.). Rather than leave code
-    // implying a protection that doesn't exist, it's removed. If real mention
-    // handling is built later, gate it there where the notification actually
-    // fires, not on a string match here.
+    // The reply target must be a real message in THIS room (silently dropped if
+    // not — a stale/foreign id shouldn't fail an otherwise valid message). We
+    // only notify the replied-to author if the parent isn't deleted.
+    let validReplyToId: string | null = null
+    let replyToAuthorId: string | null = null
+    if (replyToId) {
+      const parent = await prisma.chatMessage.findUnique({
+        where: { id: replyToId },
+        select: { id: true, roomId: true, authorId: true, isDeleted: true },
+      })
+      if (parent && parent.roomId === room.id) {
+        validReplyToId = parent.id
+        if (!parent.isDeleted) replyToAuthorId = parent.authorId
+      }
+    }
+
+    // Re-validate every mentioned id server-side: real, active, not the author.
+    // Never trust the client's list — this is what actually gates who gets pinged.
+    const uniqueMentionIds = Array.from(new Set(mentionIds)).filter(id => id !== session.user.id)
+    const validMentions = uniqueMentionIds.length
+      ? await prisma.creator.findMany({
+          where: { id: { in: uniqueMentionIds }, membershipStatus: { not: 'cancelled' } },
+          select: { id: true },
+        })
+      : []
+    const mentionCreatorIds = validMentions.map(m => m.id)
 
     const message = await prisma.chatMessage.create({
       data: {
@@ -93,11 +118,46 @@ export async function POST(
         authorId: session.user.id,
         body: body.trim(),
         imageUrl,
+        replyToId: validReplyToId,
+        mentions: mentionCreatorIds.length
+          ? { createMany: { data: mentionCreatorIds.map(creatorId => ({ creatorId })) } }
+          : undefined,
       },
       include: {
         author: { select: { id: true, firstName: true, lastName: true, profileImageUrl: true, isAdmin: true } },
+        replyTo: {
+          select: { id: true, body: true, isDeleted: true, author: { select: { firstName: true, lastName: true } } },
+        },
+        mentions: { select: { creator: { select: { id: true, firstName: true, lastName: true } } } },
       },
     })
+
+    // In-app notifications for mention recipients + the replied-to author,
+    // deduped (a reply that also @mentions the same person notifies once) and
+    // never to yourself. AWAITED so a freezing lambda can't drop the write, but
+    // a failure must not fail the send.
+    const authorName = `${message.author.firstName} ${message.author.lastName}`
+    const recipients = new Map<string, { type: string; title: string }>()
+    for (const cid of mentionCreatorIds) {
+      recipients.set(cid, { type: 'chat_mention', title: `${authorName} mentioned you` })
+    }
+    if (replyToAuthorId && replyToAuthorId !== session.user.id && !recipients.has(replyToAuthorId)) {
+      recipients.set(replyToAuthorId, { type: 'chat_reply', title: `${authorName} replied to you` })
+    }
+    if (recipients.size > 0) {
+      const preview = body.trim().slice(0, 80)
+      await prisma.notification
+        .createMany({
+          data: Array.from(recipients).map(([creatorId, n]) => ({
+            creatorId,
+            type: n.type,
+            title: n.title,
+            description: `${room.name}${preview ? ` — ${preview}` : ''}`,
+            referenceId: room.slug,
+          })),
+        })
+        .catch(err => console.error('[notify chat mention/reply]', err))
+    }
 
     // Nudge everyone in the room to refetch — content stays behind this API
     pingRealtime(`room:${params.slug}`).catch(() => {})

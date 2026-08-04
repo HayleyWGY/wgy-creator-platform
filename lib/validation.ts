@@ -150,6 +150,11 @@ export const chatMessageSchema = z
   .object({
     body: z.string().trim().max(LIMITS.message).optional().nullable(),
     imageUrl: supabaseImageUrl,
+    // Quoted reply target (another message id in the same room).
+    replyToId: z.string().max(60).optional().nullable(),
+    // Creator ids @mentioned in this message. Capped so one message can't
+    // mass-ping the whole platform; the route re-validates each id is real.
+    mentions: z.array(z.string().max(60)).max(10).optional(),
   })
   .refine(d => Boolean(d.body?.trim()) || Boolean(d.imageUrl), {
     message: 'a message body or image is required',

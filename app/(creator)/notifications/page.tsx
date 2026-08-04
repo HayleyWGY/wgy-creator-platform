@@ -21,6 +21,8 @@ function getIcon(type: string) {
     case 'comment':
     case 'reply':
     case 'dm':
+    case 'chat_mention':
+    case 'chat_reply':
       return MessageCircle
     case 'like':
       return Heart
@@ -49,6 +51,9 @@ export default function NotificationsPage() {
   function handleClick(notif: Notification) {
     if ((notif.type === 'comment' || notif.type === 'reply') && notif.referenceId) {
       router.push(`/community/creator-corner/${notif.referenceId}`)
+    } else if ((notif.type === 'chat_mention' || notif.type === 'chat_reply') && notif.referenceId) {
+      // referenceId is the room slug
+      router.push(`/community/${notif.referenceId}`)
     } else if (notif.type === 'dm') {
       router.push('/messages/wgy')
     } else if (notif.type === 'campaign' && notif.referenceId) {

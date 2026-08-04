@@ -66,6 +66,7 @@ model Creator {
   contentComments     ContentComment[]
   creatorPostLikes    CreatorPostLike[]
   chatMessages        ChatMessage[]
+  chatMentions        ChatMessageMention[]
   chatRoomReads       ChatRoomRead[]
   applications        CampaignApplication[]
   dmThread            DmThread?
@@ -356,9 +357,34 @@ model ChatMessage {
   deletedAt    DateTime?
   createdAt    DateTime   @default(now())
 
+  // WhatsApp-style quoted reply: the message this one is replying to. Optional
+  // self-relation; SetNull so a (rare) hard-deleted parent doesn't orphan the
+  // reply — the quote just falls back to "message unavailable". Soft deletes
+  // keep the row, so the usual case is handled by isDeleted at render time.
+  replyToId    String?
+  replyTo      ChatMessage?  @relation("ChatReplies", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies      ChatMessage[] @relation("ChatReplies")
+
+  // Who was @mentioned in this message — a structured record (not text
+  // parsing), so notifications and highlight-links are reliable.
+  mentions     ChatMessageMention[]
+
   // Loading a room's messages in order
   @@index([roomId, createdAt])
   @@index([authorId])
+}
+
+model ChatMessageMention {
+  id        String      @id @default(cuid())
+  messageId String
+  message   ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  creatorId String
+  creator   Creator     @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now())
+
+  // One mention record per (message, creator); "notifications for me" reads by creator.
+  @@unique([messageId, creatorId])
+  @@index([creatorId])
 }
 
 model DmThread {

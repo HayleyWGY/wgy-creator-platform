@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
-import { ArrowLeft, Send, Trash2 } from 'lucide-react'
+import { ArrowLeft, Send, Trash2, CornerUpLeft, X } from 'lucide-react'
 import { useChatPoll, CHAT_POLL_INTERVAL_MS } from '@/lib/use-chat-poll'
 import { useRealtimePing } from '@/lib/use-realtime-ping'
 import { messagesChanged } from '@/lib/chat-pagination'
@@ -17,12 +17,50 @@ interface MessageAuthor {
   isAdmin: boolean
 }
 
+interface MentionMember {
+  id: string
+  firstName: string
+  lastName: string
+  profileImageUrl?: string | null
+}
+
 interface ChatMessage {
   id: string
   body: string
   imageUrl: string | null
   createdAt: string
   author: MessageAuthor
+  replyTo?: {
+    id: string
+    body: string
+    isDeleted: boolean
+    author: { firstName: string; lastName: string }
+  } | null
+  mentions?: { creator: { id: string; firstName: string; lastName: string } }[]
+}
+
+// Renders a message body with @mentions highlighted. Mentions are structured
+// data from the server, so we highlight the exact "@First Last" the sender
+// picked — no fragile guessing about which @words are real people.
+function renderBody(msg: ChatMessage): React.ReactNode {
+  const names = (msg.mentions ?? []).map(m => `${m.creator.firstName} ${m.creator.lastName}`)
+  if (!names.length) return msg.body
+  // Longest names first so "@Jo Ann Smith" wins over "@Jo".
+  const escaped = names
+    .sort((a, b) => b.length - a.length)
+    .map(n => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+  const re = new RegExp(`@(${escaped.join('|')})`, 'g')
+  const parts = msg.body.split(re)
+  // split with one capture group => [text, name, text, name, ...]
+  return parts.map((part, i) =>
+    i % 2 === 1
+      ? <strong key={i} style={{ color: 'var(--accent)', fontWeight: 700 }}>@{part}</strong>
+      : <span key={i}>{part}</span>,
+  )
+}
+
+function truncate(s: string, n: number): string {
+  return s.length > n ? `${s.slice(0, n)}…` : s
 }
 
 function Avatar({ author }: { author: MessageAuthor }) {
@@ -71,6 +109,13 @@ export default function ChatRoomPage({ params }: { params: { roomId: string } })
   const [pinnedMessage, setPinnedMessage] = useState<{ id: string; body: string; author: { firstName: string; lastName: string; isAdmin: boolean } } | null>(null)
   const [body, setBody] = useState('')
   const [sending, setSending] = useState(false)
+  const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null)
+  // @mention autocomplete: mentionQuery === null means the picker is closed.
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null)
+  const [mentionResults, setMentionResults] = useState<MentionMember[]>([])
+  // "First Last" -> creatorId for people picked in this composer. Sent on
+  // submit only if their @name is still present in the text.
+  const pickedMentions = useRef<Map<string, string>>(new Map())
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const slug = params.roomId
@@ -120,22 +165,74 @@ export default function ChatRoomPage({ params }: { params: { roomId: string } })
     fetch(`/api/chat/rooms/${slug}/read`, { method: 'POST' }).catch(() => {})
   }, [slug, newestMessageId])
 
+  // Detect an in-progress "@token" ending at the caret and open/close the picker.
+  function onBodyChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    const val = e.target.value
+    setBody(val)
+    const caret = e.target.selectionStart ?? val.length
+    const before = val.slice(0, caret)
+    const m = before.match(/(?:^|\s)@(\S{0,30})$/)
+    setMentionQuery(m ? m[1] : null)
+  }
+
+  // Fetch matching members while the picker is open.
+  useEffect(() => {
+    if (mentionQuery === null) { setMentionResults([]); return }
+    let cancelled = false
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/chat/members?q=${encodeURIComponent(mentionQuery)}`)
+        const data = await res.json()
+        if (!cancelled) setMentionResults(data.members ?? [])
+      } catch { if (!cancelled) setMentionResults([]) }
+    }, 150)
+    return () => { cancelled = true; clearTimeout(t) }
+  }, [mentionQuery])
+
+  function insertMention(member: MentionMember) {
+    const name = `${member.firstName} ${member.lastName}`
+    // Replace the trailing "@token" with the full "@First Last ".
+    setBody(prev => prev.replace(/(^|\s)@(\S{0,30})$/, (_full, lead) => `${lead}@${name} `))
+    pickedMentions.current.set(name, member.id)
+    setMentionQuery(null)
+    setMentionResults([])
+    inputRef.current?.focus()
+  }
+
+  function scrollToMessage(id: string) {
+    const el = document.getElementById(`msg-${id}`)
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      el.style.transition = 'background 0.2s'
+      el.style.background = 'rgba(228,220,209,0.08)'
+      setTimeout(() => { el.style.background = '' }, 900)
+    }
+  }
+
   async function sendMessage(e: FormEvent) {
     e.preventDefault()
     if (!body.trim() || sending) return
     setSending(true)
     const text = body.trim()
+    // Only send mentions whose @name is still in the text (user may have deleted it).
+    const mentions = Array.from(pickedMentions.current.entries())
+      .filter(([name]) => text.includes(`@${name}`))
+      .map(([, id]) => id)
+    const replyToId = replyingTo?.id ?? null
     setBody('')
+    setReplyingTo(null)
+    setMentionQuery(null)
 
     try {
       const res = await fetch(`/api/chat/rooms/${slug}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ body: text }),
+        body: JSON.stringify({ body: text, replyToId, mentions }),
       })
       if (res.ok) {
         const { message } = await res.json()
         setMessages(prev => [...prev, message])
+        pickedMentions.current.clear()
       }
     } finally {
       setSending(false)
@@ -261,9 +358,11 @@ export default function ChatRoomPage({ params }: { params: { roomId: string } })
               return (
                 <div
                   key={msg.id}
+                  id={`msg-${msg.id}`}
                   style={{
                     display: 'flex', alignItems: 'flex-start', gap: 8,
                     marginBottom: 12,
+                    borderRadius: 8,
                     flexDirection: isOwn ? 'row-reverse' : 'row',
                   }}
                 >
@@ -274,6 +373,24 @@ export default function ChatRoomPage({ params }: { params: { roomId: string } })
                       author={isOwn ? undefined : authorLabel}
                       isWgy={msg.author.isAdmin}
                     >
+                      {/* Quoted reply preview — tap to jump to the original */}
+                      {msg.replyTo && (
+                        <button
+                          onClick={() => scrollToMessage(msg.replyTo!.id)}
+                          style={{
+                            display: 'block', width: '100%', textAlign: 'left', cursor: 'pointer',
+                            background: 'rgba(0,0,0,0.12)', borderLeft: '2px solid var(--accent)',
+                            border: 'none', borderRadius: 6, padding: '5px 8px', marginBottom: 6,
+                          }}
+                        >
+                          <span style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--accent)', fontFamily: 'Montserrat, sans-serif' }}>
+                            {msg.replyTo.isDeleted ? 'Message' : `${msg.replyTo.author.firstName} ${msg.replyTo.author.lastName}`}
+                          </span>
+                          <span style={{ display: 'block', fontSize: 12, opacity: 0.85 }}>
+                            {msg.replyTo.isDeleted ? 'This message was deleted' : truncate(msg.replyTo.body, 70)}
+                          </span>
+                        </button>
+                      )}
                       {msg.imageUrl && (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -283,13 +400,20 @@ export default function ChatRoomPage({ params }: { params: { roomId: string } })
                         />
                       )}
                       {msg.body && (
-                        <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{msg.body}</span>
+                        <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{renderBody(msg)}</span>
                       )}
                     </ChatBubble>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3, justifyContent: isOwn ? 'flex-end' : 'flex-start' }}>
                       <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif' }}>
                         {formatTime(msg.createdAt)}
                       </span>
+                      <button
+                        onClick={() => { setReplyingTo(msg); inputRef.current?.focus() }}
+                        aria-label="Reply"
+                        style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--text-muted)', display: 'flex' }}
+                      >
+                        <CornerUpLeft size={11} />
+                      </button>
                       {(isOwn || session?.user?.isAdmin) && (
                         <button
                           onClick={() => deleteMessage(msg.id)}
@@ -309,6 +433,39 @@ export default function ChatRoomPage({ params }: { params: { roomId: string } })
         <div ref={bottomRef} />
       </div>
 
+      {/* @mention picker — floats above the input while typing "@name" */}
+      {mentionQuery !== null && mentionResults.length > 0 && (
+        <div style={{ flexShrink: 0, background: 'var(--surface)', borderTop: '1px solid var(--border)', maxHeight: 180, overflowY: 'auto' }}>
+          {mentionResults.map(m => (
+            <button
+              key={m.id}
+              onClick={() => insertMention(m)}
+              style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left', background: 'none', border: 'none', padding: '8px 16px', cursor: 'pointer' }}
+            >
+              <Avatar author={{ id: m.id, firstName: m.firstName, lastName: m.lastName, profileImageUrl: m.profileImageUrl ?? null, isAdmin: false }} />
+              <span style={{ fontSize: 14, color: 'var(--text)', fontFamily: 'Montserrat, sans-serif' }}>{m.firstName} {m.lastName}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Replying-to banner */}
+      {replyingTo && (
+        <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px', background: 'var(--surface)', borderTop: '1px solid var(--border)' }}>
+          <div style={{ flex: 1, minWidth: 0, borderLeft: '2px solid var(--accent)', paddingLeft: 8 }}>
+            <span style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--accent)', fontFamily: 'Montserrat, sans-serif' }}>
+              Replying to {replyingTo.author.firstName} {replyingTo.author.lastName}
+            </span>
+            <span style={{ display: 'block', fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {replyingTo.body ? truncate(replyingTo.body, 60) : '📷 Image'}
+            </span>
+          </div>
+          <button onClick={() => setReplyingTo(null)} aria-label="Cancel reply" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex' }}>
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
       {/* Input */}
       <form
         onSubmit={sendMessage}
@@ -321,7 +478,7 @@ export default function ChatRoomPage({ params }: { params: { roomId: string } })
         <textarea
           ref={inputRef}
           value={body}
-          onChange={e => setBody(e.target.value)}
+          onChange={onBodyChange}
           onKeyDown={handleKeyDown}
           placeholder="Write a message..."
           rows={1}
