@@ -1,4 +1,30 @@
 /**
+ * Chat timestamp helpers, shared by the DM thread and community room views.
+ *
+ * These two were byte-identical copies in both pages. The many OTHER
+ * formatDate/formatTime helpers around the app are deliberately NOT folded in
+ * here: they differ in real ways (with/without year, long vs short month,
+ * nullable input, unix-seconds input) and merging them would silently change
+ * output — so only the genuinely identical chat pair lives here.
+ */
+
+// Wall-clock time, e.g. "14:05".
+export function formatChatTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+}
+
+// Day divider label: "Today" / "Yesterday" / "3 Jul".
+export function formatChatDay(iso: string): string {
+  const d = new Date(iso)
+  const today = new Date()
+  const yesterday = new Date(today)
+  yesterday.setDate(yesterday.getDate() - 1)
+  if (d.toDateString() === today.toDateString()) return 'Today'
+  if (d.toDateString() === yesterday.toDateString()) return 'Yesterday'
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+}
+
+/**
  * Human-readable "time ago" string from an ISO date string. The single source
  * of truth for relative timestamps across the app (previously duplicated ~12
  * times with small inconsistencies).

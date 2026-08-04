@@ -39,8 +39,11 @@ export async function PATCH(req: Request) {
   }
 
   if (typeof newPassword === 'string' && newPassword) {
-    if (newPassword.length < 8) {
-      return NextResponse.json({ error: 'New password must be at least 8 characters' }, { status: 400 })
+    // This route is admin-only, so the actor is always an admin — hold admin
+    // passwords to the higher 12-char minimum (admins can trigger
+    // takeover-level actions; members stay at 8).
+    if (newPassword.length < 12) {
+      return NextResponse.json({ error: 'New password must be at least 12 characters' }, { status: 400 })
     }
     data.passwordHash = await bcrypt.hash(newPassword, 10)
     changes.push('password changed')

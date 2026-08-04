@@ -7,6 +7,7 @@ import { ArrowLeft, Send, Trash2, CornerUpLeft, X } from 'lucide-react'
 import { useChatPoll, CHAT_POLL_INTERVAL_MS } from '@/lib/use-chat-poll'
 import { useRealtimePing } from '@/lib/use-realtime-ping'
 import { messagesChanged } from '@/lib/chat-pagination'
+import { formatChatDay, formatChatTime } from '@/lib/utils'
 import { COMMUNITY_ROOMS } from '@/lib/constants'
 import { ChatBubble } from '@/components/ui/chat-bubble'
 
@@ -87,21 +88,6 @@ function Avatar({ author }: { author: MessageAuthor }) {
       </span>
     </div>
   )
-}
-
-function formatTime(iso: string) {
-  const d = new Date(iso)
-  return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
-}
-
-function formatDate(iso: string) {
-  const d = new Date(iso)
-  const today = new Date()
-  const yesterday = new Date(today)
-  yesterday.setDate(yesterday.getDate() - 1)
-  if (d.toDateString() === today.toDateString()) return 'Today'
-  if (d.toDateString() === yesterday.toDateString()) return 'Yesterday'
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 }
 
 export default function ChatRoomPage({ params }: { params: { roomId: string } }) {
@@ -257,7 +243,7 @@ export default function ChatRoomPage({ params }: { params: { roomId: string } })
   // Group messages by date
   const grouped: { date: string; messages: ChatMessage[] }[] = []
   for (const msg of messages) {
-    const d = formatDate(msg.createdAt)
+    const d = formatChatDay(msg.createdAt)
     if (!grouped.length || grouped[grouped.length - 1].date !== d) {
       grouped.push({ date: d, messages: [msg] })
     } else {
@@ -407,7 +393,7 @@ export default function ChatRoomPage({ params }: { params: { roomId: string } })
                     </ChatBubble>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3, justifyContent: isOwn ? 'flex-end' : 'flex-start' }}>
                       <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-muted)', fontFamily: 'Montserrat, sans-serif' }}>
-                        {formatTime(msg.createdAt)}
+                        {formatChatTime(msg.createdAt)}
                       </span>
                       <button
                         onClick={() => { setReplyingTo(msg); inputRef.current?.focus() }}

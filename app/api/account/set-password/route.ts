@@ -36,8 +36,25 @@ export async function POST(req: Request) {
 
   const { token, password } = await req.json().catch(() => ({}))
 
-  if (typeof password !== 'string' || password.length < 8) {
+  if (typeof password !== 'string') {
     return NextResponse.json({ error: 'Password must be at least 8 characters' }, { status: 400 })
+  }
+
+  // The minimum depends on the account: admins must use 12 characters (they can
+  // trigger takeover-level actions), members 8. Peek the token — which does NOT
+  // consume it — to learn whose account this is before validating length, so a
+  // too-short password never burns a valid setup link.
+  const peekedId = await peekAccountToken(token, SETUP_PURPOSES)
+  let minLength = 8
+  if (peekedId) {
+    const account = await prisma.creator.findUnique({ where: { id: peekedId }, select: { isAdmin: true } })
+    if (account?.isAdmin) minLength = 12
+  }
+  if (password.length < minLength) {
+    return NextResponse.json(
+      { error: `Password must be at least ${minLength} characters` },
+      { status: 400 },
+    )
   }
 
   // Consume BEFORE writing the password: the update is guarded by the
