@@ -1,6 +1,6 @@
 import { parseJson, campaignWriteSchema } from '@/lib/validation';
 import { NextRequest, NextResponse } from "next/server";
-import { revalidateTag } from "next/cache";
+import { revalidateTag, unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getPayingSession } from "@/lib/session";
 import { notifyAllCreators } from "@/lib/notify";
@@ -15,6 +15,24 @@ const POST_TYPE_LABEL: Record<string, string> = {
   tiktok:         "TikTok Commission",
 };
 
+// The campaign body is identical for every viewer, so cache the DB read and
+// share it across a burst (e.g. 200 members opening the same opportunity from
+// one push notification all read from cache — the DB is hit ~once per 60s, not
+// once per viewer). Keyed by id, tagged 'campaigns' so an admin edit/status
+// change (which already calls revalidateTag('campaigns')) busts it instantly.
+// The per-viewer bits — draft/admin visibility and likedByMe — stay OUTSIDE the
+// cache below, so nothing user-specific or unpublished is ever served from it.
+const getCachedCampaign = (id: string) =>
+  unstable_cache(
+    () =>
+      prisma.post.findFirst({
+        where: { OR: [{ slug: id }, { id }] },
+        include: { section: { select: { name: true, slug: true } } },
+      }),
+    ["campaign-detail", id],
+    { revalidate: 60, tags: ["campaigns"] },
+  )();
+
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -27,10 +45,7 @@ export async function GET(
   }
 
   try {
-    const post = await prisma.post.findFirst({
-      where: { OR: [{ slug: id }, { id }] },
-      include: { section: { select: { name: true, slug: true } } },
-    });
+    const post = await getCachedCampaign(id);
 
     if (!post) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
