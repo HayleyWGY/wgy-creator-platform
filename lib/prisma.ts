@@ -4,22 +4,24 @@ import { PrismaPg } from "@prisma/adapter-pg";
 const connectionString = process.env.DATABASE_URL!;
 
 function makePrisma() {
-  // max: 1 — critical on Vercel serverless. DATABASE_URL points at the
-  // Supabase TRANSACTION pooler (Supavisor, :6543), which multiplexes many
-  // client connections onto a small pool of real Postgres connections
-  // (server max_connections is 60). The original outage came from pg's
-  // default of 10 connections PER lambda instance: with many concurrent
-  // lambdas that exhausted the pooler's client slots and took down sign-in.
-  // Each lambda serves one request at a time, so one connection is enough;
-  // parallel queries within a request queue on it harmlessly. idleTimeout
-  // releases it promptly so instances don't hold slots while idle.
+  // Pool size on Vercel serverless. DATABASE_URL MUST point at the Supabase
+  // TRANSACTION pooler (Supavisor, :6543), which multiplexes many client
+  // connections onto the real Postgres pool. Do NOT point it at the session
+  // pooler (:5432) — that hard-caps at 15 client connections and cannot scale;
+  // DIRECT_URL (:5432) is migrations only.
   //
-  // All runtime DB access flows through this single shared client on the
-  // pooler — nothing connects directly (:5432); DIRECT_URL is migrations
-  // only. Verified 2026-07: 14/60 connections in use, pooler holding 1.
+  // History: max was 1, chosen after an outage where pg's default of 10 PER
+  // lambda exhausted connection slots. But a 2026-08 staging load test showed
+  // max:1 serialises every concurrent request through ONE connection — 15
+  // concurrent room-message queries took ~3s at max:1 vs ~0.5s at max:8 (6.3x),
+  // and chat endpoints (which run ~5 sub-queries each) stalled to 8-19s under
+  // load. On the transaction pooler this is safe to raise: client connections
+  // are multiplexed, so a modest per-lambda pool doesn't exhaust the real
+  // Postgres connections the way direct connections did. idleTimeout releases
+  // them promptly so idle instances don't hold slots.
   const adapter = new PrismaPg({
     connectionString,
-    max: 1,
+    max: Number(process.env.DB_POOL_MAX ?? 5),
     idleTimeoutMillis: 15_000,
   });
   return new PrismaClient({ adapter });
