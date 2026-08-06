@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getActiveSession } from '@/lib/session'
 
-// GET — the signed-in creator's 5 most recent campaign applications, for the
+// GET — the signed-in creator's 20 most recent campaign applications, for the
 // "Recent campaigns applied to" section on their profile.
 export async function GET() {
   const session = await getActiveSession()
@@ -13,7 +13,7 @@ export async function GET() {
   const applications = await prisma.campaignApplication.findMany({
     where: { creatorId: session.user.id },
     orderBy: { appliedAt: 'desc' },
-    take: 5,
+    take: 20,
     select: { id: true, campaignName: true, campaignSlug: true, appliedAt: true },
   })
 
