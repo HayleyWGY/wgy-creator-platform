@@ -15,6 +15,36 @@ if (fs.existsSync(envPath)) {
 }
 
 /**
+ * Keep DB integration tests away from the production database.
+ *
+ * .env holds the PRODUCTION connection strings (the dev server uses them), so
+ * without this, `npm test` ran its integration suites — which create and
+ * delete real rows — against production. Now:
+ *
+ *   - TEST_DATABASE_URL set  -> integration tests run against it (staging).
+ *   - Otherwise, if the loaded URL is not the staging project, BOTH URLs are
+ *     unset so every describe.skipIf(!hasDb) suite skips instead of touching
+ *     production. Tests can only ever write to a database explicitly chosen
+ *     for testing.
+ */
+const STAGING_DB_REF = 'ffbaencyqdcmawgueztf'
+const TEST_DB = process.env.TEST_DATABASE_URL
+if (TEST_DB) {
+  process.env.DATABASE_URL = TEST_DB
+  process.env.DIRECT_URL = TEST_DB
+} else {
+  const dbUrl = process.env.DIRECT_URL || process.env.DATABASE_URL || ''
+  if (dbUrl && !dbUrl.includes(STAGING_DB_REF)) {
+    delete process.env.DATABASE_URL
+    delete process.env.DIRECT_URL
+    console.warn(
+      '[tests] Database URL is not the staging project — DB integration suites will SKIP. ' +
+        'Set TEST_DATABASE_URL (staging) in .env to run them.',
+    )
+  }
+}
+
+/**
  * Keep test keys away from production keys.
  *
  * The rate-limit suites exercise the real limiter, so they write real counter
