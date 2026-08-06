@@ -40,6 +40,30 @@ export default function MembershipPage() {
   const [loadingPortal, setLoadingPortal] = useState(false)
   const [portalError, setPortalError] = useState<'' | 'no_stripe_id' | 'general'>('')
 
+  // Cancel-flow retention offer. Eligibility is decided server-side
+  // (6+ months tenure, active, not claimed in the last year); when eligible,
+  // tapping Cancel shows the 20%-off popup before the email opens.
+  const [retentionEligible, setRetentionEligible] = useState(false)
+  const [offerOpen, setOfferOpen] = useState(false)
+  const [claiming, setClaiming] = useState(false)
+  const [claimState, setClaimState] = useState<'' | 'done' | 'error'>('')
+
+  const CANCEL_MAILTO = 'mailto:support@wegotyouagency.com?subject=Cancel%20my%20membership'
+
+  const handleClaim = async () => {
+    setClaiming(true)
+    try {
+      const res = await fetch('/api/retention-offer', { method: 'POST' })
+      if (!res.ok) throw new Error('claim')
+      setClaimState('done')
+      setRetentionEligible(false) // burned — Cancel goes straight to email now
+    } catch {
+      setClaimState('error')
+    } finally {
+      setClaiming(false)
+    }
+  }
+
   const handleUpdatePayment = async () => {
     setLoadingPortal(true)
     setPortalError('')
@@ -68,6 +92,11 @@ export default function MembershipPage() {
         setLoading(false)
       })
       .catch(() => setLoading(false))
+    // Best-effort: if this fails, Cancel simply behaves as before (email).
+    fetch('/api/retention-offer')
+      .then(r => r.json())
+      .then(data => setRetentionEligible(!!data.eligible))
+      .catch(() => {})
   }, [])
 
   if (loading) {
@@ -201,7 +230,16 @@ export default function MembershipPage() {
               </a>
             </p>
             <a
-              href="mailto:support@wegotyouagency.com?subject=Cancel%20my%20membership"
+              href={CANCEL_MAILTO}
+              onClick={e => {
+                // Eligible members see the retention offer first; the email
+                // draft still opens from inside the popup if they decline.
+                if (retentionEligible) {
+                  e.preventDefault()
+                  setClaimState('')
+                  setOfferOpen(true)
+                }
+              }}
               className="font-montserrat font-normal flex items-center justify-center"
               style={{ width: '100%', height: 40, borderRadius: 'var(--radius-pill)', background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer', textDecoration: 'none' }}
             >
@@ -223,6 +261,72 @@ export default function MembershipPage() {
           </div>
         )}
       </div>
+
+      {/* Retention offer popup — shown instead of the cancel email for
+          eligible members. Declining opens the same email draft as before. */}
+      {offerOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Special offer before you cancel"
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 20 }}
+          onClick={() => !claiming && setOfferOpen(false)}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-card)', padding: 24, maxWidth: 360, width: '100%' }}
+          >
+            {claimState === 'done' ? (
+              <>
+                <p className="font-montserrat" style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', marginBottom: 8 }}>
+                  20% off applied 🎉
+                </p>
+                <p className="font-montserrat" style={{ fontSize: 13, lineHeight: 1.6, color: 'var(--text-muted)', marginBottom: 20 }}>
+                  Your discount has been applied — your next month is 20% off, then billing returns to normal. So glad you&rsquo;re staying!
+                </p>
+                <button
+                  onClick={() => setOfferOpen(false)}
+                  className="font-montserrat"
+                  style={{ width: '100%', height: 44, background: 'var(--pill-bg)', border: 'none', borderRadius: 'var(--radius-pill)', color: 'var(--pill-text)', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}
+                >
+                  Done
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="eyebrow" style={{ marginBottom: 8 }}>Before you go…</p>
+                <p className="font-montserrat" style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', marginBottom: 8 }}>
+                  Stay with 20% off your next month
+                </p>
+                <p className="font-montserrat" style={{ fontSize: 13, lineHeight: 1.6, color: 'var(--text-muted)', marginBottom: 20 }}>
+                  You&rsquo;ve been part of WGY for a while and we&rsquo;d hate to see you leave. Claim code <strong style={{ color: 'var(--text)' }}>PLSSTAY20</strong> and we&rsquo;ll take 20% off your next month automatically — no code entry needed.
+                </p>
+                {claimState === 'error' && (
+                  <p className="font-montserrat" style={{ fontSize: 12, color: 'var(--error)', marginBottom: 8 }}>
+                    Something went wrong — please try again.
+                  </p>
+                )}
+                <button
+                  onClick={handleClaim}
+                  disabled={claiming}
+                  className="font-montserrat"
+                  style={{ width: '100%', height: 44, background: 'var(--pill-bg)', border: 'none', borderRadius: 'var(--radius-pill)', color: 'var(--pill-text)', fontWeight: 700, fontSize: 14, cursor: claiming ? 'wait' : 'pointer', opacity: claiming ? 0.7 : 1, marginBottom: 10 }}
+                >
+                  {claiming ? 'Applying…' : 'Claim 20% off & stay'}
+                </button>
+                <a
+                  href={CANCEL_MAILTO}
+                  onClick={() => setOfferOpen(false)}
+                  className="font-montserrat flex items-center justify-center"
+                  style={{ width: '100%', height: 40, color: 'var(--text-muted)', fontSize: 12, textDecoration: 'none' }}
+                >
+                  No thanks, cancel my membership
+                </a>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
