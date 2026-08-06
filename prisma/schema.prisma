@@ -37,6 +37,10 @@ model Creator {
   // Stamped whenever membershipStatus flips to cancelled (kept on
   // reactivation so monthly-cancellation analytics retain history)
   cancelledAt         DateTime?
+  // When the member last claimed the cancel-flow retention discount
+  // (PLSSTAY20). Claimable at most once every 365 days — see
+  // lib/retention-offer.ts. Null = never claimed.
+  retentionOfferRedeemedAt DateTime?
   membershipType      String                @default("paid")
   isAdmin             Boolean               @default(false)
   isClient            Boolean               @default(false)
